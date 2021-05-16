@@ -1,20 +1,9 @@
-import com.expediagroup.graphql.plugin.generator.GraphQLClientType
 import com.expediagroup.graphql.plugin.gradle.graphql
-
-graphql {
-  client {
-    // target GraphQL endpoint
-    endpoint = "https://graphql.natwelch.com/graphql"
-    // package for generated client code
-    packageName = "com.natwelch.graphql.generated"
-    clientType = GraphQLClientType.KTOR
-  }
-}
 
 plugins {
     id 'com.android.application'
     id 'kotlin-android'
-    id("com.expediagroup.graphql") version $latestGraphQLKotlinVersion
+    id 'com.expediagroup.graphql' version '4.1.1'
 }
 
 android {
@@ -58,5 +47,15 @@ dependencies {
     testImplementation 'junit:junit:4.+'
     androidTestImplementation 'androidx.test.ext:junit:1.1.1'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.2.0'
-  implementation("com.expediagroup:graphql-kotlin-ktor-client:$latestGraphQLKotlinVersion")
+    implementation("com.expediagroup:graphql-kotlin-spring-client:4.1.1")
+}
+
+graphql {
+    client {
+        // target GraphQL endpoint
+        endpoint = "https://graphql.natwelch.com/graphql"
+        // package for generated client code
+        packageName = "com.natwelch.graphql.generated"
+        clientType = GraphQLClientType.KTOR
+    }
 }
