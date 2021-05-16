@@ -25,3 +25,4 @@
 /local.properties
 hs_err_pid*
 local.properties
+!gradle/wrapper/gradle-wrapper.jar
