@@ -8,7 +8,6 @@ import React, {
 import type { User } from '../api/client';
 import {
   getStoredAuth,
-  setStoredAuth,
   clearStoredAuth,
   loginWithApiKey,
   loginWithEmailPassword,

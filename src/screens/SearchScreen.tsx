@@ -32,7 +32,7 @@ function groupNotesByDate(notes: Note[]): GroupedNotes {
     if (!groups[label]) groups[label] = [];
     groups[label].push(note);
   }
-  return Object.entries(groups).map(([label, notes]) => ({ label, notes }));
+  return Object.entries(groups).map(([label, groupNotes]) => ({ label, notes: groupNotes }));
 }
 
 export default function SearchScreen() {

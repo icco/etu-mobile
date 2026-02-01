@@ -129,7 +129,7 @@ export default function SettingsScreen() {
         </>
       )}
 
-      <Text style={[styles.sectionTitle, { marginTop: 32 }]}>API Keys</Text>
+      <Text style={[styles.sectionTitle, styles.sectionTitleSpaced]}>API Keys</Text>
       <Text style={styles.hint}>
         Create keys to use the Etu CLI or sign in on this app with “API key”.
       </Text>
@@ -140,7 +140,7 @@ export default function SettingsScreen() {
         <Text style={styles.linkBtnText}>Manage API keys →</Text>
       </TouchableOpacity>
 
-      <Text style={[styles.sectionTitle, { marginTop: 32 }]}>Subscription</Text>
+      <Text style={[styles.sectionTitle, styles.sectionTitleSpaced]}>Subscription</Text>
       <TouchableOpacity
         style={styles.linkBtn}
         onPress={() => Linking.openURL('https://etu.natwelch.com/settings')}
@@ -184,6 +184,7 @@ const styles = StyleSheet.create({
   hint: { color: '#666', fontSize: 14, marginBottom: 12 },
   linkBtn: { marginBottom: 8 },
   linkBtnText: { color: '#0a84ff', fontSize: 16 },
+  sectionTitleSpaced: { marginTop: 32 },
   logoutBtn: {
     marginTop: 32,
     padding: 16,

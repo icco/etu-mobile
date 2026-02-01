@@ -2,6 +2,10 @@
 
 etu-mobile is the react-native version of Etu. It should have all of the same functionality of etu-web and etu, using etu-backend for storage.
 
+## Security
+
+Dependencies are kept at latest versions. Transitive vulnerabilities in `markdown-it` and `fast-xml-parser` are overridden via `resolutions`. One moderate ESLint advisory (circular-ref serialization) remains; the fix requires ESLint 9, which is not yet compatible with `eslint-plugin-react-native`. Upgrade to ESLint 9 when the React Native ecosystem supports it.
+
 ## Prerequisites
 
 - Node.js 20+

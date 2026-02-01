@@ -1,5 +1,4 @@
 import React from 'react';
-import { useWindowDimensions } from 'react-native';
 import Markdown from 'react-native-markdown-display';
 
 const markdownStyles = {
@@ -20,7 +19,6 @@ interface MarkdownViewProps {
 }
 
 export default function MarkdownView({ content }: MarkdownViewProps) {
-  const { width } = useWindowDimensions();
   return (
     <Markdown
       style={markdownStyles}

@@ -21,7 +21,7 @@ export default function ApiKeysScreen() {
   const [modalVisible, setModalVisible] = useState(false);
   const [newName, setNewName] = useState('');
   const [creating, setCreating] = useState(false);
-  const [rawKeyShown, setRawKeyShown] = useState<string | null>(null);
+  const [, setRawKeyShown] = useState<string | null>(null);
 
   const { data: keys = [], isLoading } = useQuery({
     queryKey: ['apiKeys', user?.id],
