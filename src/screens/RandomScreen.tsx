@@ -56,7 +56,7 @@ export default function RandomScreen() {
         <NoteCard
           note={item}
           onPress={() =>
-            navigation.navigate('NoteDetail' as never, { noteId: item.id } as never)
+            (navigation as { navigate: (name: string, params?: object) => void }).navigate('NoteDetail', { noteId: item.id })
           }
         />
       )}

@@ -9,10 +9,7 @@ const getBaseUrl = (): string => {
   } catch {
     // fallback when react-native-config not linked
   }
-  // @ts-expect-error process.env may be set by Metro in RN
-  return typeof process !== 'undefined' && process.env?.GRPC_BACKEND_URL
-    ? process.env.GRPC_BACKEND_URL
-    : 'http://localhost:50051';
+  return 'http://localhost:50051';
 };
 
 const baseUrl = getBaseUrl();

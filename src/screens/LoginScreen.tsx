@@ -154,7 +154,7 @@ export default function LoginScreen() {
 
         <TouchableOpacity
           style={styles.link}
-          onPress={() => navigation.navigate('Register' as never)}
+          onPress={() => (navigation as { navigate: (name: string, params?: object) => void }).navigate('Register')}
         >
           <Text style={styles.linkText}>Create an account</Text>
         </TouchableOpacity>

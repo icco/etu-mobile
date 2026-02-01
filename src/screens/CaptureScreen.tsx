@@ -8,7 +8,7 @@ export default function CaptureScreen() {
     <View style={styles.container}>
       <TouchableOpacity
         style={styles.button}
-        onPress={() => navigation.navigate('NoteEdit' as never)}
+        onPress={() => (navigation as { navigate: (name: string, params?: object) => void }).navigate('NoteEdit')}
       >
         <Text style={styles.buttonText}>New note</Text>
       </TouchableOpacity>

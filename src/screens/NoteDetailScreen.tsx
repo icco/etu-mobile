@@ -51,7 +51,7 @@ export default function NoteDetailScreen() {
   };
 
   const handleEdit = () => {
-    navigation.navigate('NoteEdit' as never, { noteId, note } as never);
+    (navigation as { navigate: (name: string, params?: object) => void }).navigate('NoteEdit', { noteId, note });
   };
 
   if (!user || !token || !noteId) return null;

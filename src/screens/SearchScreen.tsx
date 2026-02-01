@@ -158,9 +158,7 @@ export default function SearchScreen() {
               <NoteCard
                 note={item.note}
                 onPress={() =>
-                  navigation.navigate('NoteDetail' as never, {
-                    noteId: item.note.id,
-                  } as never)
+                  (navigation as { navigate: (name: string, params?: object) => void }).navigate('NoteDetail', { noteId: item.note.id })
                 }
               />
             );
