@@ -1,7 +1,39 @@
+# OSX
+.DS_Store
+
+# Xcode
+build/
+*.pbxuser
+!default.pbxuser
+*.mode1v3
+!default.mode1v3
+*.mode2v3
+!default.mode2v3
+*.perspectivev3
+!default.perspectivev3
+xcuserdata
+*.xccheckout
+*.moved-aside
+DerivedData
+*.hmap
+*.ipa
+*.xcuserstate
+**/.xcode.env.local
+
+# Android/IntelliJ
+build/
+.idea
+.gradle
+local.properties
+*.iml
+*.hprof
+.cxx/
+*.keystore
+!debug.keystore
+.kotlin/
 *.class
 *.ctxt
 *.ear
-*.iml
 *.jar
 *.log
 *.nar
@@ -9,20 +41,47 @@
 *.tar.gz
 *.war
 *.zip
-.DS_Store
-.cxx
 .externalNativeBuild
-.gradle
-.mtj.tmp/
-/.idea/assetWizardSettings.xml
-/.idea/caches
-/.idea/libraries
-/.idea/modules.xml
-/.idea/navEditor.xml
-/.idea/workspace.xml
-/build
 /captures
-/local.properties
 hs_err_pid*
-local.properties
 !gradle/wrapper/gradle-wrapper.jar
+
+# node.js
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# fastlane
+**/fastlane/report.xml
+**/fastlane/Preview.html
+**/fastlane/screenshots
+**/fastlane/test_output
+
+# Bundle artifact
+*.jsbundle
+
+# Ruby / CocoaPods
+**/Pods/
+/vendor/bundle/
+
+# Metro
+.metro-health-check*
+
+# testing
+/coverage
+
+# Yarn
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/sdks
+!.yarn/versions
+
+# Env (secrets)
+.env
+.env.local
+!.env.example
+
+# React Native / Metro
+.bundle/
