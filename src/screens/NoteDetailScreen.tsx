@@ -62,7 +62,7 @@ export default function NoteDetailScreen() {
       </View>
     );
   }
-  if (error || !note) {
+  if (error || !note || !note.content) {
     return (
       <View style={styles.centered}>
         <Text style={styles.error}>Failed to load note</Text>
@@ -71,7 +71,6 @@ export default function NoteDetailScreen() {
   }
 
   const created = protoTimestampToDate(note.createdAt);
-  const updated = protoTimestampToDate(note.updatedAt);
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>

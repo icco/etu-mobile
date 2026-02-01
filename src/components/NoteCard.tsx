@@ -10,14 +10,16 @@ interface NoteCardProps {
 
 export default function NoteCard({ note, onPress }: NoteCardProps) {
   const date = protoTimestampToDate(note.createdAt);
-  const preview = note.content.slice(0, 120) + (note.content.length > 120 ? '…' : '');
+  const text = note.content ?? '';
+  const preview = text.slice(0, 120) + (text.length > 120 ? '…' : '');
+  const tags = note.tags ?? [];
 
   return (
     <TouchableOpacity style={styles.card} onPress={onPress} activeOpacity={0.7}>
       <Text style={styles.preview} numberOfLines={3}>{preview}</Text>
-      {note.tags.length > 0 ? (
+      {tags.length > 0 ? (
         <View style={styles.tagRow}>
-          {note.tags.slice(0, 5).map((tag) => (
+          {tags.slice(0, 5).map((tag) => (
             <Text key={tag} style={styles.tag}>{tag}</Text>
           ))}
         </View>
