@@ -31,6 +31,7 @@ function MainTabs() {
       <Tab.Screen name="Timeline" component={TimelineScreen} />
       <Tab.Screen name="Capture" component={CaptureScreen} />
       <Tab.Screen name="Random" component={RandomScreen} />
+      <Tab.Screen name="Search" component={SearchScreen} />
       <Tab.Screen name="Settings" component={SettingsScreen} />
     </Tab.Navigator>
   );
