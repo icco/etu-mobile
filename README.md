@@ -4,7 +4,7 @@ etu-mobile is the react-native version of Etu. It should have all of the same fu
 
 ## Security
 
-Dependencies are kept at latest versions. Transitive vulnerabilities in `markdown-it` and `fast-xml-parser` are overridden via `resolutions`. One moderate ESLint advisory (circular-ref serialization) remains; the fix requires ESLint 9, which is not yet compatible with `eslint-plugin-react-native`. Upgrade to ESLint 9 when the React Native ecosystem supports it.
+Dependencies are kept at latest versions. Transitive vulnerabilities in `markdown-it` and `fast-xml-parser` are overridden via `resolutions`. ESLint 9 is used with `@eslint/compat` and FlatCompat so the React Native config and plugins work with the new flat config format.
 
 ## Prerequisites
 
