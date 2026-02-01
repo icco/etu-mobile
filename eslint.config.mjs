@@ -76,6 +76,7 @@ export default tseslint.config(
       'node_modules/',
       'android/',
       'ios/',
+      '**/__mocks__/**',
       '**/eslint.config.mjs',
       '**/*.config.js',
       'babel.config.js',
