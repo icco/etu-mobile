@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import { useAuth } from '../context/AuthContext';
 import { getUserSettings, updateUserSettings } from '../api/settings';
+import { listNotes } from '../api/notes';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import ApiKeysScreen from './ApiKeysScreen';
 
@@ -27,6 +28,12 @@ export default function SettingsScreen() {
   const { data: profile, isLoading } = useQuery({
     queryKey: ['userSettings', user?.id],
     queryFn: () => getUserSettings(user!.id, token!),
+    enabled: !!user?.id && !!token && activeSection === 'main',
+  });
+
+  const { data: noteStats } = useQuery({
+    queryKey: ['noteStats', user?.id],
+    queryFn: () => listNotes({ userId: user!.id, token: token!, limit: 1, offset: 0 }),
     enabled: !!user?.id && !!token && activeSection === 'main',
   });
 
@@ -128,6 +135,12 @@ export default function SettingsScreen() {
           </TouchableOpacity>
         </>
       )}
+
+      <Text style={[styles.sectionTitle, styles.sectionTitleSpaced]}>Usage</Text>
+      <Text style={styles.label}>Notes</Text>
+      <Text style={styles.value}>
+        {noteStats?.total != null ? noteStats.total.toLocaleString() : '—'}
+      </Text>
 
       <Text style={[styles.sectionTitle, styles.sectionTitleSpaced]}>API Keys</Text>
       <Text style={styles.hint}>

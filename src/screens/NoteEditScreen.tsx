@@ -19,21 +19,28 @@ import TagInput from '../components/TagInput';
 import type { Note } from '../api/client';
 import type { Tag } from '../api/client';
 
-type Params = { noteId?: string; note?: Note };
+type Params = { noteId?: string; note?: Note; initialContent?: string };
 
 export default function NoteEditScreen() {
   const navigation = useNavigation();
   const route = useRoute<RouteProp<{ params: Params }, 'params'>>();
   const noteId = route.params?.noteId;
   const existingNote = route.params?.note;
+  const initialContent = route.params?.initialContent;
   const queryClient = useQueryClient();
   const { user, token } = useAuth();
 
-  const [content, setContent] = useState('');
+  const [content, setContent] = useState(initialContent ?? '');
   const [tags, setTags] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
 
   const isEdit = !!noteId;
+
+  useEffect(() => {
+    if (initialContent !== undefined && !existingNote && !noteId) {
+      setContent(initialContent);
+    }
+  }, [initialContent, existingNote, noteId]);
 
   const { data: note, isLoading } = useQuery({
     queryKey: ['note', noteId, user?.id],

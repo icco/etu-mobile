@@ -33,6 +33,9 @@ jobs:
       - name: TypeScript
         run: npm run typecheck
 
+      - name: Test
+        run: npm test
+
   android:
     name: Android
     runs-on: ubuntu-latest
@@ -112,5 +115,6 @@ jobs:
         run: |
           cd ios
           xcodebuild -workspace EtuMobileApp.xcworkspace -scheme EtuMobileApp \
-            -configuration Debug -sdk iphonesimulator -arch x86_64 \
+            -configuration Debug -sdk iphonesimulator \
+            -destination 'platform=iOS Simulator,name=iPhone 16' \
             -derivedDataPath build ONLY_ACTIVE_ARCH=NO

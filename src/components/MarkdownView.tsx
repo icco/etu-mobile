@@ -12,6 +12,7 @@ const markdownStyles = {
   link: { color: '#0a84ff' },
   blockquote: { borderLeftWidth: 4, borderLeftColor: '#0a84ff', paddingLeft: 12, marginVertical: 8, color: '#888' },
   list_item: { color: '#fff', marginBottom: 4 },
+  image: { marginVertical: 8, borderRadius: 8 },
 };
 
 interface MarkdownViewProps {
@@ -20,10 +21,7 @@ interface MarkdownViewProps {
 
 export default function MarkdownView({ content }: MarkdownViewProps) {
   return (
-    <Markdown
-      style={markdownStyles}
-      rules={{ image: () => null }}
-    >
+    <Markdown style={markdownStyles}>
       {content || '_No content_'}
     </Markdown>
   );

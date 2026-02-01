@@ -14,6 +14,26 @@ import NoteEditScreen from '../screens/NoteEditScreen';
 import SearchScreen from '../screens/SearchScreen';
 import { View, ActivityIndicator, StyleSheet } from 'react-native';
 
+const linking = {
+  prefixes: ['etu://open'],
+  config: {
+    screens: {
+      MainTabs: {
+        path: '',
+        screens: {
+          Timeline: '',
+          Capture: 'capture',
+          Random: 'random',
+          Search: 'search',
+          Settings: 'settings',
+        },
+      },
+      NoteDetail: 'note/:noteId',
+      NoteEdit: 'edit',
+    },
+  },
+};
+
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 
@@ -84,7 +104,7 @@ export default function RootNavigator() {
   }
 
   return (
-    <NavigationContainer>
+    <NavigationContainer linking={linking}>
       {isAuthenticated ? <MainStack /> : <AuthStack />}
     </NavigationContainer>
   );

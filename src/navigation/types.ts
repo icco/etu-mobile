@@ -6,7 +6,7 @@ import type { Note } from '../api/client';
 export type RootStackParamList = {
   MainTabs: undefined;
   NoteDetail: { noteId: string };
-  NoteEdit: { noteId?: string; note?: Note };
+  NoteEdit: { noteId?: string; note?: Note; initialContent?: string };
   Search: undefined;
 };
 
