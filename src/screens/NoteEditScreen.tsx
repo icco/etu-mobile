@@ -38,7 +38,7 @@ export default function NoteEditScreen() {
   const { data: note, isLoading } = useQuery({
     queryKey: ['note', noteId, user?.id],
     queryFn: () => getNote(user!.id, token!, noteId!),
-    enabled: isEdit && !!user?.id && !!token && !!noteId,
+    enabled: isEdit && !!user?.id && !!token && !!noteId && !existingNote,
   });
 
   const { data: tagList = [] } = useQuery({

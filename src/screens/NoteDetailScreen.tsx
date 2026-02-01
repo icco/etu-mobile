@@ -62,7 +62,7 @@ export default function NoteDetailScreen() {
       </View>
     );
   }
-  if (error || !note || !note.content) {
+  if (error || !note) {
     return (
       <View style={styles.centered}>
         <Text style={styles.error}>Failed to load note</Text>
