@@ -83,5 +83,8 @@ yarn-error.log
 .env.local
 !.env.example
 
+# iOS export (generated in CI)
+ios/ExportOptions.plist
+
 # React Native / Metro
 .bundle/

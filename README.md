@@ -32,6 +32,42 @@ npx react-native run-ios
 npx react-native run-android
 ```
 
+## CI/CD
+
+GitHub Actions run on push/PR to `main`, `implement`, and `develop`:
+
+- **Lint**: ESLint + TypeScript. Requires `NPM_TOKEN` (GitHub Packages) in repo secrets.
+- **Android**: Builds debug APK (always) and release AAB when signing secrets are set. Uploads `app-debug` and `app-release-aab` as artifacts.
+- **iOS**: Builds for simulator (Debug). No IPA artifact unless you add signing and export steps.
+
+### Build-only secrets
+
+| Secret | Required for | Description |
+|--------|--------------|-------------|
+| `NPM_TOKEN` | Lint, Android, iOS | GitHub PAT with `read:packages` for `@icco/etu-proto`. |
+
+### Android release signing (optional)
+
+Set these to build and upload a signed release AAB:
+
+| Secret | Description |
+|--------|-------------|
+| `ANDROID_KEYSTORE_BASE64` | Base64-encoded release keystore file. |
+| `ANDROID_KEYSTORE_PASSWORD` | Keystore password. |
+| `ANDROID_KEY_ALIAS` | Key alias. |
+| `ANDROID_KEY_PASSWORD` | Key password. |
+
+Generate a keystore: `keytool -genkeypair -v -storetype PKCS12 -keystore release.keystore -alias mykey -keyalg RSA -keysize 2048 -validity 10000`. Then `base64 -i release.keystore | pbcopy`.
+
+### Deploy (optional)
+
+The **Deploy** workflow (`.github/workflows/deploy.yml`) runs on push to `main` when deploy secrets are present:
+
+- **Play (internal track)**: Set `PLAY_STORE_SERVICE_ACCOUNT_JSON` (JSON key for a service account with Play Console API access) plus the Android signing secrets above. Builds AAB and uploads to the internal track.
+- **TestFlight**: Set `APPLE_APP_STORE_CONNECT_API_KEY` (App Store Connect API key .p8 content), `APPLE_ISSUER_ID`, `APPLE_API_KEY_ID`, plus `APPLE_CERTIFICATE_P12_BASE64`, `APPLE_CERTIFICATE_PASSWORD`, `KEYCHAIN_PASSWORD`, and `APPLE_TEAM_ID`. Builds IPA and uploads to TestFlight.
+
+Create an App Store Connect API key in App Store Connect → Users and Access → Keys. For the provisioning profile name in ExportOptions, ensure it matches your Xcode project (e.g. `EtuMobileApp`).
+
 ## More information
 
 - https://writing.natwelch.com/post/765
