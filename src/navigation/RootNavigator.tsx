@@ -11,6 +11,7 @@ import RandomScreen from '../screens/RandomScreen';
 import SettingsScreen from '../screens/SettingsScreen';
 import NoteDetailScreen from '../screens/NoteDetailScreen';
 import NoteEditScreen from '../screens/NoteEditScreen';
+import SearchScreen from '../screens/SearchScreen';
 import { View, ActivityIndicator, StyleSheet } from 'react-native';
 
 const Stack = createNativeStackNavigator();

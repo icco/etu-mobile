@@ -79,3 +79,15 @@ export async function listTags(userId: string, token: string) {
   );
   return res.tags;
 }
+
+export async function getRandomNotes(
+  userId: string,
+  token: string,
+  count = 5
+) {
+  const res = await notesClient.client.getRandomNotes(
+    { userId, count },
+    { headers: createHeaders(token) }
+  );
+  return res.notes;
+}
