@@ -11,7 +11,7 @@ export async function getUserSettings(userId: string, token: string): Promise<Us
     { headers: createHeaders(token) }
   );
   if (!res.user) throw new Error('User not found');
-  return res.user as User;
+  return res.user;
 }
 
 export async function updateUserSettings(
@@ -24,7 +24,7 @@ export async function updateUserSettings(
     { headers: createHeaders(token) }
   );
   if (!res.user) throw new Error('Update failed');
-  return res.user as User;
+  return res.user;
 }
 
 export async function listApiKeys(userId: string, token: string): Promise<ApiKey[]> {
@@ -32,7 +32,7 @@ export async function listApiKeys(userId: string, token: string): Promise<ApiKey
     { userId },
     { headers: createHeaders(token) }
   );
-  return (res.apiKeys ?? []) as ApiKey[];
+  return res.apiKeys ?? [];
 }
 
 export async function createApiKey(
@@ -45,7 +45,7 @@ export async function createApiKey(
     { headers: createHeaders(token) }
   );
   if (!res.apiKey || !res.rawKey) throw new Error('Create API key failed');
-  return { apiKey: res.apiKey as ApiKey, rawKey: res.rawKey };
+  return { apiKey: res.apiKey, rawKey: res.rawKey };
 }
 
 export async function deleteApiKey(

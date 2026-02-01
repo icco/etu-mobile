@@ -26,6 +26,7 @@ export type MainTabNavigationProp<T extends keyof MainTabParamList> =
     RootStackNavigationProp
   >;
 
+/* eslint-disable @typescript-eslint/no-namespace, @typescript-eslint/no-empty-object-type -- React Navigation param list augmentation */
 declare global {
   namespace ReactNavigation {
     interface RootParamList extends RootStackParamList {}

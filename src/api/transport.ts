@@ -1,14 +1,9 @@
 import { createConnectTransport } from '@connectrpc/connect-web';
+import Config from 'react-native-config';
 
 const getBaseUrl = (): string => {
-  // react-native-config exposes env at build time
-  try {
-    const Config = require('react-native-config').default;
-    const url = Config?.GRPC_BACKEND_URL;
-    if (url && typeof url === 'string') return url;
-  } catch {
-    // fallback when react-native-config not linked
-  }
+  const url = Config?.GRPC_BACKEND_URL;
+  if (url && typeof url === 'string') return url;
   return 'http://localhost:50051';
 };
 

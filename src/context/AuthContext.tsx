@@ -54,8 +54,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   useEffect(() => {
-    loadStoredAuth();
-  }, [loadStoredAuth]);
+    let cancelled = false;
+    void getStoredAuth().then((stored) => {
+      if (cancelled) return;
+      if (stored) {
+        setState({
+          user: stored.user,
+          token: stored.token,
+          isLoading: false,
+          isAuthenticated: true,
+        });
+      } else {
+        setState((s) => ({ ...s, isLoading: false, isAuthenticated: false }));
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const loginWithKey = useCallback(async (apiKey: string) => {
     const user = await loginWithApiKey(apiKey.trim());

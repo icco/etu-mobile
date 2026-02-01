@@ -34,7 +34,7 @@ export default function ApiKeysScreen() {
     setCreating(true);
     try {
       const { rawKey } = await createApiKey(user.id, token, newName.trim());
-      queryClient.invalidateQueries({ queryKey: ['apiKeys', user.id] });
+      void queryClient.invalidateQueries({ queryKey: ['apiKeys', user.id] });
       setModalVisible(false);
       setNewName('');
       setRawKeyShown(rawKey);
@@ -60,9 +60,10 @@ export default function ApiKeysScreen() {
         {
           text: 'Delete',
           style: 'destructive',
-          onPress: async () => {
-            await deleteApiKey(user.id, token, key.id);
-            queryClient.invalidateQueries({ queryKey: ['apiKeys', user.id] });
+          onPress: () => {
+            void deleteApiKey(user.id, token, key.id).then(() => {
+              queryClient.invalidateQueries({ queryKey: ['apiKeys', user.id] });
+            });
           },
         },
       ]
@@ -84,7 +85,7 @@ export default function ApiKeysScreen() {
         <ActivityIndicator size="large" color="#0a84ff" style={styles.loader} />
       ) : (
         <FlatList
-          data={keys as ApiKey[]}
+          data={keys}
           keyExtractor={(item) => item.id}
           contentContainerStyle={styles.list}
           renderItem={({ item }) => (
@@ -95,7 +96,9 @@ export default function ApiKeysScreen() {
               </View>
               <TouchableOpacity
                 style={styles.deleteBtn}
-                onPress={() => handleDelete(item)}
+                onPress={() => {
+                  handleDelete(item);
+                }}
               >
                 <Text style={styles.deleteBtnText}>Delete</Text>
               </TouchableOpacity>
@@ -134,7 +137,9 @@ export default function ApiKeysScreen() {
               </TouchableOpacity>
               <TouchableOpacity
                 style={[styles.modalCreate, creating && styles.disabled]}
-                onPress={handleCreate}
+                onPress={() => {
+                  void handleCreate();
+                }}
                 disabled={creating || !newName.trim()}
               >
                 {creating ? (

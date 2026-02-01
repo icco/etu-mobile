@@ -54,7 +54,7 @@ export async function loginWithApiKey(apiKey: string): Promise<User> {
   if (!userRes.user) {
     throw new Error('User not found');
   }
-  const user = userRes.user as User;
+  const user = userRes.user;
   await setStoredAuth(apiKey, user);
   return user;
 }
@@ -67,7 +67,7 @@ export async function register(email: string, password: string): Promise<User> {
   if (!res.user) {
     throw new Error('Registration failed');
   }
-  const user = res.user as User;
+  const user = res.user;
   // Backend may return a token in future; for now user must create API key in web and use "Login with API key"
   return user;
 }
@@ -83,7 +83,7 @@ export async function loginWithEmailPassword(
   if (!res.success || !res.user) {
     throw new Error('Invalid email or password');
   }
-  const user = res.user as User;
+  const user = res.user;
   // Backend does not return a token in proto yet; create an API key for this app session
   try {
     const keyRes = await apiKeysClient.client.createApiKey(
