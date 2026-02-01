@@ -9,7 +9,9 @@ import TimelineScreen from '../screens/TimelineScreen';
 import CaptureScreen from '../screens/CaptureScreen';
 import RandomScreen from '../screens/RandomScreen';
 import SettingsScreen from '../screens/SettingsScreen';
-import { Text, View, ActivityIndicator, StyleSheet } from 'react-native';
+import NoteDetailScreen from '../screens/NoteDetailScreen';
+import NoteEditScreen from '../screens/NoteEditScreen';
+import { View, ActivityIndicator, StyleSheet } from 'react-native';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -30,6 +32,22 @@ function MainTabs() {
       <Tab.Screen name="Random" component={RandomScreen} />
       <Tab.Screen name="Settings" component={SettingsScreen} />
     </Tab.Navigator>
+  );
+}
+
+function MainStack() {
+  return (
+    <Stack.Navigator
+      screenOptions={{
+        headerStyle: { backgroundColor: '#111' },
+        headerTintColor: '#fff',
+        contentStyle: { backgroundColor: '#111' },
+      }}
+    >
+      <Stack.Screen name="MainTabs" component={MainTabs} options={{ headerShown: false }} />
+      <Stack.Screen name="NoteDetail" component={NoteDetailScreen} />
+      <Stack.Screen name="NoteEdit" component={NoteEditScreen} />
+    </Stack.Navigator>
   );
 }
 
