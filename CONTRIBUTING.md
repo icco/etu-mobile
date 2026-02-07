@@ -34,15 +34,17 @@ git checkout -b fix/your-bug-fix
 
 ```bash
 # Run tests
-npm test
+yarn test
 
 # Run linter
-npm run lint
+yarn lint
 
 # Run type checker
-npm run typecheck
+yarn typecheck
 
 # Run with coverage
+yarn test:coverage
+```
 npm run test:coverage
 ```
 
@@ -104,7 +106,7 @@ The project uses:
 Run linter before committing:
 
 ```bash
-npm run lint
+yarn lint
 ```
 
 ## Testing
@@ -143,26 +145,26 @@ describe('MyComponent', () => {
 
 ```bash
 # Run all tests
-npm test
+yarn test
 
 # Run specific test file
-npm test -- path/to/test.test.tsx
+yarn test path/to/test.test.tsx
 
 # Run with coverage
-npm run test:coverage
+yarn test:coverage
 
 # Watch mode
-npm run test:watch
+yarn test:watch
 ```
 
 ## Pull Request Guidelines
 
 ### Before Submitting
 
-- [ ] Tests pass (`npm test`)
-- [ ] Linter passes (`npm run lint`)
-- [ ] TypeScript compiles (`npm run typecheck`)
-- [ ] Code coverage is maintained (`npm run test:coverage`)
+- [ ] Tests pass (`yarn test`)
+- [ ] Linter passes (`yarn lint`)
+- [ ] TypeScript compiles (`yarn typecheck`)
+- [ ] Code coverage is maintained (`yarn test:coverage`)
 - [ ] Documentation is updated if needed
 - [ ] Changelog is updated (if applicable)
 

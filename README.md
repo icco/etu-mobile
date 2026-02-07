@@ -2,7 +2,7 @@
 
 etu-mobile is the React Native version of Etu. It provides all of the same functionality as etu-web and etu, using etu-backend for storage.
 
-Notes are **text-only** for now: create/edit support markdown content and tags; image and audio upload in notes are not implemented (backend support would be required). Markdown in notes can include image links (`![alt](url)`), which are rendered when viewing a note.
+Notes support **markdown content and tags**. Images can be uploaded directly to notes or included via markdown links (`![alt](url)`). Audio upload in notes is not yet implemented.
 
 ## Features
 
@@ -28,7 +28,7 @@ Dependencies are kept at latest versions. Transitive vulnerabilities in `markdow
 
 ## Prerequisites
 
-- Node.js 20+
+- Node.js 25+
 - Running [etu-backend](https://github.com/icco/etu-backend) gRPC service
 - **GitHub Packages auth**: The app depends on `@icco/etu-proto` from GitHub Packages. Set `NPM_TOKEN` (or add `//npm.pkg.github.com/:_authToken=YOUR_TOKEN` to `~/.npmrc`) so `npm install` can fetch it. Use a classic PAT with `read:packages` scope.
 
@@ -46,25 +46,25 @@ Dependencies are kept at latest versions. Transitive vulnerabilities in `markdow
 ## Setup
 
 ```bash
-# Set token for @icco scope (required for npm install)
+# Set token for @icco scope (required for yarn install)
 export NPM_TOKEN=your_github_pat_with_read_packages
 
 # Install dependencies
-npm install
+yarn install
 
 # Copy environment configuration
 cp .env.example .env
 
 # Edit .env and set GRPC_BACKEND_URL to your etu-backend URL
 # Example: GRPC_BACKEND_URL=http://localhost:50051
-# For production: GRPC_BACKEND_URL=https://api.etu.example.com
+# For production: GRPC_BACKEND_URL=https://grpc.etu.natwelch.com
 ```
 
 ## Environment Variables
 
 | Variable | Required | Description | Example |
 |----------|----------|-------------|---------|
-| `GRPC_BACKEND_URL` | Yes | URL of the etu-backend gRPC service | `http://localhost:50051` |
+| `GRPC_BACKEND_URL` | Yes | URL of the etu-backend gRPC service | `http://localhost:50051` (dev), `https://grpc.etu.natwelch.com` (prod) |
 
 **Important**: The app will log a warning if `GRPC_BACKEND_URL` is not set and fall back to `localhost:50051`. For production builds, always set this variable.
 
@@ -274,13 +274,13 @@ The app communicates with [etu-backend](https://github.com/icco/etu-backend) usi
 
 ### NPM Install Fails
 
-**Error**: `401 Unauthorized` when running `npm install`
+**Error**: `401 Unauthorized` when running `yarn install`
 
 **Solution**: Set GitHub PAT with `read:packages` scope:
 
 ```bash
 export NPM_TOKEN=ghp_your_token_here
-npm install
+yarn install
 ```
 
 Or add to `~/.npmrc`:
@@ -330,8 +330,8 @@ npx react-native start --reset-cache
 # Clear all caches
 rm -rf node_modules
 rm -rf ios/Pods
-rm package-lock.json
-npm install
+rm yarn.lock
+yarn install
 cd ios && pod install && cd ..
 ```
 

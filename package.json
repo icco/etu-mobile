@@ -55,7 +55,7 @@
     "typescript-eslint": "^8.18.0"
   },
   "engines": {
-    "node": ">=20"
+    "node": ">=25"
   },
   "resolutions": {
     "markdown-it": ">=12.3.2",

@@ -18,8 +18,8 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v6
         with:
-          node-version: '20'
-          cache: 'npm'
+          node-version: '25'
+          cache: 'yarn'
 
       - name: Setup Java
         uses: actions/setup-java@v5
@@ -30,7 +30,7 @@ jobs:
       - name: Install dependencies
         env:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-        run: npm ci
+        run: yarn install --frozen-lockfile
 
       - name: Decode keystore and build release AAB
         env:
@@ -62,13 +62,13 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v6
         with:
-          node-version: '20'
-          cache: 'npm'
+          node-version: '25'
+          cache: 'yarn'
 
       - name: Install dependencies
         env:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-        run: npm ci
+        run: yarn install --frozen-lockfile
 
       - name: Install CocoaPods
         run: cd ios && pod install
