@@ -44,6 +44,7 @@ jobs:
 
       - name: Install dependencies
         env:
+          # NPM_TOKEN is used by .npmrc for GitHub Packages authentication
           NPM_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: yarn install --frozen-lockfile
 
@@ -76,6 +77,7 @@ jobs:
 
       - name: Install dependencies
         env:
+          # NPM_TOKEN is used by .npmrc for GitHub Packages authentication
           NPM_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: yarn install --frozen-lockfile
 
@@ -134,6 +136,7 @@ jobs:
 
       - name: Install dependencies
         env:
+          # NPM_TOKEN is used by .npmrc for GitHub Packages authentication
           NPM_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: yarn install --frozen-lockfile
 
