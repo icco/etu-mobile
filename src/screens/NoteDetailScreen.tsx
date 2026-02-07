@@ -9,7 +9,6 @@ import {
   Alert,
   Image,
   Modal,
-  Dimensions,
 } from 'react-native';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -18,6 +17,8 @@ import { getNote, deleteNote } from '../api/notes';
 import MarkdownView from '../components/MarkdownView';
 import { protoTimestampToDate } from '../utils/date';
 import { isAuthError, getErrorMessage } from '../utils/errors';
+
+const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = require('react-native').Dimensions.get('window');
 
 type Params = { noteId: string };
 
@@ -169,7 +170,7 @@ export default function NoteDetailScreen() {
                       <Text style={styles.audioSize}>{formatFileSize(Number(audio.size))}</Text>
                     )}
                   </View>
-                  <Text style={styles.audioNote}>Tap to play in browser</Text>
+                  <Text style={styles.audioNote}>Audio file attached</Text>
                 </View>
               );
             })}
@@ -306,8 +307,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   fullImage: {
-    width: Dimensions.get('window').width,
-    height: Dimensions.get('window').height,
+    width: SCREEN_WIDTH,
+    height: SCREEN_HEIGHT,
   },
   closeButton: {
     position: 'absolute',
