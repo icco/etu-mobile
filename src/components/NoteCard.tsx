@@ -13,10 +13,26 @@ export default function NoteCard({ note, onPress }: NoteCardProps) {
   const text = note.content ?? '';
   const preview = text.slice(0, 120) + (text.length > 120 ? '…' : '');
   const tags = note.tags ?? [];
+  const hasImages = (note.images?.length ?? 0) > 0;
+  const hasAudios = (note.audios?.length ?? 0) > 0;
 
   return (
     <TouchableOpacity style={styles.card} onPress={onPress} activeOpacity={0.7}>
       <Text style={styles.preview} numberOfLines={3}>{preview}</Text>
+      {(hasImages || hasAudios) && (
+        <View style={styles.mediaIndicators}>
+          {hasImages && (
+            <View style={styles.indicator}>
+              <Text style={styles.indicatorText}>🖼️ {note.images?.length}</Text>
+            </View>
+          )}
+          {hasAudios && (
+            <View style={styles.indicator}>
+              <Text style={styles.indicatorText}>🔊 {note.audios?.length}</Text>
+            </View>
+          )}
+        </View>
+      )}
       {tags.length > 0 ? (
         <View style={styles.tagRow}>
           {tags.slice(0, 5).map((tag) => (
@@ -38,6 +54,21 @@ const styles = StyleSheet.create({
     marginVertical: 6,
   },
   preview: { color: '#fff', fontSize: 15, lineHeight: 22 },
+  mediaIndicators: {
+    flexDirection: 'row',
+    marginTop: 8,
+    gap: 8,
+  },
+  indicator: {
+    backgroundColor: '#333',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+  },
+  indicatorText: {
+    color: '#fff',
+    fontSize: 12,
+  },
   tagRow: { flexDirection: 'row', flexWrap: 'wrap', marginTop: 8, gap: 6 },
   tag: {
     backgroundColor: '#333',
