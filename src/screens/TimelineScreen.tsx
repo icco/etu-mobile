@@ -14,6 +14,7 @@ import { listNotes } from '../api/notes';
 import NoteCard from '../components/NoteCard';
 import type { Note } from '../api/client';
 import { protoTimestampToDate, formatDateGroup } from '../utils/date';
+import { isAuthError, getErrorMessage } from '../utils/errors';
 
 type GroupedNotes = { label: string; notes: Note[] }[];
 
@@ -35,12 +36,19 @@ function groupNotesByDate(notes: Note[]): GroupedNotes {
 
 export default function TimelineScreen() {
   const navigation = useNavigation();
-  const { user, token } = useAuth();
-  const { data, isLoading, isRefetching, refetch } = useQuery({
+  const { user, token, handleAuthError } = useAuth();
+  const { data, isLoading, isRefetching, refetch, error } = useQuery({
     queryKey: ['notes', user?.id],
     queryFn: () => listNotes({ userId: user!.id, token: token! }),
     enabled: !!user?.id && !!token,
   });
+
+  // Handle auth errors
+  React.useEffect(() => {
+    if (error && isAuthError(error)) {
+      void handleAuthError();
+    }
+  }, [error, handleAuthError]);
 
   const grouped = useMemo(() => {
     if (!data?.notes) return [];
@@ -53,6 +61,15 @@ export default function TimelineScreen() {
     return (
       <View style={styles.centered}>
         <ActivityIndicator size="large" color="#0a84ff" />
+      </View>
+    );
+  }
+
+  if (error) {
+    return (
+      <View style={styles.centered}>
+        <Text style={styles.errorText}>Failed to load notes</Text>
+        <Text style={styles.errorDetail}>{getErrorMessage(error)}</Text>
       </View>
     );
   }
@@ -111,4 +128,6 @@ const styles = StyleSheet.create({
   empty: { padding: 48, alignItems: 'center' },
   emptyText: { color: '#fff', fontSize: 18 },
   emptyHint: { color: '#666', fontSize: 14, marginTop: 8 },
+  errorText: { color: '#ff453a', fontSize: 18, marginBottom: 8 },
+  errorDetail: { color: '#888', fontSize: 14, textAlign: 'center', paddingHorizontal: 32 },
 });

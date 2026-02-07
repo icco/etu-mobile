@@ -13,17 +13,25 @@ import { useAuth } from '../context/AuthContext';
 import { getRandomNotes } from '../api/notes';
 import NoteCard from '../components/NoteCard';
 import type { Note } from '../api/client';
+import { isAuthError, getErrorMessage } from '../utils/errors';
 
 const RANDOM_COUNT = 5;
 
 export default function RandomScreen() {
   const navigation = useNavigation();
-  const { user, token } = useAuth();
-  const { data: notes = [], isLoading, isRefetching, refetch } = useQuery({
+  const { user, token, handleAuthError } = useAuth();
+  const { data: notes = [], isLoading, isRefetching, refetch, error } = useQuery({
     queryKey: ['randomNotes', user?.id],
     queryFn: () => getRandomNotes(user!.id, token!, RANDOM_COUNT),
     enabled: !!user?.id && !!token,
   });
+
+  // Handle auth errors
+  React.useEffect(() => {
+    if (error && isAuthError(error)) {
+      void handleAuthError();
+    }
+  }, [error, handleAuthError]);
 
   if (!user || !token) return null;
 
@@ -31,6 +39,15 @@ export default function RandomScreen() {
     return (
       <View style={styles.centered}>
         <ActivityIndicator size="large" color="#0a84ff" />
+      </View>
+    );
+  }
+
+  if (error) {
+    return (
+      <View style={styles.centered}>
+        <Text style={styles.errorText}>Failed to load random notes</Text>
+        <Text style={styles.errorDetail}>{getErrorMessage(error)}</Text>
       </View>
     );
   }
@@ -82,4 +99,6 @@ const styles = StyleSheet.create({
   empty: { padding: 48, alignItems: 'center' },
   emptyText: { color: '#fff', fontSize: 18 },
   emptyHint: { color: '#666', fontSize: 14, marginTop: 8 },
+  errorText: { color: '#ff453a', fontSize: 18, marginBottom: 8 },
+  errorDetail: { color: '#888', fontSize: 14, textAlign: 'center', paddingHorizontal: 32 },
 });
