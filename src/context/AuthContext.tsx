@@ -126,7 +126,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const handleAuthError = useCallback(async () => {
-    logInfo('Handling authentication error - logging out user');
+    logError('Authentication error - logging out user');
     await logout();
   }, [logout]);
 

@@ -24,9 +24,8 @@ const url = baseUrl.startsWith('http') ? baseUrl : `http://${baseUrl}`;
 export function createTransport() {
   return createConnectTransport({
     baseUrl: url,
-    // Set reasonable timeout for mobile network conditions
-    // Default is no timeout, which can cause hangs
-    defaultTimeoutMs: 30000, // 30 seconds
+    // Timeout chosen for mobile network conditions - allows time for slow 3G/4G
+    defaultTimeoutMs: 30000,
   });
 }
 

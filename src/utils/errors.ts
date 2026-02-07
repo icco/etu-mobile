@@ -106,6 +106,7 @@ export function shouldRetry(error: unknown, attempt: number, maxAttempts = 3): b
  * Calculates exponential backoff delay for retries.
  */
 export function getRetryDelay(attempt: number, baseDelay = 1000): number {
+  const MAX_RETRY_DELAY = 30000; // 30 seconds maximum
   // Exponential backoff: 1s, 2s, 4s, 8s...
-  return Math.min(baseDelay * Math.pow(2, attempt), 30000);
+  return Math.min(baseDelay * Math.pow(2, attempt), MAX_RETRY_DELAY);
 }
