@@ -44,7 +44,7 @@ jobs:
 
       - name: Install dependencies
         env:
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN || secrets.GITHUB_TOKEN }}
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN != '' && secrets.NPM_TOKEN || secrets.GITHUB_TOKEN }}
         run: yarn install --frozen-lockfile
 
       - name: Lint
@@ -76,7 +76,7 @@ jobs:
 
       - name: Install dependencies
         env:
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN || secrets.GITHUB_TOKEN }}
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN != '' && secrets.NPM_TOKEN || secrets.GITHUB_TOKEN }}
         run: yarn install --frozen-lockfile
 
       - name: Build debug APK
@@ -134,7 +134,7 @@ jobs:
 
       - name: Install dependencies
         env:
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN || secrets.GITHUB_TOKEN }}
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN != '' && secrets.NPM_TOKEN || secrets.GITHUB_TOKEN }}
         run: yarn install --frozen-lockfile
 
       - name: Install CocoaPods
