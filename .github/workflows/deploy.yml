@@ -2,9 +2,9 @@
 # Runs on: push to main branch or manual workflow dispatch
 # Deploys Android AAB to Play Store internal track and iOS IPA to TestFlight
 #
-# Required Secrets:
-#   - NPM_TOKEN: GitHub Packages authentication token for @icco/etu-proto dependency
-#     (or GITHUB_TOKEN will be used as fallback for same-repo access)
+# Authentication:
+#   Uses GITHUB_TOKEN (automatically provided) for GitHub Packages authentication
+#   to access @icco/etu-proto dependency
 #
 # Android Deploy Secrets (all required if deploying to Play Store):
 #   - ANDROID_KEYSTORE_BASE64: Base64-encoded Android keystore file
@@ -87,7 +87,7 @@ jobs:
 
       - name: Install dependencies
         env:
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN != '' && secrets.NPM_TOKEN || secrets.GITHUB_TOKEN }}
+          NPM_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: yarn install --frozen-lockfile
 
       - name: Decode keystore and build release AAB
@@ -126,7 +126,7 @@ jobs:
 
       - name: Install dependencies
         env:
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN != '' && secrets.NPM_TOKEN || secrets.GITHUB_TOKEN }}
+          NPM_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: yarn install --frozen-lockfile
 
       - name: Install CocoaPods

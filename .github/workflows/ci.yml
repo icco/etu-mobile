@@ -1,9 +1,9 @@
 # CI Workflow
 # Runs on: push to main/implement/develop branches and pull requests
 #
-# Required Secrets:
-#   - NPM_TOKEN: GitHub Packages authentication token for @icco/etu-proto dependency
-#     (or GITHUB_TOKEN will be used as fallback for same-repo access)
+# Authentication:
+#   Uses GITHUB_TOKEN (automatically provided) for GitHub Packages authentication
+#   to access @icco/etu-proto dependency
 #
 # Optional Secrets (for release builds):
 #   - ANDROID_KEYSTORE_BASE64: Base64-encoded Android keystore file
@@ -44,7 +44,7 @@ jobs:
 
       - name: Install dependencies
         env:
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN != '' && secrets.NPM_TOKEN || secrets.GITHUB_TOKEN }}
+          NPM_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: yarn install --frozen-lockfile
 
       - name: Lint
@@ -76,7 +76,7 @@ jobs:
 
       - name: Install dependencies
         env:
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN != '' && secrets.NPM_TOKEN || secrets.GITHUB_TOKEN }}
+          NPM_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: yarn install --frozen-lockfile
 
       - name: Build debug APK
@@ -134,7 +134,7 @@ jobs:
 
       - name: Install dependencies
         env:
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN != '' && secrets.NPM_TOKEN || secrets.GITHUB_TOKEN }}
+          NPM_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: yarn install --frozen-lockfile
 
       - name: Install CocoaPods
