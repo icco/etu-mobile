@@ -1,9 +1,20 @@
 import { createConnectTransport } from '@connectrpc/connect-web';
 import Config from 'react-native-config';
+import { logError, logWarning } from '../utils/logger';
 
 const getBaseUrl = (): string => {
   const url = Config?.GRPC_BACKEND_URL;
-  if (url && typeof url === 'string') return url;
+  if (url && typeof url === 'string') {
+    return url;
+  }
+  
+  // Warn about using localhost - likely misconfiguration in production
+  if (__DEV__) {
+    logWarning('GRPC_BACKEND_URL not set, using localhost:50051');
+  } else {
+    logError('GRPC_BACKEND_URL not configured for production build');
+  }
+  
   return 'http://localhost:50051';
 };
 
@@ -13,6 +24,8 @@ const url = baseUrl.startsWith('http') ? baseUrl : `http://${baseUrl}`;
 export function createTransport() {
   return createConnectTransport({
     baseUrl: url,
+    // Timeout chosen for mobile network conditions - allows time for slow 3G/4G
+    defaultTimeoutMs: 30000,
   });
 }
 

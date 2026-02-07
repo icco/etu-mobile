@@ -13,6 +13,7 @@ import {
   loginWithEmailPassword,
   register as registerApi,
 } from '../api/auth';
+import { logInfo } from '../utils/logger';
 
 interface AuthState {
   user: User | null;
@@ -27,6 +28,7 @@ interface AuthContextValue extends AuthState {
   register: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
+  handleAuthError: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -113,6 +115,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       isLoading: false,
       isAuthenticated: false,
     });
+    logInfo('User logged out');
   }, []);
 
   const refreshUser = useCallback(async () => {
@@ -122,6 +125,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
+  const handleAuthError = useCallback(async () => {
+    logError('Authentication error - logging out user');
+    await logout();
+  }, [logout]);
+
   const value: AuthContextValue = {
     ...state,
     loginWithKey,
@@ -129,6 +137,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     register,
     logout,
     refreshUser,
+    handleAuthError,
   };
 
   return (

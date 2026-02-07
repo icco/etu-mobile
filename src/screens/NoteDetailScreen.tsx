@@ -14,6 +14,7 @@ import { useAuth } from '../context/AuthContext';
 import { getNote, deleteNote } from '../api/notes';
 import MarkdownView from '../components/MarkdownView';
 import { protoTimestampToDate } from '../utils/date';
+import { isAuthError, getErrorMessage } from '../utils/errors';
 
 type Params = { noteId: string };
 
@@ -22,13 +23,20 @@ export default function NoteDetailScreen() {
   const route = useRoute<RouteProp<{ params: Params }, 'params'>>();
   const noteId = route.params?.noteId;
   const queryClient = useQueryClient();
-  const { user, token } = useAuth();
+  const { user, token, handleAuthError } = useAuth();
 
   const { data: note, isLoading, error } = useQuery({
     queryKey: ['note', noteId, user?.id],
     queryFn: () => getNote(user!.id, token!, noteId!),
     enabled: !!user?.id && !!token && !!noteId,
   });
+
+  // Handle auth errors
+  React.useEffect(() => {
+    if (error && isAuthError(error)) {
+      void handleAuthError();
+    }
+  }, [error, handleAuthError]);
 
   const handleDelete = () => {
     if (!noteId || !user || !token) return;
@@ -66,6 +74,7 @@ export default function NoteDetailScreen() {
     return (
       <View style={styles.centered}>
         <Text style={styles.error}>Failed to load note</Text>
+        <Text style={styles.errorDetail}>{error ? getErrorMessage(error) : 'Note not found'}</Text>
       </View>
     );
   }
@@ -104,6 +113,7 @@ const styles = StyleSheet.create({
   content: { padding: 16, paddingBottom: 48 },
   centered: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#111' },
   error: { color: '#ff453a', fontSize: 16 },
+  errorDetail: { color: '#888', fontSize: 14, marginTop: 8, textAlign: 'center', paddingHorizontal: 32 },
   meta: { marginBottom: 16 },
   date: { color: '#666', fontSize: 13 },
   tagRow: { flexDirection: 'row', flexWrap: 'wrap', marginTop: 8, gap: 6 },

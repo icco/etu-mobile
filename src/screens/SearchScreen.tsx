@@ -16,6 +16,7 @@ import NoteCard from '../components/NoteCard';
 import type { Note } from '../api/client';
 import type { Tag } from '../api/client';
 import { protoTimestampToDate, formatDateGroup } from '../utils/date';
+import { isAuthError, getErrorMessage } from '../utils/errors';
 
 type GroupedNotes = { label: string; notes: Note[] }[];
 
@@ -37,19 +38,26 @@ function groupNotesByDate(notes: Note[]): GroupedNotes {
 
 export default function SearchScreen() {
   const navigation = useNavigation();
-  const { user, token } = useAuth();
+  const { user, token, handleAuthError } = useAuth();
   const [search, setSearch] = useState('');
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
 
-  const { data: tagList = [] } = useQuery({
+  const { data: tagList = [], error: tagsError } = useQuery({
     queryKey: ['tags', user?.id],
     queryFn: () => listTags(user!.id, token!),
     enabled: !!user?.id && !!token,
   });
 
-  const { data, isLoading } = useQuery({
+  // Handle auth errors for tags query
+  React.useEffect(() => {
+    if (tagsError && isAuthError(tagsError)) {
+      void handleAuthError();
+    }
+  }, [tagsError, handleAuthError]);
+
+  const { data, isLoading, error } = useQuery({
     queryKey: [
       'notesSearch',
       user?.id,
@@ -70,6 +78,13 @@ export default function SearchScreen() {
       }),
     enabled: !!user?.id && !!token,
   });
+
+  // Handle auth errors for notes query
+  React.useEffect(() => {
+    if (error && isAuthError(error)) {
+      void handleAuthError();
+    }
+  }, [error, handleAuthError]);
 
   const grouped = useMemo(() => {
     if (!data?.notes) return [];
@@ -145,6 +160,11 @@ export default function SearchScreen() {
         <View style={styles.centered}>
           <ActivityIndicator size="large" color="#0a84ff" />
         </View>
+      ) : error ? (
+        <View style={styles.empty}>
+          <Text style={styles.emptyText}>Error loading notes</Text>
+          <Text style={styles.errorDetail}>{getErrorMessage(error)}</Text>
+        </View>
       ) : (
         <FlatList
           data={sections}
@@ -218,4 +238,5 @@ const styles = StyleSheet.create({
   centered: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   empty: { padding: 48, alignItems: 'center' },
   emptyText: { color: '#666', fontSize: 16 },
+  errorDetail: { color: '#ff453a', fontSize: 14, marginTop: 8, textAlign: 'center' },
 });
