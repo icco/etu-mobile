@@ -2,11 +2,13 @@
 
 etu-mobile is the React Native version of Etu. It provides all of the same functionality as etu-web and etu, using etu-backend for storage.
 
-Notes support **markdown content and tags**. Images can be uploaded directly to notes or included via markdown links (`![alt](url)`). Audio upload in notes is not yet implemented.
+Notes support **markdown content, tags, image uploads, and audio uploads**. Images can be uploaded directly to notes or included via markdown links (`![alt](url)`).
 
 ## Features
 
 - 📝 **Quick Note Capture**: Create markdown notes with tags
+- 🖼️ **Image Upload**: Attach up to 10 images per note (5 MiB each)
+- 🔊 **Audio Upload**: Attach up to 5 audio files per note (25 MiB each)
 - 📚 **Timeline View**: Browse notes chronologically grouped by date
 - 🔍 **Search & Filter**: Find notes by content, tags, or date range
 - 🎲 **Random Resurface**: Rediscover random notes from your past
@@ -251,6 +253,9 @@ etu-mobile/
 - **TanStack Query 5**: Server state management
 - **Connect RPC**: gRPC-Web client for API communication
 - **React Native Keychain**: Secure token storage
+- **React Native Image Picker**: Image selection and upload
+- **React Native Document Picker**: Audio file selection
+- **React Native FS**: File system access for reading files
 - **TypeScript**: Type safety
 - **Jest**: Testing framework
 
@@ -355,8 +360,7 @@ Subscription management is currently handled through the web interface. The mobi
 
 ## Known Limitations
 
-- **Text-only notes**: Image and audio uploads not yet implemented (requires backend support)
-- **Markdown images**: Only via external URLs (`![alt](url)`), not uploaded files
+- **Markdown images**: Can be used via external URLs (`![alt](url)`) or uploaded files
 - **Offline support**: Not yet implemented (requires sync mechanism)
 - **Push notifications**: Not yet implemented
 
