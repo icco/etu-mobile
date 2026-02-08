@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -7,9 +7,15 @@ import {
   Alert,
   ActivityIndicator,
 } from 'react-native';
-import DocumentPicker from 'react-native-document-picker';
+import {
+  pick,
+  keepLocalCopy,
+  types,
+  errorCodes,
+  isErrorWithCode,
+} from '@react-native-documents/picker';
 import RNFS from 'react-native-fs';
-import AudioRecorderPlayer from 'react-native-nitro-sound';
+import Sound from 'react-native-nitro-sound';
 
 export interface SelectedAudio {
   uri: string;
@@ -52,15 +58,13 @@ export default function AudioPicker({
   const maxSizeBytes = maxSizeMB * 1024 * 1024;
   const [isRecording, setIsRecording] = useState(false);
   const [recordingTime, setRecordingTime] = useState(0);
-  const audioRecorderPlayerRef = useRef(new AudioRecorderPlayer());
 
   // Cleanup on unmount
   useEffect(() => {
     return () => {
-      const player = audioRecorderPlayerRef.current;
       if (isRecording) {
-        player.stopRecorder().catch(console.error);
-        player.removeRecordBackListener();
+        Sound.stopRecorder().catch(console.error);
+        Sound.removeRecordBackListener();
       }
     };
   }, [isRecording]);
@@ -72,31 +76,43 @@ export default function AudioPicker({
     }
 
     try {
-      const results = await DocumentPicker.pick({
-        type: [DocumentPicker.types.audio],
+      const results = await pick({
+        type: [types.audio],
         allowMultiSelection: true,
-        copyTo: 'cachesDirectory',
+      });
+
+      if (results.length === 0) return;
+
+      const copyResults = await keepLocalCopy({
+        files: results.map((f, i) => ({
+          uri: f.uri,
+          fileName: f.name ?? `audio-${i}`,
+        })),
+        destination: 'cachesDirectory',
       });
 
       const newAudios: SelectedAudio[] = [];
 
-      for (const file of results) {
+      for (let i = 0; i < results.length; i++) {
+        const file = results[i];
+        const copyResult = copyResults[i];
+
         // Validate MIME type
-        const mimeType = file.type || 'audio/mpeg';
+        const mimeType = file.type ?? 'audio/mpeg';
         if (!ALLOWED_MIME_TYPES.includes(mimeType)) {
           Alert.alert(
             'Invalid Format',
-            `${file.name} is not a supported audio format`
+            `${file.name ?? 'File'} is not a supported audio format`
           );
           continue;
         }
 
         // Validate size
-        const fileSize = file.size || 0;
+        const fileSize = file.size ?? 0;
         if (fileSize > maxSizeBytes) {
           Alert.alert(
             'File Too Large',
-            `${file.name} exceeds ${maxSizeMB} MiB limit`
+            `${file.name ?? 'File'} exceeds ${maxSizeMB} MiB limit`
           );
           continue;
         }
@@ -107,20 +123,25 @@ export default function AudioPicker({
           break;
         }
 
-        // Read file as base64
-        const uri = file.fileCopyUri || file.uri;
+        if (copyResult.status !== 'success') {
+          console.error('Error copying file:', copyResult.copyError);
+          Alert.alert('Error', `Failed to read ${file.name ?? 'file'}`);
+          continue;
+        }
+
+        const uri = copyResult.localUri;
         try {
           const base64Data = await RNFS.readFile(uri, 'base64');
           newAudios.push({
             uri,
-            name: file.name,
+            name: file.name ?? `audio-${i}`,
             data: base64Data,
             mimeType,
             size: fileSize,
           });
         } catch (error) {
           console.error('Error reading audio file:', error);
-          Alert.alert('Error', `Failed to read ${file.name}`);
+          Alert.alert('Error', `Failed to read ${file.name ?? 'file'}`);
         }
       }
 
@@ -128,8 +149,7 @@ export default function AudioPicker({
         onAudiosChange([...audios, ...newAudios]);
       }
     } catch (error) {
-      if (DocumentPicker.isCancel(error)) {
-        // User cancelled
+      if (isErrorWithCode(error) && error.code === errorCodes.OPERATION_CANCELED) {
         return;
       }
       console.error('Audio picker error:', error);
@@ -149,13 +169,11 @@ export default function AudioPicker({
     }
 
     try {
-      const player = audioRecorderPlayerRef.current;
-      const path = await player.startRecorder();
+      await Sound.startRecorder();
       setIsRecording(true);
       setRecordingTime(0);
 
-      // Update recording time every second
-      player.addRecordBackListener((e: { currentPosition: number }) => {
+      Sound.addRecordBackListener((e: { currentPosition: number }) => {
         setRecordingTime(Math.floor(e.currentPosition / 1000));
       });
     } catch (error) {
@@ -166,9 +184,8 @@ export default function AudioPicker({
 
   const handleStopRecording = async () => {
     try {
-      const player = audioRecorderPlayerRef.current;
-      const result = await player.stopRecorder();
-      player.removeRecordBackListener();
+      const result = await Sound.stopRecorder();
+      Sound.removeRecordBackListener();
       setIsRecording(false);
       setRecordingTime(0);
 
