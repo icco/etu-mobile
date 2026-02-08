@@ -81,11 +81,13 @@ export default function AudioPicker({
 
       if (results.length === 0) return;
 
+      const filesToCopy = results.map((f, i) => ({
+        uri: f.uri,
+        fileName: f.name ?? `audio-${i}`,
+      }));
+
       const copyResults = await keepLocalCopy({
-        files: results.map((f, i) => ({
-          uri: f.uri,
-          fileName: f.name ?? `audio-${i}`,
-        })),
+        files: filesToCopy as [{ uri: string; fileName: string }, ...{ uri: string; fileName: string }[]],
         destination: 'cachesDirectory',
       });
 

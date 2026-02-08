@@ -85,7 +85,7 @@ export default function NoteDetailScreen() {
       /* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call -- proto Uint8Array */
       const data = image.data;
       const binary = Array.from(data, (byte: number) => String.fromCharCode(byte)).join('');
-      const base64 = btoa(binary);
+      const base64 = (globalThis as unknown as { btoa(s: string): string }).btoa(binary);
       return `data:${image.mimeType};base64,${base64}`;
       /* eslint-enable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call */
     }
@@ -159,11 +159,8 @@ export default function NoteDetailScreen() {
                 <View key={index} style={styles.audioItem}>
                   <View style={styles.audioInfo}>
                     <Text style={styles.audioName} numberOfLines={1}>
-                      {audio.filename || `Audio ${index + 1}`}
+                      {`Audio ${index + 1}`}
                     </Text>
-                    {audio.size && (
-                      <Text style={styles.audioSize}>{formatFileSize(Number(audio.size))}</Text>
-                    )}
                   </View>
                   <Text style={styles.audioNote}>Audio file attached</Text>
                 </View>
