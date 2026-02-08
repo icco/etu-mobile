@@ -13,7 +13,7 @@ import {
   loginWithEmailPassword,
   register as registerApi,
 } from '../api/auth';
-import { logInfo } from '../utils/logger';
+import { logInfo, logError } from '../utils/logger';
 
 interface AuthState {
   user: User | null;
@@ -40,20 +40,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     isLoading: true,
     isAuthenticated: false,
   });
-
-  const loadStoredAuth = useCallback(async () => {
-    const stored = await getStoredAuth();
-    if (stored) {
-      setState({
-        user: stored.user,
-        token: stored.token,
-        isLoading: false,
-        isAuthenticated: true,
-      });
-    } else {
-      setState((s) => ({ ...s, isLoading: false, isAuthenticated: false }));
-    }
-  }, []);
 
   useEffect(() => {
     let cancelled = false;

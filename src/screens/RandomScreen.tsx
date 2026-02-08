@@ -12,7 +12,6 @@ import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '../context/AuthContext';
 import { getRandomNotes } from '../api/notes';
 import NoteCard from '../components/NoteCard';
-import type { Note } from '../api/client';
 import { isAuthError, getErrorMessage } from '../utils/errors';
 
 const RANDOM_COUNT = 5;
@@ -65,7 +64,7 @@ export default function RandomScreen() {
       refreshControl={
         <RefreshControl
           refreshing={isRefetching && !isLoading}
-          onRefresh={refetch}
+          onRefresh={() => { void refetch(); }}
           tintColor="#0a84ff"
         />
       }

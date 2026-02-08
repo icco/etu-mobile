@@ -60,8 +60,8 @@ export default function SettingsScreen() {
     setSaving(true);
     try {
       await updateUserSettings(user.id, token, updates);
-      queryClient.invalidateQueries({ queryKey: ['userSettings', user.id] });
-      refreshUser();
+      void queryClient.invalidateQueries({ queryKey: ['userSettings', user.id] });
+      void refreshUser();
       setPassword('');
       setConfirmPassword('');
       Alert.alert('Saved', 'Profile updated');
@@ -124,7 +124,7 @@ export default function SettingsScreen() {
           />
           <TouchableOpacity
             style={[styles.saveBtn, saving && styles.disabled]}
-            onPress={handleUpdateProfile}
+            onPress={() => { void handleUpdateProfile(); }}
             disabled={saving}
           >
             {saving ? (
@@ -156,12 +156,12 @@ export default function SettingsScreen() {
       <Text style={[styles.sectionTitle, styles.sectionTitleSpaced]}>Subscription</Text>
       <TouchableOpacity
         style={styles.linkBtn}
-        onPress={() => Linking.openURL('https://etu.natwelch.com/settings')}
+        onPress={() => { void Linking.openURL('https://etu.natwelch.com/settings'); }}
       >
         <Text style={styles.linkBtnText}>Manage subscription (web) →</Text>
       </TouchableOpacity>
 
-      <TouchableOpacity style={styles.logoutBtn} onPress={logout}>
+      <TouchableOpacity style={styles.logoutBtn} onPress={() => { void logout(); }}>
         <Text style={styles.logoutBtnText}>Sign out</Text>
       </TouchableOpacity>
     </ScrollView>

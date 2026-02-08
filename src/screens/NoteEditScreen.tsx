@@ -19,7 +19,6 @@ import TagInput from '../components/TagInput';
 import ImagePicker, { SelectedImage } from '../components/ImagePicker';
 import AudioPicker, { SelectedAudio } from '../components/AudioPicker';
 import type { Note } from '../api/client';
-import type { Tag } from '../api/client';
 
 type Params = { noteId?: string; note?: Note; initialContent?: string };
 
@@ -99,7 +98,7 @@ export default function NoteEditScreen() {
           imageUploads.length > 0 ? imageUploads : undefined,
           audioUploads.length > 0 ? audioUploads : undefined
         );
-        queryClient.invalidateQueries({ queryKey: ['note', noteId] });
+        void queryClient.invalidateQueries({ queryKey: ['note', noteId] });
       } else {
         await createNote(
           user.id,
@@ -110,7 +109,7 @@ export default function NoteEditScreen() {
           audioUploads.length > 0 ? audioUploads : undefined
         );
       }
-      queryClient.invalidateQueries({ queryKey: ['notes', user.id] });
+      void queryClient.invalidateQueries({ queryKey: ['notes', user.id] });
       navigation.goBack();
     } catch (e) {
       Alert.alert('Error', e instanceof Error ? e.message : 'Failed to save');
@@ -159,7 +158,7 @@ export default function NoteEditScreen() {
         <AudioPicker audios={audios} onAudiosChange={setAudios} />
         <TouchableOpacity
           style={[styles.saveBtn, saving && styles.saveBtnDisabled]}
-          onPress={handleSave}
+          onPress={() => { void handleSave(); }}
           disabled={saving}
         >
           {saving ? (

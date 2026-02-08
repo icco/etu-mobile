@@ -14,7 +14,6 @@ import { useAuth } from '../context/AuthContext';
 import { listNotes, listTags } from '../api/notes';
 import NoteCard from '../components/NoteCard';
 import type { Note } from '../api/client';
-import type { Tag } from '../api/client';
 import { protoTimestampToDate, formatDateGroup } from '../utils/date';
 import { isAuthError, getErrorMessage } from '../utils/errors';
 
@@ -89,7 +88,7 @@ export default function SearchScreen() {
   const grouped = useMemo(() => {
     if (!data?.notes) return [];
     return groupNotesByDate(data.notes);
-  }, [data?.notes]);
+  }, [data]);
 
   const sections = useMemo(() => {
     return grouped.flatMap((g) => [

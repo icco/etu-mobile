@@ -2,6 +2,8 @@
  * Jest setup: mocks for React Native and navigation in Node test env.
  */
 
+import React from 'react';
+
 // Extend Jest matchers for React Native Testing Library
 import '@testing-library/react-native/extend-expect';
 

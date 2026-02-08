@@ -53,10 +53,12 @@ export default function NoteDetailScreen() {
         {
           text: 'Delete',
           style: 'destructive',
-          onPress: async () => {
-            await deleteNote(user.id, token, noteId);
-            queryClient.invalidateQueries({ queryKey: ['notes', user.id] });
-            navigation.goBack();
+          onPress: () => {
+            void (async () => {
+              await deleteNote(user.id, token, noteId);
+              void queryClient.invalidateQueries({ queryKey: ['notes', user.id] });
+              navigation.goBack();
+            })();
           },
         },
       ]

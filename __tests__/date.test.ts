@@ -8,7 +8,7 @@ import { protoTimestampToDate, formatDateGroup } from '../src/utils/date';
 describe('Date Utilities', () => {
   describe('protoTimestampToDate', () => {
     it('converts Timestamp to Date', () => {
-      const timestamp = Timestamp.fromDate(new Date('2024-01-15T10:30:00Z'));
+      const timestamp = Timestamp.fromDate(new Date('2024-01-15T10:30:00Z')) as Timestamp;
       const date = protoTimestampToDate(timestamp);
       
       expect(date).toBeInstanceOf(Date);
@@ -25,7 +25,7 @@ describe('Date Utilities', () => {
 
     it('preserves milliseconds', () => {
       const originalDate = new Date('2024-06-20T15:45:30.123Z');
-      const timestamp = Timestamp.fromDate(originalDate);
+      const timestamp = Timestamp.fromDate(originalDate) as Timestamp;
       const date = protoTimestampToDate(timestamp);
       
       expect(date.getTime()).toBe(originalDate.getTime());
