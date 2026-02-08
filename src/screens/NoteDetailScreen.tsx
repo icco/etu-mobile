@@ -27,7 +27,7 @@ export default function NoteDetailScreen() {
 
   const { data: note, isLoading, error } = useQuery({
     queryKey: ['note', noteId, user?.id],
-    queryFn: () => getNote(user!.id, token!, noteId!),
+    queryFn: () => getNote(user!.id, token!, noteId),
     enabled: !!user?.id && !!token && !!noteId,
   });
 

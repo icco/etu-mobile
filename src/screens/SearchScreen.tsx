@@ -119,7 +119,7 @@ export default function SearchScreen() {
       <View style={styles.filterRow}>
         <Text style={styles.filterLabel}>Tags:</Text>
         <View style={styles.tagRow}>
-          {(tagList as Tag[]).slice(0, 10).map((t) => (
+          {(tagList).slice(0, 10).map((t) => (
             <TouchableOpacity
               key={t.id}
               style={[

@@ -120,7 +120,7 @@ export default function NoteEditScreen() {
           <TagInput
             selectedTags={tags}
             onTagsChange={setTags}
-            suggestions={tagList as Tag[]}
+            suggestions={tagList}
           />
         </View>
         <TouchableOpacity

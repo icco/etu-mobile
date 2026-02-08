@@ -54,7 +54,7 @@ export default function RandomScreen() {
 
   return (
     <FlatList
-      data={notes as Note[]}
+      data={notes}
       keyExtractor={(item) => item.id}
       contentContainerStyle={styles.list}
       ListHeaderComponent={
