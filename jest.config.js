@@ -13,7 +13,7 @@ module.exports = {
     '!src/**/index.ts',
     '!src/**/*.styles.ts',
   ],
-  coverageThresholds: {
+  coverageThreshold: {
     global: {
       statements: 50,
       branches: 50,
