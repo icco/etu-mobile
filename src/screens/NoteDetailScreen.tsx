@@ -73,12 +73,6 @@ export default function NoteDetailScreen() {
     (navigation as { navigate: (name: string, params?: object) => void }).navigate('NoteEdit', { noteId, note });
   };
 
-  const formatFileSize = (bytes: number): string => {
-    if (bytes < 1024) return `${bytes} B`;
-    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-  };
-
   const getImageUrl = (image: { url?: string; data?: Uint8Array; mimeType?: string }): string | null => {
     if (image.url) return image.url;
     if (image.data != null && image.mimeType) {
