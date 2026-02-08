@@ -87,6 +87,9 @@ jobs:
           distribution: 'zulu'
           java-version: '17'
 
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
       - name: Install dependencies
         run: yarn install --frozen-lockfile
         env:
@@ -116,7 +119,7 @@ jobs:
     name: Deploy iOS (TestFlight)
     needs: check-secrets
     if: needs.check-secrets.outputs.has_apple_secrets == 'true'
-    runs-on: macos-14
+    runs-on: macos-15
     steps:
       - uses: actions/checkout@v6
 
