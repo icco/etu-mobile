@@ -1,13 +1,15 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
   TouchableOpacity,
   StyleSheet,
   Alert,
+  ActivityIndicator,
 } from 'react-native';
 import DocumentPicker from 'react-native-document-picker';
 import RNFS from 'react-native-fs';
+import AudioRecorderPlayer from 'react-native-nitro-sound';
 
 export interface SelectedAudio {
   uri: string;
@@ -41,6 +43,8 @@ const MAX_AUDIOS = 5;
 const MAX_SIZE_MB = 25;
 const MAX_SIZE_BYTES = MAX_SIZE_MB * 1024 * 1024;
 
+const audioRecorderPlayer = new AudioRecorderPlayer();
+
 export default function AudioPicker({
   audios,
   onAudiosChange,
@@ -48,6 +52,8 @@ export default function AudioPicker({
   maxSizeMB = MAX_SIZE_MB,
 }: AudioPickerProps) {
   const maxSizeBytes = maxSizeMB * 1024 * 1024;
+  const [isRecording, setIsRecording] = useState(false);
+  const [recordingTime, setRecordingTime] = useState(0);
 
   const handleSelectAudios = async () => {
     if (audios.length >= maxAudios) {
@@ -126,6 +132,82 @@ export default function AudioPicker({
     onAudiosChange(newAudios);
   };
 
+  const handleStartRecording = async () => {
+    if (audios.length >= maxAudios) {
+      Alert.alert('Limit Reached', `Maximum ${maxAudios} audio files allowed`);
+      return;
+    }
+
+    try {
+      const path = await audioRecorderPlayer.startRecorder();
+      setIsRecording(true);
+      setRecordingTime(0);
+
+      // Update recording time every second
+      audioRecorderPlayer.addRecordBackListener((e: { currentPosition: number }) => {
+        setRecordingTime(Math.floor(e.currentPosition / 1000));
+      });
+    } catch (error) {
+      console.error('Error starting recording:', error);
+      Alert.alert('Error', 'Failed to start recording');
+    }
+  };
+
+  const handleStopRecording = async () => {
+    try {
+      const result = await audioRecorderPlayer.stopRecorder();
+      audioRecorderPlayer.removeRecordBackListener();
+      setIsRecording(false);
+      setRecordingTime(0);
+
+      if (!result) {
+        Alert.alert('Error', 'Failed to save recording');
+        return;
+      }
+
+      // Read the recorded file
+      const fileInfo = await RNFS.stat(result);
+      const fileSize = fileInfo.size;
+
+      // Validate size
+      if (fileSize > maxSizeBytes) {
+        Alert.alert(
+          'File Too Large',
+          `Recording exceeds ${maxSizeMB} MiB limit. Try recording a shorter audio.`
+        );
+        // Delete the file
+        await RNFS.unlink(result);
+        return;
+      }
+
+      // Read file as base64
+      const base64Data = await RNFS.readFile(result, 'base64');
+      const fileName = `recording-${Date.now()}.m4a`;
+      const mimeType = 'audio/m4a';
+
+      const newAudio: SelectedAudio = {
+        uri: result,
+        name: fileName,
+        data: base64Data,
+        mimeType,
+        size: fileSize,
+      };
+
+      onAudiosChange([...audios, newAudio]);
+    } catch (error) {
+      console.error('Error stopping recording:', error);
+      Alert.alert('Error', 'Failed to save recording');
+      setIsRecording(false);
+      setRecordingTime(0);
+    }
+  };
+
+  const formatRecordingTime = (seconds: number): string => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
+
   const formatFileSize = (bytes: number): string => {
     if (bytes < 1024) return `${bytes} B`;
     if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
@@ -136,12 +218,31 @@ export default function AudioPicker({
     <View style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.label}>Audio ({audios.length}/{maxAudios})</Text>
-        {audios.length < maxAudios && (
-          <TouchableOpacity style={styles.addButton} onPress={handleSelectAudios}>
-            <Text style={styles.addButtonText}>+ Add Audio</Text>
-          </TouchableOpacity>
-        )}
+        <View style={styles.headerButtons}>
+          {audios.length < maxAudios && !isRecording && (
+            <>
+              <TouchableOpacity style={styles.recordButton} onPress={handleStartRecording}>
+                <Text style={styles.recordButtonText}>🎙️ Record</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.addButton} onPress={handleSelectAudios}>
+                <Text style={styles.addButtonText}>+ Add Audio</Text>
+              </TouchableOpacity>
+            </>
+          )}
+        </View>
       </View>
+
+      {isRecording && (
+        <View style={styles.recordingIndicator}>
+          <View style={styles.recordingHeader}>
+            <View style={styles.recordingDot} />
+            <Text style={styles.recordingText}>Recording {formatRecordingTime(recordingTime)}</Text>
+          </View>
+          <TouchableOpacity style={styles.stopButton} onPress={handleStopRecording}>
+            <Text style={styles.stopButtonText}>⏹ Stop</Text>
+          </TouchableOpacity>
+        </View>
+      )}
 
       {audios.length > 0 && (
         <View style={styles.audioList}>
@@ -181,6 +282,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 12,
   },
+  headerButtons: {
+    flexDirection: 'row',
+    gap: 8,
+  },
   label: {
     color: '#fff',
     fontSize: 16,
@@ -194,6 +299,53 @@ const styles = StyleSheet.create({
   },
   addButtonText: {
     color: '#0a84ff',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  recordButton: {
+    backgroundColor: '#ff453a',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 6,
+  },
+  recordButtonText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  recordingIndicator: {
+    backgroundColor: '#1c1c1e',
+    padding: 12,
+    borderRadius: 8,
+    marginBottom: 12,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  recordingHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  recordingDot: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    backgroundColor: '#ff453a',
+  },
+  recordingText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  stopButton: {
+    backgroundColor: '#333',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 6,
+  },
+  stopButtonText: {
+    color: '#ff453a',
     fontSize: 14,
     fontWeight: '600',
   },
