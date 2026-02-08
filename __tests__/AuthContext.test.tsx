@@ -19,6 +19,7 @@ describe('AuthContext', () => {
   );
 
   // Helper to create mock User
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-call
   const createMockUser = (id: string, email: string): User => {
     return new User({
       id,
