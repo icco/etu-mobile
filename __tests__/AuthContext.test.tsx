@@ -6,7 +6,7 @@ import React from 'react';
 import { renderHook, act, waitFor } from '@testing-library/react-native';
 import { AuthProvider, useAuth } from '../src/context/AuthContext';
 import * as authApi from '../src/api/auth';
-import { User } from '@icco/etu-proto';
+import type { User } from '@icco/etu-proto';
 
 // Mock the auth API
 jest.mock('../src/api/auth');
@@ -20,12 +20,12 @@ describe('AuthContext', () => {
 
   // Helper to create mock User
   const createMockUser = (id: string, email: string): User => {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-call
-    return new User({
+    return {
       id,
       email,
       createdAt: undefined,
-    });
+      $typeName: 'etu.User' as const,
+    } as User;
   };
 
   beforeEach(() => {
