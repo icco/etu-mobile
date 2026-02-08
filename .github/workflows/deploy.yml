@@ -70,6 +70,9 @@ jobs:
     needs: check-secrets
     if: needs.check-secrets.outputs.has_play_store_secrets == 'true'
     runs-on: ubuntu-latest
+    env:
+      # NPM_TOKEN is used by .npmrc for GitHub Packages authentication
+      NPM_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - uses: actions/checkout@v6
 
@@ -86,9 +89,6 @@ jobs:
           java-version: '17'
 
       - name: Install dependencies
-        env:
-          # NPM_TOKEN is used by .npmrc for GitHub Packages authentication
-          NPM_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: yarn install --frozen-lockfile
 
       - name: Decode keystore and build release AAB
@@ -116,6 +116,9 @@ jobs:
     needs: check-secrets
     if: needs.check-secrets.outputs.has_apple_secrets == 'true'
     runs-on: macos-14
+    env:
+      # NPM_TOKEN is used by .npmrc for GitHub Packages authentication
+      NPM_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - uses: actions/checkout@v6
 
@@ -126,9 +129,6 @@ jobs:
           cache: 'yarn'
 
       - name: Install dependencies
-        env:
-          # NPM_TOKEN is used by .npmrc for GitHub Packages authentication
-          NPM_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: yarn install --frozen-lockfile
 
       - name: Install CocoaPods
