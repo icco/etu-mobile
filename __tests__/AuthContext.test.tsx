@@ -169,7 +169,7 @@ describe('AuthContext', () => {
 
   it('refreshes user data', async () => {
     const mockUser = createMockUser('123', 'test@example.com');
-    const updatedUser = { id: '123', email: 'updated@example.com', createdAt: undefined };
+    const updatedUser = createMockUser('123', 'updated@example.com');
     const mockToken = 'test-token';
     
     mockedAuthApi.getStoredAuth
