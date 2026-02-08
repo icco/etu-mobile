@@ -28,7 +28,6 @@ interface ImagePickerProps {
 const ALLOWED_MIME_TYPES = ['image/png', 'image/jpeg', 'image/webp', 'image/gif'];
 const MAX_IMAGES = 10;
 const MAX_SIZE_MB = 5;
-const MAX_SIZE_BYTES = MAX_SIZE_MB * 1024 * 1024;
 
 export default function ImagePicker({
   images,
@@ -116,7 +115,7 @@ export default function ImagePicker({
       <View style={styles.header}>
         <Text style={styles.label}>Images ({images.length}/{maxImages})</Text>
         {images.length < maxImages && (
-          <TouchableOpacity style={styles.addButton} onPress={handleSelectImages}>
+          <TouchableOpacity style={styles.addButton} onPress={() => void handleSelectImages()}>
             <Text style={styles.addButtonText}>+ Add Images</Text>
           </TouchableOpacity>
         )}

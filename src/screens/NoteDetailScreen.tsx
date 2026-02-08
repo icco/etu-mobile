@@ -9,6 +9,7 @@ import {
   Alert,
   Image,
   Modal,
+  Dimensions,
 } from 'react-native';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -18,7 +19,10 @@ import MarkdownView from '../components/MarkdownView';
 import { protoTimestampToDate } from '../utils/date';
 import { isAuthError, getErrorMessage } from '../utils/errors';
 
-const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = require('react-native').Dimensions.get('window');
+const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window') as {
+  width: number;
+  height: number;
+};
 
 type Params = { noteId: string };
 
@@ -77,22 +81,13 @@ export default function NoteDetailScreen() {
 
   const getImageUrl = (image: { url?: string; data?: Uint8Array; mimeType?: string }): string | null => {
     if (image.url) return image.url;
-    if (image.data && image.mimeType) {
-      // Convert Uint8Array to base64
-      const binary = String.fromCharCode(...Array.from(image.data));
+    if (image.data != null && image.mimeType) {
+      /* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call -- proto Uint8Array */
+      const data = image.data;
+      const binary = Array.from(data, (byte: number) => String.fromCharCode(byte)).join('');
       const base64 = btoa(binary);
       return `data:${image.mimeType};base64,${base64}`;
-    }
-    return null;
-  };
-
-  const getAudioUrl = (audio: { url?: string; data?: Uint8Array; mimeType?: string }): string | null => {
-    if (audio.url) return audio.url;
-    if (audio.data && audio.mimeType) {
-      // Convert Uint8Array to base64
-      const binary = String.fromCharCode(...Array.from(audio.data));
-      const base64 = btoa(binary);
-      return `data:${audio.mimeType};base64,${base64}`;
+      /* eslint-enable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call */
     }
     return null;
   };
@@ -160,9 +155,7 @@ export default function NoteDetailScreen() {
         {audios.length > 0 && (
           <View style={styles.mediaSection}>
             <Text style={styles.mediaTitle}>Audio ({audios.length})</Text>
-            {audios.map((audio, index) => {
-              const audioUrl = getAudioUrl(audio);
-              return (
+            {audios.map((audio, index) => (
                 <View key={index} style={styles.audioItem}>
                   <View style={styles.audioInfo}>
                     <Text style={styles.audioName} numberOfLines={1}>
@@ -174,8 +167,7 @@ export default function NoteDetailScreen() {
                   </View>
                   <Text style={styles.audioNote}>Audio file attached</Text>
                 </View>
-              );
-            })}
+              ))}
           </View>
         )}
 

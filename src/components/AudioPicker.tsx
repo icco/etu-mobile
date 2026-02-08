@@ -5,7 +5,6 @@ import {
   TouchableOpacity,
   StyleSheet,
   Alert,
-  ActivityIndicator,
 } from 'react-native';
 import {
   pick,
@@ -47,7 +46,6 @@ const ALLOWED_MIME_TYPES = [
 
 const MAX_AUDIOS = 5;
 const MAX_SIZE_MB = 25;
-const MAX_SIZE_BYTES = MAX_SIZE_MB * 1024 * 1024;
 
 export default function AudioPicker({
   audios,
@@ -250,10 +248,10 @@ export default function AudioPicker({
         <View style={styles.headerButtons}>
           {audios.length < maxAudios && !isRecording && (
             <>
-              <TouchableOpacity style={styles.recordButton} onPress={handleStartRecording}>
+              <TouchableOpacity style={styles.recordButton} onPress={() => void handleStartRecording()}>
                 <Text style={styles.recordButtonText}>🎙️ Record</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={styles.addButton} onPress={handleSelectAudios}>
+              <TouchableOpacity style={styles.addButton} onPress={() => void handleSelectAudios()}>
                 <Text style={styles.addButtonText}>+ Add Audio</Text>
               </TouchableOpacity>
             </>
@@ -267,7 +265,7 @@ export default function AudioPicker({
             <View style={styles.recordingDot} />
             <Text style={styles.recordingText}>Recording {formatRecordingTime(recordingTime)}</Text>
           </View>
-          <TouchableOpacity style={styles.stopButton} onPress={handleStopRecording}>
+          <TouchableOpacity style={styles.stopButton} onPress={() => void handleStopRecording()}>
             <Text style={styles.stopButtonText}>⏹ Stop</Text>
           </TouchableOpacity>
         </View>
@@ -285,7 +283,7 @@ export default function AudioPicker({
               </View>
               <TouchableOpacity
                 style={styles.removeButton}
-                onPress={() => handleRemoveAudio(index)}
+                onPress={() => void handleRemoveAudio(index)}
               >
                 <Text style={styles.removeButtonText}>Remove</Text>
               </TouchableOpacity>
