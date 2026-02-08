@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   View,
   Text,
@@ -43,8 +43,6 @@ const MAX_AUDIOS = 5;
 const MAX_SIZE_MB = 25;
 const MAX_SIZE_BYTES = MAX_SIZE_MB * 1024 * 1024;
 
-const audioRecorderPlayer = new AudioRecorderPlayer();
-
 export default function AudioPicker({
   audios,
   onAudiosChange,
@@ -54,6 +52,18 @@ export default function AudioPicker({
   const maxSizeBytes = maxSizeMB * 1024 * 1024;
   const [isRecording, setIsRecording] = useState(false);
   const [recordingTime, setRecordingTime] = useState(0);
+  const audioRecorderPlayerRef = useRef(new AudioRecorderPlayer());
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      const player = audioRecorderPlayerRef.current;
+      if (isRecording) {
+        player.stopRecorder().catch(console.error);
+        player.removeRecordBackListener();
+      }
+    };
+  }, [isRecording]);
 
   const handleSelectAudios = async () => {
     if (audios.length >= maxAudios) {
@@ -139,12 +149,13 @@ export default function AudioPicker({
     }
 
     try {
-      const path = await audioRecorderPlayer.startRecorder();
+      const player = audioRecorderPlayerRef.current;
+      const path = await player.startRecorder();
       setIsRecording(true);
       setRecordingTime(0);
 
       // Update recording time every second
-      audioRecorderPlayer.addRecordBackListener((e: { currentPosition: number }) => {
+      player.addRecordBackListener((e: { currentPosition: number }) => {
         setRecordingTime(Math.floor(e.currentPosition / 1000));
       });
     } catch (error) {
@@ -155,8 +166,9 @@ export default function AudioPicker({
 
   const handleStopRecording = async () => {
     try {
-      const result = await audioRecorderPlayer.stopRecorder();
-      audioRecorderPlayer.removeRecordBackListener();
+      const player = audioRecorderPlayerRef.current;
+      const result = await player.stopRecorder();
+      player.removeRecordBackListener();
       setIsRecording(false);
       setRecordingTime(0);
 
