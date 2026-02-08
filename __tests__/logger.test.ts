@@ -18,8 +18,8 @@ describe('Logger', () => {
   });
 
   it('logs debug messages in development', () => {
-    const originalDev = (global as { __DEV__?: boolean }).__DEV__;
-    (global as { __DEV__?: boolean }).__DEV__ = true;
+    const originalDev = (globalThis as typeof globalThis & { __DEV__?: boolean }).__DEV__;
+    (globalThis as typeof globalThis & { __DEV__?: boolean }).__DEV__ = true;
     
     logDebug('Test debug message');
     
@@ -29,7 +29,7 @@ describe('Logger', () => {
     expect(logs[0].level).toBe('debug');
     expect(logs[0].message).toBe('Test debug message');
     
-    (global as { __DEV__?: boolean }).__DEV__ = originalDev;
+    (globalThis as typeof globalThis & { __DEV__?: boolean }).__DEV__ = originalDev;
   });
 
   it('logs info messages', () => {
