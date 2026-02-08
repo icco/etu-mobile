@@ -2,8 +2,8 @@
 # Runs on: push to main/implement/develop branches and pull requests
 #
 # Authentication:
-#   Uses GITHUB_TOKEN (automatically provided) for GitHub Packages authentication
-#   to access @icco/etu-proto dependency
+#   Uses setup-node's built-in authentication with NODE_AUTH_TOKEN for GitHub Packages
+#   No authentication token needed in .npmrc
 #
 # Optional Secrets (for release builds):
 #   - ANDROID_KEYSTORE_BASE64: Base64-encoded Android keystore file
@@ -33,9 +33,6 @@ jobs:
   lint:
     name: Lint
     runs-on: ubuntu-latest
-    env:
-      # NPM_TOKEN is used by .npmrc for GitHub Packages authentication
-      NPM_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - uses: actions/checkout@v6
 
@@ -44,9 +41,13 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'yarn'
+          registry-url: 'https://npm.pkg.github.com'
+          scope: '@icco'
 
       - name: Install dependencies
         run: yarn install --frozen-lockfile
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Lint
         run: yarn lint
@@ -60,9 +61,6 @@ jobs:
   android:
     name: Android
     runs-on: ubuntu-latest
-    env:
-      # NPM_TOKEN is used by .npmrc for GitHub Packages authentication
-      NPM_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - uses: actions/checkout@v6
 
@@ -71,6 +69,8 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'yarn'
+          registry-url: 'https://npm.pkg.github.com'
+          scope: '@icco'
 
       - name: Setup Java
         uses: actions/setup-java@v5
@@ -80,6 +80,8 @@ jobs:
 
       - name: Install dependencies
         run: yarn install --frozen-lockfile
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build debug APK
         run: |
@@ -125,9 +127,6 @@ jobs:
   ios:
     name: iOS
     runs-on: macos-14
-    env:
-      # NPM_TOKEN is used by .npmrc for GitHub Packages authentication
-      NPM_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - uses: actions/checkout@v6
 
@@ -136,9 +135,13 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'yarn'
+          registry-url: 'https://npm.pkg.github.com'
+          scope: '@icco'
 
       - name: Install dependencies
         run: yarn install --frozen-lockfile
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Install CocoaPods
         run: |
