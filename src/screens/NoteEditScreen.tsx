@@ -16,6 +16,8 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '../context/AuthContext';
 import { getNote, createNote, updateNote, listTags } from '../api/notes';
 import TagInput from '../components/TagInput';
+import ImagePicker, { SelectedImage } from '../components/ImagePicker';
+import AudioPicker, { SelectedAudio } from '../components/AudioPicker';
 import type { Note } from '../api/client';
 import type { Tag } from '../api/client';
 
@@ -32,6 +34,8 @@ export default function NoteEditScreen() {
 
   const [content, setContent] = useState(initialContent ?? '');
   const [tags, setTags] = useState<string[]>([]);
+  const [images, setImages] = useState<SelectedImage[]>([]);
+  const [audios, setAudios] = useState<SelectedAudio[]>([]);
   const [saving, setSaving] = useState(false);
 
   const isEdit = !!noteId;
@@ -72,11 +76,39 @@ export default function NoteEditScreen() {
     }
     setSaving(true);
     try {
+      // Prepare image uploads
+      const imageUploads = images.map(img => ({
+        data: img.data,
+        mimeType: img.mimeType,
+      }));
+
+      // Prepare audio uploads
+      const audioUploads = audios.map(audio => ({
+        data: audio.data,
+        mimeType: audio.mimeType,
+      }));
+
       if (isEdit && noteId) {
-        await updateNote(user.id, token, noteId, content.trim(), tags, true);
+        await updateNote(
+          user.id,
+          token,
+          noteId,
+          content.trim(),
+          tags,
+          true,
+          imageUploads.length > 0 ? imageUploads : undefined,
+          audioUploads.length > 0 ? audioUploads : undefined
+        );
         queryClient.invalidateQueries({ queryKey: ['note', noteId] });
       } else {
-        await createNote(user.id, token, content.trim(), tags);
+        await createNote(
+          user.id,
+          token,
+          content.trim(),
+          tags,
+          imageUploads.length > 0 ? imageUploads : undefined,
+          audioUploads.length > 0 ? audioUploads : undefined
+        );
       }
       queryClient.invalidateQueries({ queryKey: ['notes', user.id] });
       navigation.goBack();
@@ -123,6 +155,8 @@ export default function NoteEditScreen() {
             suggestions={tagList as Tag[]}
           />
         </View>
+        <ImagePicker images={images} onImagesChange={setImages} />
+        <AudioPicker audios={audios} onAudiosChange={setAudios} />
         <TouchableOpacity
           style={[styles.saveBtn, saving && styles.saveBtnDisabled]}
           onPress={handleSave}
