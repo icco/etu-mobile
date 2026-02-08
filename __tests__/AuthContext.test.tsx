@@ -6,6 +6,7 @@ import React from 'react';
 import { renderHook, act, waitFor } from '@testing-library/react-native';
 import { AuthProvider, useAuth } from '../src/context/AuthContext';
 import * as authApi from '../src/api/auth';
+import type { User } from '@icco/etu-proto';
 
 // Mock the auth API
 jest.mock('../src/api/auth');
@@ -16,6 +17,16 @@ describe('AuthContext', () => {
   const wrapper = ({ children }: { children: React.ReactNode }) => (
     <AuthProvider>{children}</AuthProvider>
   );
+
+  // Helper to create mock User
+  const createMockUser = (id: string, email: string): User => {
+    return {
+      id,
+      email,
+      createdAt: undefined,
+      $typeName: 'etu.User' as const,
+    } as User;
+  };
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -34,7 +45,7 @@ describe('AuthContext', () => {
   });
 
   it('loads stored auth on mount', async () => {
-    const mockUser = { id: '123', email: 'test@example.com', createdAt: undefined };
+    const mockUser = createMockUser('123', 'test@example.com');
     const mockToken = 'test-token';
     mockedAuthApi.getStoredAuth.mockResolvedValue({
       user: mockUser,
@@ -53,7 +64,7 @@ describe('AuthContext', () => {
   });
 
   it('handles login with API key', async () => {
-    const mockUser = { id: '123', email: 'test@example.com', createdAt: undefined };
+    const mockUser = createMockUser('123', 'test@example.com');
     mockedAuthApi.loginWithApiKey.mockResolvedValue(mockUser);
 
     const { result } = renderHook(() => useAuth(), { wrapper });
@@ -73,7 +84,7 @@ describe('AuthContext', () => {
   });
 
   it('handles login with email and password', async () => {
-    const mockUser = { id: '123', email: 'test@example.com', createdAt: undefined };
+    const mockUser = createMockUser('123', 'test@example.com');
     const mockToken = 'generated-token';
     mockedAuthApi.loginWithEmailPassword.mockResolvedValue(mockUser);
     mockedAuthApi.getStoredAuth.mockResolvedValueOnce(null); // Initial load
@@ -94,7 +105,7 @@ describe('AuthContext', () => {
   });
 
   it('handles registration', async () => {
-    const mockUser = { id: '123', email: 'test@example.com', createdAt: undefined };
+    const mockUser = createMockUser('123', 'test@example.com');
     mockedAuthApi.register.mockResolvedValue(mockUser);
 
     const { result } = renderHook(() => useAuth(), { wrapper });
@@ -112,7 +123,7 @@ describe('AuthContext', () => {
   });
 
   it('handles logout', async () => {
-    const mockUser = { id: '123', email: 'test@example.com', createdAt: undefined };
+    const mockUser = createMockUser('123', 'test@example.com');
     const mockToken = 'test-token';
     mockedAuthApi.getStoredAuth.mockResolvedValue({
       user: mockUser,
@@ -136,7 +147,7 @@ describe('AuthContext', () => {
   });
 
   it('handles auth errors', async () => {
-    const mockUser = { id: '123', email: 'test@example.com', createdAt: undefined };
+    const mockUser = createMockUser('123', 'test@example.com');
     const mockToken = 'test-token';
     mockedAuthApi.getStoredAuth.mockResolvedValue({
       user: mockUser,
@@ -158,8 +169,8 @@ describe('AuthContext', () => {
   });
 
   it('refreshes user data', async () => {
-    const mockUser = { id: '123', email: 'test@example.com', createdAt: undefined };
-    const updatedUser = { id: '123', email: 'updated@example.com', createdAt: undefined };
+    const mockUser = createMockUser('123', 'test@example.com');
+    const updatedUser = createMockUser('123', 'updated@example.com');
     const mockToken = 'test-token';
     
     mockedAuthApi.getStoredAuth

@@ -2,8 +2,39 @@
  * Jest setup: mocks for React Native and navigation in Node test env.
  */
 
-// Extend Jest matchers for React Native Testing Library
-import '@testing-library/react-native/extend-expect';
+import React from 'react';
+
+// Load React Native Testing Library so built-in Jest matchers and cleanup are registered (v13+)
+import '@testing-library/react-native';
+
+jest.mock('react-native-image-picker', () => ({
+  launchImageLibrary: jest.fn(() => Promise.resolve({ didCancel: false, assets: [] })),
+  launchCamera: jest.fn(() => Promise.resolve({ didCancel: false, assets: [] })),
+}));
+
+jest.mock('@react-native-documents/picker', () => ({
+  pick: jest.fn(() => Promise.resolve([])),
+  keepLocalCopy: jest.fn((opts) => Promise.resolve((opts.files || []).map((f) => ({ status: 'success', localUri: f.uri, sourceUri: f.uri })))),
+  types: { audio: 'audio' },
+  errorCodes: { OPERATION_CANCELED: 'OPERATION_CANCELED' },
+  isErrorWithCode: jest.fn(() => false),
+}));
+
+jest.mock('react-native-fs', () => ({
+  readFile: jest.fn(() => Promise.resolve('')),
+  unlink: jest.fn(() => Promise.resolve()),
+  stat: jest.fn(() => Promise.resolve({ size: 0 })),
+}));
+
+jest.mock('react-native-nitro-sound', () => ({
+  __esModule: true,
+  default: {
+    startRecorder: jest.fn(() => Promise.resolve('')),
+    stopRecorder: jest.fn(() => Promise.resolve('')),
+    addRecordBackListener: jest.fn(),
+    removeRecordBackListener: jest.fn(),
+  },
+}));
 
 jest.mock('react-native-config', () => ({
   __esModule: true,

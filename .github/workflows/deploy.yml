@@ -1,5 +1,29 @@
-# Optional: run on push to main when deploy secrets are present.
-# Uploads Android AAB to Play internal track and iOS IPA to TestFlight.
+# Deploy Workflow
+# Runs on: push to main branch or manual workflow dispatch
+# Deploys Android AAB to Play Store internal track and iOS IPA to TestFlight
+#
+# Authentication:
+#   Uses setup-node's built-in authentication with NODE_AUTH_TOKEN for GitHub Packages
+#   No authentication token needed in .npmrc
+#
+# Android Deploy Secrets (all required if deploying to Play Store):
+#   - ANDROID_KEYSTORE_BASE64: Base64-encoded Android keystore file
+#   - ANDROID_KEYSTORE_PASSWORD: Password for the keystore
+#   - ANDROID_KEY_ALIAS: Key alias in the keystore
+#   - ANDROID_KEY_PASSWORD: Password for the key
+#   - PLAY_STORE_SERVICE_ACCOUNT_JSON: Google Play service account JSON
+#
+# iOS Deploy Secrets (all required if deploying to TestFlight):
+#   - APPLE_CERTIFICATE_P12_BASE64: Base64-encoded Apple signing certificate
+#   - APPLE_CERTIFICATE_PASSWORD: Password for the certificate
+#   - KEYCHAIN_PASSWORD: Password for the temporary keychain
+#   - APPLE_TEAM_ID: Apple Developer Team ID
+#   - APPLE_ISSUER_ID: App Store Connect API issuer ID
+#   - APPLE_API_KEY_ID: App Store Connect API key ID
+#   - APPLE_APP_STORE_CONNECT_API_KEY: App Store Connect API private key
+#
+# Note: Deploy jobs will be skipped if required secrets are not configured.
+
 name: Deploy
 
 on:
@@ -7,10 +31,44 @@ on:
     branches: [main]
   workflow_dispatch:
 
+permissions:
+  contents: read
+  packages: read
+
 jobs:
+  check-secrets:
+    name: Check required secrets
+    runs-on: ubuntu-latest
+    outputs:
+      has_play_store_secrets: ${{ steps.check_play.outputs.has_secrets }}
+      has_apple_secrets: ${{ steps.check_apple.outputs.has_secrets }}
+    steps:
+      - name: Check Play Store secrets
+        id: check_play
+        env:
+          PLAY_STORE_JSON: ${{ secrets.PLAY_STORE_SERVICE_ACCOUNT_JSON }}
+        run: |
+          if [ -n "$PLAY_STORE_JSON" ]; then
+            echo "has_secrets=true" >> $GITHUB_OUTPUT
+          else
+            echo "has_secrets=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Check Apple secrets
+        id: check_apple
+        env:
+          APPLE_KEY: ${{ secrets.APPLE_APP_STORE_CONNECT_API_KEY }}
+        run: |
+          if [ -n "$APPLE_KEY" ]; then
+            echo "has_secrets=true" >> $GITHUB_OUTPUT
+          else
+            echo "has_secrets=false" >> $GITHUB_OUTPUT
+          fi
+
   android-deploy:
     name: Deploy Android (Play internal)
-    if: ${{ secrets.PLAY_STORE_SERVICE_ACCOUNT_JSON != '' }}
+    needs: check-secrets
+    if: needs.check-secrets.outputs.has_play_store_secrets == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
@@ -20,6 +78,8 @@ jobs:
         with:
           node-version: '25'
           cache: 'yarn'
+          registry-url: 'https://npm.pkg.github.com'
+          scope: '@icco'
 
       - name: Setup Java
         uses: actions/setup-java@v5
@@ -27,10 +87,13 @@ jobs:
           distribution: 'zulu'
           java-version: '17'
 
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
       - name: Install dependencies
-        env:
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: yarn install --frozen-lockfile
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Decode keystore and build release AAB
         env:
@@ -54,8 +117,9 @@ jobs:
 
   ios-deploy:
     name: Deploy iOS (TestFlight)
-    if: ${{ secrets.APPLE_APP_STORE_CONNECT_API_KEY != '' }}
-    runs-on: macos-14
+    needs: check-secrets
+    if: needs.check-secrets.outputs.has_apple_secrets == 'true'
+    runs-on: macos-15
     steps:
       - uses: actions/checkout@v6
 
@@ -64,11 +128,13 @@ jobs:
         with:
           node-version: '25'
           cache: 'yarn'
+          registry-url: 'https://npm.pkg.github.com'
+          scope: '@icco'
 
       - name: Install dependencies
-        env:
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: yarn install --frozen-lockfile
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Install CocoaPods
         run: cd ios && pod install

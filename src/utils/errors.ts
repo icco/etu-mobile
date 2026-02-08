@@ -2,7 +2,7 @@
  * Error utilities for handling API errors and retries.
  */
 
-import { ConnectError } from '@connectrpc/connect';
+import { ConnectError, Code } from '@connectrpc/connect';
 import { logError, logWarning } from './logger';
 
 export interface ApiErrorContext {
@@ -18,7 +18,7 @@ export interface ApiErrorContext {
 export function isAuthError(error: unknown): boolean {
   if (error instanceof ConnectError) {
     // ConnectError codes: https://connectrpc.com/docs/protocol/#error-codes
-    return error.code === 'unauthenticated' || error.code === 'permission_denied';
+    return error.code === Code.Unauthenticated || error.code === Code.PermissionDenied;
   }
   return false;
 }
@@ -28,7 +28,7 @@ export function isAuthError(error: unknown): boolean {
  */
 export function isNetworkError(error: unknown): boolean {
   if (error instanceof ConnectError) {
-    return error.code === 'unavailable' || error.code === 'deadline_exceeded';
+    return error.code === Code.Unavailable || error.code === Code.DeadlineExceeded;
   }
   if (error instanceof Error) {
     // Check for common network error messages
@@ -91,10 +91,10 @@ export function shouldRetry(error: unknown, attempt: number, maxAttempts = 3): b
   if (error instanceof ConnectError) {
     // Retry on network errors and temporary server errors
     return (
-      error.code === 'unavailable' ||
-      error.code === 'deadline_exceeded' ||
-      error.code === 'internal' ||
-      error.code === 'unknown'
+      error.code === Code.Unavailable ||
+      error.code === Code.DeadlineExceeded ||
+      error.code === Code.Internal ||
+      error.code === Code.Unknown
     );
   }
   

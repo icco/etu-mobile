@@ -89,7 +89,7 @@ export default function RegisterScreen() {
         />
         <TouchableOpacity
           style={[styles.button, loading && styles.buttonDisabled]}
-          onPress={handleRegister}
+          onPress={() => { void handleRegister(); }}
           disabled={loading}
         >
           {loading ? (

@@ -2,22 +2,29 @@
  * @format
  */
 
-import { Timestamp } from '@bufbuild/protobuf';
 import { protoTimestampToDate, formatDateGroup } from '../src/utils/date';
+
+function timestampFromDate(d: Date): { seconds: bigint; nanos: number } {
+  const ms = d.getTime();
+  return {
+    seconds: BigInt(Math.floor(ms / 1000)),
+    nanos: (ms % 1000) * 1_000_000,
+  };
+}
 
 describe('Date Utilities', () => {
   describe('protoTimestampToDate', () => {
     it('converts Timestamp to Date', () => {
-      const timestamp = Timestamp.fromDate(new Date('2024-01-15T10:30:00Z'));
+      const timestamp = timestampFromDate(new Date('2024-01-15T10:30:00Z'));
       const date = protoTimestampToDate(timestamp);
-      
+
       expect(date).toBeInstanceOf(Date);
       expect(date.toISOString()).toBe('2024-01-15T10:30:00.000Z');
     });
 
     it('handles undefined timestamp', () => {
       const date = protoTimestampToDate(undefined);
-      
+
       expect(date).toBeInstanceOf(Date);
       // Should return current date/time, so just check it's valid
       expect(date.getTime()).toBeGreaterThan(0);
@@ -25,9 +32,9 @@ describe('Date Utilities', () => {
 
     it('preserves milliseconds', () => {
       const originalDate = new Date('2024-06-20T15:45:30.123Z');
-      const timestamp = Timestamp.fromDate(originalDate);
+      const timestamp = timestampFromDate(originalDate);
       const date = protoTimestampToDate(timestamp);
-      
+
       expect(date.getTime()).toBe(originalDate.getTime());
     });
   });

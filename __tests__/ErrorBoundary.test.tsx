@@ -57,7 +57,7 @@ describe('ErrorBoundary', () => {
   });
 
   it('provides a way to retry after error', () => {
-    const { getByText, rerender } = render(
+    const { getByText } = render(
       <ErrorBoundary>
         <ThrowError shouldThrow={true} />
       </ErrorBoundary>

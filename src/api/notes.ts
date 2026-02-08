@@ -21,8 +21,9 @@ export interface AudioUploadInput {
 }
 
 // Helper function to convert base64 to Uint8Array
-function base64ToUint8Array(base64: string): Uint8Array {
-  const binaryString = atob(base64);
+function base64ToUint8Array(base64: string): Uint8Array<ArrayBufferLike> {
+  // atob is a global in browser/RN; TypeScript lib may not declare it
+  const binaryString = (globalThis as unknown as { atob(s: string): string }).atob(base64);
   const len = binaryString.length;
   const bytes = new Uint8Array(len);
   for (let i = 0; i < len; i++) {

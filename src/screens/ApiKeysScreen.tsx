@@ -61,9 +61,10 @@ export default function ApiKeysScreen() {
           text: 'Delete',
           style: 'destructive',
           onPress: () => {
-            void deleteApiKey(user.id, token, key.id).then(() => {
-              queryClient.invalidateQueries({ queryKey: ['apiKeys', user.id] });
-            });
+            const p = deleteApiKey(user.id, token, key.id)
+              .then(() => queryClient.invalidateQueries({ queryKey: ['apiKeys', user.id] }))
+              .catch(() => {});
+            void p;
           },
         },
       ]

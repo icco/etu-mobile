@@ -53,7 +53,7 @@ export default function TimelineScreen() {
   const grouped = useMemo(() => {
     if (!data?.notes) return [];
     return groupNotesByDate(data.notes);
-  }, [data?.notes]);
+  }, [data]);
 
   if (!user || !token) return null;
 
@@ -87,7 +87,7 @@ export default function TimelineScreen() {
       refreshControl={
         <RefreshControl
           refreshing={isRefetching && !isLoading}
-          onRefresh={refetch}
+          onRefresh={() => { void refetch(); }}
           tintColor="#0a84ff"
         />
       }

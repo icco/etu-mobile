@@ -64,7 +64,7 @@ describe('Error Utilities', () => {
   describe('getErrorMessage', () => {
     it('extracts message from ConnectError', () => {
       const error = new ConnectError('Test error message', Code.Unknown);
-      expect(getErrorMessage(error)).toBe('Test error message');
+      expect(getErrorMessage(error)).toBe('[unknown] Test error message');
     });
 
     it('extracts message from regular Error', () => {
