@@ -76,12 +76,12 @@ export default function NoteDetailScreen() {
   const getImageUrl = (image: { url?: string; data?: Uint8Array; mimeType?: string }): string | null => {
     if (image.url) return image.url;
     if (image.data != null && image.mimeType) {
-      /* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call -- proto Uint8Array */
+       
       const data = image.data;
       const binary = Array.from(data, (byte: number) => String.fromCharCode(byte)).join('');
       const base64 = (globalThis as unknown as { btoa(s: string): string }).btoa(binary);
       return `data:${image.mimeType};base64,${base64}`;
-      /* eslint-enable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call */
+       
     }
     return null;
   };
