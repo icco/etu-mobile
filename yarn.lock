@@ -1591,16 +1591,6 @@
     fast-xml-parser "^5.3.6"
     picocolors "^1.1.1"
 
-"@react-native-community/cli-config-apple@20.1.1":
-  version "20.1.1"
-  resolved "https://registry.yarnpkg.com/@react-native-community/cli-config-apple/-/cli-config-apple-20.1.1.tgz#d4960f21a01d5bb6dfe00044ba82988b47e816c7"
-  integrity sha512-doepJgLJVqeJb5tNoP9hyFIcoZ1OMGO7QN/YMuCCIjbThUQe/J87XdwPol3Qrjr58KRt9xeBVz+kHeW5mtSutw==
-  dependencies:
-    "@react-native-community/cli-tools" "20.1.1"
-    execa "^5.0.0"
-    fast-glob "^3.3.2"
-    picocolors "^1.1.1"
-
 "@react-native-community/cli-config-apple@20.1.2":
   version "20.1.2"
   resolved "https://registry.yarnpkg.com/@react-native-community/cli-config-apple/-/cli-config-apple-20.1.2.tgz#3a7d789eb1997d8c01f3007ec490625ce21842f6"
@@ -1666,17 +1656,6 @@
     logkitty "^0.7.1"
     picocolors "^1.1.1"
 
-"@react-native-community/cli-platform-apple@20.1.1":
-  version "20.1.1"
-  resolved "https://registry.yarnpkg.com/@react-native-community/cli-platform-apple/-/cli-platform-apple-20.1.1.tgz#95ec7f5e01b2f99466bc4d3433cf1fa92144ceba"
-  integrity sha512-mQEjOzRFCcQTrCt73Q/+5WWTfUg6U2vLZv5rPuFiNrLbrwRqxVH3OLaXg5gilJkDTJC80z8iOSsdd8MRxONOig==
-  dependencies:
-    "@react-native-community/cli-config-apple" "20.1.1"
-    "@react-native-community/cli-tools" "20.1.1"
-    execa "^5.0.0"
-    fast-xml-parser "^4.4.1"
-    picocolors "^1.1.1"
-
 "@react-native-community/cli-platform-apple@20.1.2":
   version "20.1.2"
   resolved "https://registry.yarnpkg.com/@react-native-community/cli-platform-apple/-/cli-platform-apple-20.1.2.tgz#1608dd2af22ce625fdd24bfb1e42c40a1f1ecba7"
@@ -1688,19 +1667,12 @@
     fast-xml-parser "^5.3.6"
     picocolors "^1.1.1"
 
-"@react-native-community/cli-platform-ios@20.1.2":
+"@react-native-community/cli-platform-ios@20.1.2", "@react-native-community/cli-platform-ios@^20.1.2":
   version "20.1.2"
   resolved "https://registry.yarnpkg.com/@react-native-community/cli-platform-ios/-/cli-platform-ios-20.1.2.tgz#64d519e89894c8d40151e5eb3d63dd49bb140984"
   integrity sha512-ZzdLwJMt7ehjO0iy/rQGPgH6uZqMYXeS5uXzSi1DeLYwurV1wOqFc0SLm4TAz5FKYQmHpwBXlMiI12rUmkZxcg==
   dependencies:
     "@react-native-community/cli-platform-apple" "20.1.2"
-
-"@react-native-community/cli-platform-ios@^20.1.1":
-  version "20.1.1"
-  resolved "https://registry.yarnpkg.com/@react-native-community/cli-platform-ios/-/cli-platform-ios-20.1.1.tgz#54d2542d5e30ccc0d78e6f35f3fbdd54d2e2ca4e"
-  integrity sha512-6vr10/oSjKkZO/BBgfFJNQTC/0CDF4WrN8iW9ss+Kt6ZL2QrBXLYz7fobrrboOlHwqqs5EyQadlEaNii7gKRJg==
-  dependencies:
-    "@react-native-community/cli-platform-apple" "20.1.1"
 
 "@react-native-community/cli-server-api@20.1.2":
   version "20.1.2"
