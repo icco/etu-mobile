@@ -23,7 +23,7 @@
     "@react-navigation/native": "^7.1.28",
     "@react-navigation/native-stack": "^7.14.6",
     "@tanstack/react-query": "^5.91.3",
-    "fast-xml-parser": "^5.5.7",
+    "fast-xml-parser": "^5.5.9",
     "markdown-it": "^14.0.0",
     "react": "^19.2.4",
     "react-native": "^0.84.1",
