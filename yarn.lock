@@ -1571,16 +1571,6 @@
     fast-glob "^3.3.2"
     picocolors "^1.1.1"
 
-"@react-native-community/cli-config-android@20.1.2":
-  version "20.1.2"
-  resolved "https://registry.yarnpkg.com/@react-native-community/cli-config-android/-/cli-config-android-20.1.2.tgz#f029d0e0facef19d27655e82456adf7d53d900d5"
-  integrity sha512-W0Qx+lW8pbQMz8x3Rlf/H7D2j2u8O+u9HnrZnKzDl1DaXgaOQqL484lTZlMEQofjq7eLXdmzWxuZdqS6K1QfmQ==
-  dependencies:
-    "@react-native-community/cli-tools" "20.1.2"
-    fast-glob "^3.3.2"
-    fast-xml-parser "^5.3.6"
-    picocolors "^1.1.1"
-
 "@react-native-community/cli-config-android@20.1.3":
   version "20.1.3"
   resolved "https://registry.yarnpkg.com/@react-native-community/cli-config-android/-/cli-config-android-20.1.3.tgz#3ec64d07973e17be1c3fe884cf7b6b8164c155eb"
@@ -1634,24 +1624,13 @@
     wcwidth "^1.0.1"
     yaml "^2.2.1"
 
-"@react-native-community/cli-platform-android@20.1.3":
+"@react-native-community/cli-platform-android@20.1.3", "@react-native-community/cli-platform-android@^20.1.3":
   version "20.1.3"
   resolved "https://registry.yarnpkg.com/@react-native-community/cli-platform-android/-/cli-platform-android-20.1.3.tgz#c3d08bcd3e15c18a3a77689f06ff12b5dec04f16"
   integrity sha512-bzB9ELPOISuqgtDZXFPQlkuxx1YFkNx3cNgslc5ElCrk+5LeCLQLIBh/dmIuK8rwUrPcrramjeBj++Noc+TaAA==
   dependencies:
     "@react-native-community/cli-config-android" "20.1.3"
     "@react-native-community/cli-tools" "20.1.3"
-    execa "^5.0.0"
-    logkitty "^0.7.1"
-    picocolors "^1.1.1"
-
-"@react-native-community/cli-platform-android@^20.1.2":
-  version "20.1.2"
-  resolved "https://registry.yarnpkg.com/@react-native-community/cli-platform-android/-/cli-platform-android-20.1.2.tgz#ebd5668c9c729b38c2f18d058842eb254eef9f2f"
-  integrity sha512-1iHB8cTTJpMyEKhxWTRYsxhBBsiOq3tVguGX/HtBdHRzhlCeDpanE6U+aKxWfMFetMcFL+HLe5nQPcJXf9EtKg==
-  dependencies:
-    "@react-native-community/cli-config-android" "20.1.2"
-    "@react-native-community/cli-tools" "20.1.2"
     execa "^5.0.0"
     logkitty "^0.7.1"
     picocolors "^1.1.1"
@@ -1690,22 +1669,6 @@
     serve-static "^1.13.1"
     strict-url-sanitise "0.0.1"
     ws "^6.2.3"
-
-"@react-native-community/cli-tools@20.1.2":
-  version "20.1.2"
-  resolved "https://registry.yarnpkg.com/@react-native-community/cli-tools/-/cli-tools-20.1.2.tgz#9caa7f516cf2722c425c767964e961e30c9bc829"
-  integrity sha512-on2VUBZb68RlMxvIrEdK6+NiOEYu/z+t/cz746yGtxn49fwW6Wafzmh1QNZj8HPAuZ8+Ds61LiXbwoDDkzNSSA==
-  dependencies:
-    "@vscode/sudo-prompt" "^9.0.0"
-    appdirsjs "^1.2.4"
-    execa "^5.0.0"
-    find-up "^5.0.0"
-    launch-editor "^2.9.1"
-    mime "^2.4.1"
-    ora "^5.4.1"
-    picocolors "^1.1.1"
-    prompts "^2.4.2"
-    semver "^7.5.2"
 
 "@react-native-community/cli-tools@20.1.3":
   version "20.1.3"
