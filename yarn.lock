@@ -6204,10 +6204,10 @@ react-native-nitro-modules@^0.33.0:
   resolved "https://registry.yarnpkg.com/react-native-nitro-modules/-/react-native-nitro-modules-0.33.9.tgz#77983bd170b81b87e05c2989c82d91475649569d"
   integrity sha512-BM9C5mCGYYjrc8CDWZZ0anLWU/knH2xaEuFzvzogKTOW6fzgS6mmsCdM3ty+AhImJNSYwK19DLrHaqwnrrwEzw==
 
-react-native-nitro-sound@^0.2.10:
-  version "0.2.10"
-  resolved "https://registry.yarnpkg.com/react-native-nitro-sound/-/react-native-nitro-sound-0.2.10.tgz#6d54259b216565ef418fb7f1e25a7590b05c1a1d"
-  integrity sha512-hzTk74gbGqIms7jnKG0rQzNj/eI118Zcw3a9+lnXi+TLRzIuhqvEehKImvfa1NdyqA+oi9eZAsIQTtvnlKbb9w==
+react-native-nitro-sound@^0.2.13:
+  version "0.2.13"
+  resolved "https://registry.yarnpkg.com/react-native-nitro-sound/-/react-native-nitro-sound-0.2.13.tgz#de540ba84222c3011bede7a97b28302957425f87"
+  integrity sha512-YrMqRBD1ZRGh70pz7im/ZwjhHQG2otPovg25OMlOyAYHDfx4XEH+sX8WYZH/VfUnV1DjCvw2qT8wRxfUMt+4DQ==
   dependencies:
     "@react-native-community/slider" "^5.0.1"
 
