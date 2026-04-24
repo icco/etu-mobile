@@ -188,7 +188,7 @@ jobs:
             -exportOptionsPlist ExportOptions.plist
 
       - name: Upload to TestFlight
-        uses: apple-actions/upload-testflight-build@v4
+        uses: apple-actions/upload-testflight-build@v5
         with:
           app-path: ios/build/export/*.ipa
           issuer-id: ${{ secrets.APPLE_ISSUER_ID }}
