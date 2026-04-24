@@ -6199,10 +6199,10 @@ react-native-markdown-display@^7.0.2:
     prop-types "^15.7.2"
     react-native-fit-image "^1.5.5"
 
-react-native-nitro-modules@^0.33.0:
-  version "0.33.9"
-  resolved "https://registry.yarnpkg.com/react-native-nitro-modules/-/react-native-nitro-modules-0.33.9.tgz#77983bd170b81b87e05c2989c82d91475649569d"
-  integrity sha512-BM9C5mCGYYjrc8CDWZZ0anLWU/knH2xaEuFzvzogKTOW6fzgS6mmsCdM3ty+AhImJNSYwK19DLrHaqwnrrwEzw==
+react-native-nitro-modules@^0.35.5:
+  version "0.35.5"
+  resolved "https://registry.yarnpkg.com/react-native-nitro-modules/-/react-native-nitro-modules-0.35.5.tgz#19fe8f289b118b26b9e8522f62bb6e7b40e44c50"
+  integrity sha512-aa03UzC5dLg5qFfyBkVK+JGSwHTjmK7jUZzyRz11r1Yk9C/nJTFe59EeHPxxNNTagkiwQTM6p3sySgD/TDRC7Q==
 
 react-native-nitro-sound@^0.2.10:
   version "0.2.10"
