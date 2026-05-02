@@ -143,20 +143,32 @@ npm run test:coverage    # Run with coverage report
 npm run test:watch       # Watch mode for development
 ```
 
+## Verifying changes without a local build
+
+If you cannot run Android Studio, Xcode, or emulators locally, use **GitHub Actions on your PR**:
+
+1. Open the PR → **Checks** tab → wait for **CI** to finish.
+2. **Lint** job: ESLint, `tsc`, and **Jest** (`yarn test`). Run **`yarn test:coverage`** locally when you want the coverage table; the 50% thresholds in `jest.config.js` apply to that command and are not enforced on every PR until the suite grows.
+3. **Android** job: downloads **`app-debug`** (installable debug APK). If repo signing secrets are absent, **`app-release-bundle-ci`** is a release-mode AAB built with the Gradle debug-signing fallback (validates Hermes, native modules, and release Gradle — not for Play upload). With `ANDROID_KEYSTORE_*` secrets, **`app-release-aab`** is the signed bundle.
+4. **iOS** job: compiles the Debug simulator build (catches Pod/native breakages).
+
+You can also run CI manually: **Actions** → **CI** → **Run workflow**. Concurrency cancels older runs on the same PR when you push new commits.
+
 ## CI/CD
 
-GitHub Actions run on push/PR to `main`, `implement`, and `develop`:
+Workflows run on **pushes** to `main`, `implement`, or `develop`, on **all pull requests**, and on **workflow_dispatch** (manual):
 
-- **Lint**: ESLint + TypeScript. Requires `NPM_TOKEN` (GitHub Packages) in repo secrets.
-- **Test**: Jest unit tests with coverage reporting
-- **Android**: Builds debug APK (always) and release AAB when signing secrets are set. Uploads `app-debug` and `app-release-aab` as artifacts.
-- **iOS**: Builds for simulator (Debug). No IPA artifact unless you add signing and export steps.
+- **Lint**: ESLint, TypeScript, Jest (`yarn test`).
+- **Android**: `assembleDebug` + artifact `app-debug`; signed `app-release-aab` when keystore secrets exist; otherwise `bundleRelease` smoke + artifact **`app-release-bundle-ci`**.
+- **iOS**: `pod install` + simulator `xcodebuild` (no `.app` artifact uploaded today).
+
+`yarn install` uses `NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN || secrets.GITHUB_TOKEN }}` — same-repo workflows usually work with the default `GITHUB_TOKEN`; set **`NPM_TOKEN`** (PAT with `read:packages`) if installs fail (e.g. some fork PRs).
 
 ### Required Secrets
 
 | Secret | Required for | Description |
 |--------|--------------|-------------|
-| `NPM_TOKEN` | Lint, Test, Android, iOS | GitHub PAT with `read:packages` for `@icco/etu-proto`. |
+| `NPM_TOKEN` | Optional in CI | GitHub PAT with `read:packages` for `@icco/etu-proto` when `GITHUB_TOKEN` is not enough (e.g. forks). |
 
 ### Android Release Signing (Optional)
 

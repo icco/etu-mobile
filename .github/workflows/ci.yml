@@ -1,9 +1,4 @@
-# CI Workflow
-# Runs on: push to main/implement/develop branches and pull requests
-#
-# Authentication:
-#   Uses setup-node's built-in authentication with NODE_AUTH_TOKEN for GitHub Packages
-#   No authentication token needed in .npmrc
+# CI Workflow — runs on pushes to main/implement/develop, all pull requests, and manual dispatch.
 #
 # Optional Secrets (for release builds):
 #   - ANDROID_KEYSTORE_BASE64: Base64-encoded Android keystore file
@@ -11,8 +6,12 @@
 #   - ANDROID_KEY_ALIAS: Key alias in the keystore
 #   - ANDROID_KEY_PASSWORD: Password for the key
 #
-# Note: Release builds will be skipped if signing secrets are not configured.
-# Debug builds always run and produce artifacts for testing.
+# Primary validation path when contributors cannot build locally:
+# lint + typecheck + tests, Android debug APK + release bundle smoke,
+# iOS simulator compile. Download artifacts from the workflow run summary.
+#
+# GitHub Packages: forks may need NPM_TOKEN in repo secrets; same-repo PRs can use GITHUB_TOKEN.
+# Signed release AAB only when ANDROID_KEYSTORE_* secrets are set.
 
 name: CI
 
@@ -20,7 +19,11 @@ on:
   push:
     branches: [main, implement, develop]
   pull_request:
-    branches: [main, implement, develop]
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.sha }}
+  cancel-in-progress: true
 
 permissions:
   contents: read
@@ -47,7 +50,7 @@ jobs:
       - name: Install dependencies
         run: yarn install --frozen-lockfile
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN || secrets.GITHUB_TOKEN }}
 
       - name: Lint
         run: yarn lint
@@ -84,7 +87,7 @@ jobs:
       - name: Install dependencies
         run: yarn install --frozen-lockfile
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN || secrets.GITHUB_TOKEN }}
 
       - name: Build debug APK
         run: |
@@ -96,6 +99,7 @@ jobs:
         with:
           name: app-debug
           path: android/app/build/outputs/apk/debug/app-debug.apk
+          retention-days: 21
 
       - name: Check for Android signing secrets
         id: check_android_secrets
@@ -126,6 +130,22 @@ jobs:
         with:
           name: app-release-aab
           path: android/app/build/outputs/bundle/release/app-release.aab
+          retention-days: 21
+
+      # Validates release Gradle path (Hermes, Sentry, etc.) when no upload keystore is configured.
+      - name: Build release bundle (CI smoke, debug signing fallback)
+        if: steps.check_android_secrets.outputs.has_keystore != 'true'
+        run: |
+          cd android
+          ./gradlew bundleRelease --no-daemon
+
+      - name: Upload release AAB (CI smoke)
+        if: steps.check_android_secrets.outputs.has_keystore != 'true'
+        uses: actions/upload-artifact@v7
+        with:
+          name: app-release-bundle-ci
+          path: android/app/build/outputs/bundle/release/app-release.aab
+          retention-days: 14
 
   ios:
     name: iOS
@@ -144,7 +164,7 @@ jobs:
       - name: Install dependencies
         run: yarn install --frozen-lockfile
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN || secrets.GITHUB_TOKEN }}
 
       - name: Install CocoaPods
         run: |
