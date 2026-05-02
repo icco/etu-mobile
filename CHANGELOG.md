@@ -8,6 +8,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Android `RECORD_AUDIO` and runtime microphone prompt before in-app audio recording
+- Timeline infinite scroll (paged `listNotes` with pull-to-refresh reset)
+- Optional Sentry reporting via `SENTRY_DSN` (`crashReporting.ts`, `logger`, `ErrorBoundary`)
+- Google Play submission and Data safety guidance in README
+- CI: all PRs + `workflow_dispatch`, concurrency, `NPM_TOKEN || GITHUB_TOKEN`, Android `bundleRelease` smoke artifact when unsigned, README “verify without local build”
 - Comprehensive error handling and logging infrastructure
   - Centralized logging utility with multiple log levels (debug, info, warning, error)
   - Error utility for handling API errors, auth errors, and network errors
@@ -39,6 +44,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Troubleshooting guide
 
 ### Changed
+- Root navigation is a single stack (auth + main + note screens) for reliable `etu://` deep links; documented `login` / `register` paths
 - Updated auth flow to use proper error logging
 - Improved API client with timeout configuration
 - Enhanced AuthContext with handleAuthError method
@@ -46,6 +52,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Consistent error UI patterns across screens
 
 ### Fixed
+- Removed empty `NSLocationWhenInUseUsageDescription` from iOS `Info.plist` (app does not use location)
 - Silent failures in auth flow (API key creation)
 - Missing error states in SearchScreen
 - Inconsistent error handling across screens
