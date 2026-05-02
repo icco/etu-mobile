@@ -5,6 +5,8 @@ import {
   TouchableOpacity,
   StyleSheet,
   Alert,
+  Platform,
+  PermissionsAndroid,
 } from 'react-native';
 import {
   pick,
@@ -162,6 +164,18 @@ export default function AudioPicker({
     onAudiosChange(newAudios);
   };
 
+  const ensureMicPermission = async (): Promise<boolean> => {
+    if (Platform.OS !== 'android') return true;
+    const granted = await PermissionsAndroid.check(PermissionsAndroid.PERMISSIONS.RECORD_AUDIO);
+    if (granted) return true;
+    const result = await PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.RECORD_AUDIO, {
+      title: 'Microphone',
+      message: 'Etu needs microphone access to record audio for your notes.',
+      buttonPositive: 'Allow',
+    });
+    return result === PermissionsAndroid.RESULTS.GRANTED;
+  };
+
   const handleStartRecording = async () => {
     if (audios.length >= maxAudios) {
       Alert.alert('Limit Reached', `Maximum ${maxAudios} audio files allowed`);
@@ -169,6 +183,11 @@ export default function AudioPicker({
     }
 
     try {
+      const ok = await ensureMicPermission();
+      if (!ok) {
+        Alert.alert('Permission required', 'Microphone access is needed to record audio.');
+        return;
+      }
       await Sound.startRecorder();
       setIsRecording(true);
       setRecordingTime(0);

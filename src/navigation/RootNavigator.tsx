@@ -14,10 +14,13 @@ import NoteEditScreen from '../screens/NoteEditScreen';
 import SearchScreen from '../screens/SearchScreen';
 import { View, ActivityIndicator, StyleSheet } from 'react-native';
 
+/** Single root stack so deep links resolve whether user is on a tab or a pushed screen. */
 const linking = {
   prefixes: ['etu://open'],
   config: {
     screens: {
+      Login: 'login',
+      Register: 'register',
       MainTabs: {
         path: '',
         screens: {
@@ -36,6 +39,12 @@ const linking = {
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
+
+const stackScreenOptions = {
+  headerStyle: { backgroundColor: '#111' },
+  headerTintColor: '#fff',
+  contentStyle: { backgroundColor: '#111' },
+} as const;
 
 function MainTabs() {
   return (
@@ -57,37 +66,6 @@ function MainTabs() {
   );
 }
 
-function MainStack() {
-  return (
-    <Stack.Navigator
-      screenOptions={{
-        headerStyle: { backgroundColor: '#111' },
-        headerTintColor: '#fff',
-        contentStyle: { backgroundColor: '#111' },
-      }}
-    >
-      <Stack.Screen name="MainTabs" component={MainTabs} options={{ headerShown: false }} />
-      <Stack.Screen name="NoteDetail" component={NoteDetailScreen} />
-      <Stack.Screen name="NoteEdit" component={NoteEditScreen} />
-    </Stack.Navigator>
-  );
-}
-
-function AuthStack() {
-  return (
-    <Stack.Navigator
-      screenOptions={{
-        headerStyle: { backgroundColor: '#111' },
-        headerTintColor: '#fff',
-        contentStyle: { backgroundColor: '#111' },
-      }}
-    >
-      <Stack.Screen name="Login" component={LoginScreen} />
-      <Stack.Screen name="Register" component={RegisterScreen} />
-    </Stack.Navigator>
-  );
-}
-
 function LoadingScreen() {
   return (
     <View style={styles.loading}>
@@ -105,7 +83,20 @@ export default function RootNavigator() {
 
   return (
     <NavigationContainer linking={linking}>
-      {isAuthenticated ? <MainStack /> : <AuthStack />}
+      <Stack.Navigator screenOptions={stackScreenOptions}>
+        {!isAuthenticated ? (
+          <>
+            <Stack.Screen name="Login" component={LoginScreen} />
+            <Stack.Screen name="Register" component={RegisterScreen} />
+          </>
+        ) : (
+          <>
+            <Stack.Screen name="MainTabs" component={MainTabs} options={{ headerShown: false }} />
+            <Stack.Screen name="NoteDetail" component={NoteDetailScreen} />
+            <Stack.Screen name="NoteEdit" component={NoteEditScreen} />
+          </>
+        )}
+      </Stack.Navigator>
     </NavigationContainer>
   );
 }

@@ -67,8 +67,11 @@ cp .env.example .env
 | Variable | Required | Description | Example |
 |----------|----------|-------------|---------|
 | `GRPC_BACKEND_URL` | Yes | URL of the etu-backend gRPC service | `http://localhost:50051` (dev), `https://grpc.etu.natwelch.com` (prod) |
+| `SENTRY_DSN` | No | When set, `logError` / `logException` and `ErrorBoundary` report to [Sentry](https://sentry.io) | DSN from your Sentry project |
 
 **Important**: The app will log a warning if `GRPC_BACKEND_URL` is not set and fall back to `localhost:50051`. For production builds, always set this variable.
+
+After adding `@sentry/react-native`, run `cd ios && pod install` before building iOS.
 
 ## Running the App
 
@@ -221,13 +224,57 @@ The app supports standard React Native build variants:
 
 ## Deep Linking
 
-The app registers the URL scheme `etu://`. Use `etu://open` to open the app and `etu://open/note/:noteId` to open a specific note (when authenticated). Configure the same scheme in share targets or web links if you want "open in app" behavior.
+The app registers the URL scheme `etu://` with host `open` (see `AndroidManifest.xml`). Navigation uses a **single root stack** so links resolve the same way for auth and main flows.
 
-**Examples**:
-```
-etu://open                    # Open app
-etu://open/note/abc123        # Open specific note
-```
+**When signed in**
+
+| URL | Screen |
+|-----|--------|
+| `etu://open` | Timeline (default tab) |
+| `etu://open/capture` | Capture |
+| `etu://open/random` | Random |
+| `etu://open/search` | Search |
+| `etu://open/settings` | Settings |
+| `etu://open/note/:noteId` | Note detail |
+| `etu://open/edit` | New note (capture flow) |
+
+**When signed out**
+
+| URL | Screen |
+|-----|--------|
+| `etu://open/login` | Login |
+| `etu://open/register` | Register |
+
+Opening a note link while signed out shows the auth stack; sign in, then open the link again.
+
+## Google Play submission
+
+Use this checklist before **Production** (internal / closed testing first is recommended).
+
+### Console checklist
+
+1. Create the app with package name **`com.etumobileapp`** (must match `applicationId` in Gradle).
+2. **App signing**: use Play App Signing; upload key matches your CI/local release keystore.
+3. **Store listing**: title, short description, full description, icon, feature graphic, phone screenshots (tablet if required by policy).
+4. **Privacy policy**: public HTTPS URL describing data collection and use (backend URL, account, notes, optional crash reports if `SENTRY_DSN` is set).
+5. **Content rating** questionnaire (IARC).
+6. **Target API**: already **API 36** in this project.
+7. **Release**: upload AAB from CI (`bundleRelease`) or locally; run **Pre-launch report** on an internal track build.
+
+### Data safety (aligned with this codebase)
+
+Declare in Play Console what the app actually uses:
+
+- **Network**: notes and auth go to your configured gRPC host (`GRPC_BACKEND_URL`).
+- **Account**: email/password or API key; tokens stored with the OS secure store (Keychain / Keystore-backed).
+- **Photos / images**: attach images to notes (`READ_MEDIA_IMAGES`, camera, storage on older APIs).
+- **Audio files**: attach or pick audio (`READ_MEDIA_AUDIO`).
+- **Microphone**: in-app recording uses **`RECORD_AUDIO`**; runtime permission is requested on Android before recording.
+- **Crash diagnostics** (optional): if you ship with `SENTRY_DSN`, disclose error/crash reporting and the third party (Sentry).
+
+### Versioning
+
+Bump `versionCode` for **every** Play upload and `versionName` for user-visible releases (`android/app/build.gradle`).
 
 ## Architecture
 
@@ -248,7 +295,7 @@ etu-mobile/
 
 ### Key Technologies
 
-- **React Native 0.83.1**: Mobile framework
+- **React Native 0.84**: Mobile framework
 - **React Navigation 7**: Navigation library
 - **TanStack Query 5**: Server state management
 - **Connect RPC**: gRPC-Web client for API communication

@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useCallback } from 'react';
 import {
   View,
   Text,
@@ -8,13 +8,15 @@ import {
   RefreshControl,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { useQuery } from '@tanstack/react-query';
+import { useInfiniteQuery, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '../context/AuthContext';
 import { listNotes } from '../api/notes';
 import NoteCard from '../components/NoteCard';
 import type { Note } from '../api/client';
 import { protoTimestampToDate, formatDateGroup } from '../utils/date';
 import { isAuthError, getErrorMessage } from '../utils/errors';
+
+const PAGE_SIZE = 50;
 
 type GroupedNotes = { label: string; notes: Note[] }[];
 
@@ -36,24 +38,55 @@ function groupNotesByDate(notes: Note[]): GroupedNotes {
 
 export default function TimelineScreen() {
   const navigation = useNavigation();
+  const queryClient = useQueryClient();
   const { user, token, handleAuthError } = useAuth();
-  const { data, isLoading, isRefetching, refetch, error } = useQuery({
+
+  const {
+    data,
+    isLoading,
+    isFetching,
+    isFetchingNextPage,
+    fetchNextPage,
+    hasNextPage,
+    error,
+  } = useInfiniteQuery({
     queryKey: ['notes', user?.id],
-    queryFn: () => listNotes({ userId: user!.id, token: token! }),
+    queryFn: ({ pageParam }) =>
+      listNotes({
+        userId: user!.id,
+        token: token!,
+        limit: PAGE_SIZE,
+        offset: pageParam,
+      }),
+    initialPageParam: 0,
+    getNextPageParam: lastPage => {
+      const loaded = lastPage.offset + lastPage.notes.length;
+      if (loaded >= lastPage.total) return undefined;
+      return loaded;
+    },
     enabled: !!user?.id && !!token,
   });
 
-  // Handle auth errors
   React.useEffect(() => {
     if (error && isAuthError(error)) {
       void handleAuthError();
     }
   }, [error, handleAuthError]);
 
-  const grouped = useMemo(() => {
-    if (!data?.notes) return [];
-    return groupNotesByDate(data.notes);
-  }, [data]);
+  const allNotes = useMemo(() => (data?.pages ?? []).flatMap(p => p.notes), [data?.pages]);
+
+  const grouped = useMemo(() => groupNotesByDate(allNotes), [allNotes]);
+
+  const onRefresh = useCallback(() => {
+    if (!user?.id) return;
+    void queryClient.resetQueries({ queryKey: ['notes', user.id] });
+  }, [queryClient, user]);
+
+  const onEndReached = useCallback(() => {
+    if (hasNextPage && !isFetchingNextPage) {
+      void fetchNextPage();
+    }
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   if (!user || !token) return null;
 
@@ -65,7 +98,7 @@ export default function TimelineScreen() {
     );
   }
 
-  if (error) {
+  if (error && allNotes.length === 0) {
     return (
       <View style={styles.centered}>
         <Text style={styles.errorText}>Failed to load notes</Text>
@@ -79,6 +112,8 @@ export default function TimelineScreen() {
     ...g.notes.map((n) => ({ type: 'note' as const, key: n.id, note: n })),
   ]);
 
+  const isPullRefreshing = isFetching && !isFetchingNextPage && !isLoading;
+
   return (
     <FlatList
       data={sections}
@@ -86,10 +121,19 @@ export default function TimelineScreen() {
       contentContainerStyle={styles.list}
       refreshControl={
         <RefreshControl
-          refreshing={isRefetching && !isLoading}
-          onRefresh={() => { void refetch(); }}
+          refreshing={isPullRefreshing}
+          onRefresh={onRefresh}
           tintColor="#0a84ff"
         />
+      }
+      onEndReached={onEndReached}
+      onEndReachedThreshold={0.35}
+      ListFooterComponent={
+        isFetchingNextPage ? (
+          <View style={styles.footer}>
+            <ActivityIndicator size="small" color="#0a84ff" />
+          </View>
+        ) : null
       }
       renderItem={({ item }) => {
         if (item.type === 'header') {
@@ -117,6 +161,7 @@ export default function TimelineScreen() {
 const styles = StyleSheet.create({
   centered: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#111' },
   list: { paddingVertical: 8, paddingBottom: 32 },
+  footer: { paddingVertical: 16, alignItems: 'center' },
   sectionHeader: {
     color: '#888',
     fontSize: 13,

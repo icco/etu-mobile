@@ -40,7 +40,14 @@ jest.mock('react-native-config', () => ({
   __esModule: true,
   default: {
     GRPC_BACKEND_URL: 'http://localhost:50051',
+    SENTRY_DSN: '',
   },
+}));
+
+jest.mock('@sentry/react-native', () => ({
+  init: jest.fn(),
+  captureException: jest.fn(),
+  captureMessage: jest.fn(),
 }));
 
 jest.mock('react-native-keychain', () => ({
@@ -84,6 +91,7 @@ jest.mock('@tanstack/react-query', () => ({
   QueryClient: jest.fn().mockImplementation(() => ({
     clear: jest.fn(),
     invalidateQueries: jest.fn(),
+    resetQueries: jest.fn(() => Promise.resolve()),
   })),
   QueryClientProvider: ({ children }: { children: React.ReactNode }) => children,
 }));
