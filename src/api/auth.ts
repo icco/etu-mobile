@@ -94,6 +94,20 @@ export async function loginWithApiKey(apiKey: string): Promise<User> {
   }
 }
 
+/**
+ * Hash an email for log correlation without leaking the address itself.
+ * djb2 is fast, dependency-free, and good enough to dedupe events without
+ * revealing the underlying PII in crash reports or device log streams.
+ */
+function hashEmail(email: string): string {
+  let hash = 5381;
+  for (let i = 0; i < email.length; i++) {
+    hash = (hash * 33) ^ email.charCodeAt(i);
+  }
+  // Force unsigned and base36 for compactness.
+  return (hash >>> 0).toString(36);
+}
+
 export async function register(email: string, password: string): Promise<User> {
   try {
     const res = await authClient.client.register(
@@ -111,7 +125,7 @@ export async function register(email: string, password: string): Promise<User> {
   } catch (error) {
     logException(error instanceof Error ? error : new Error(String(error)), {
       method: 'register',
-      email,
+      emailHash: hashEmail(email),
     });
     throw error;
   }
@@ -127,7 +141,7 @@ export async function loginWithEmailPassword(
       {} // no auth required for authenticate
     );
     if (!res.success || !res.user) {
-      logWarning('Authentication failed for user', { email });
+      logWarning('Authentication failed for user', { emailHash: hashEmail(email) });
       throw new Error('Invalid email or password');
     }
     const user = res.user;
@@ -157,7 +171,7 @@ export async function loginWithEmailPassword(
   } catch (error) {
     logException(error instanceof Error ? error : new Error(String(error)), {
       method: 'loginWithEmailPassword',
-      email,
+      emailHash: hashEmail(email),
     });
     throw error;
   }
