@@ -1,5 +1,7 @@
 module.exports = {
-  preset: 'react-native',
+  // React Native 0.85 split the jest preset out into its own package.
+  // See https://github.com/facebook/react-native/pull/52133
+  preset: '@react-native/jest-preset',
   setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],
   moduleNameMapper: {
     '^@icco/etu-proto$': '<rootDir>/__mocks__/etu-proto.js',
