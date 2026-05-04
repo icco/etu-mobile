@@ -24,6 +24,11 @@ export default function SettingsScreen() {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [saving, setSaving] = useState(false);
+  // Track the last server-provided name we hydrated into the editable
+  // `name` field so we re-sync only when the upstream value actually
+  // changes. Avoids react-hooks/set-state-in-effect; see
+  // https://react.dev/reference/react/useState#storing-information-from-previous-renders
+  const [hydratedName, setHydratedName] = useState<string | null>(null);
 
   const { data: profile, isLoading } = useQuery({
     queryKey: ['userSettings', user?.id],
@@ -37,9 +42,10 @@ export default function SettingsScreen() {
     enabled: !!user?.id && !!token && activeSection === 'main',
   });
 
-  React.useEffect(() => {
-    if (profile?.name) setName(profile.name);
-  }, [profile?.name]);
+  if (profile?.name && profile.name !== hydratedName) {
+    setHydratedName(profile.name);
+    setName(profile.name);
+  }
 
   const handleUpdateProfile = async () => {
     if (!user || !token) return;

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -36,14 +36,14 @@ export default function NoteEditScreen() {
   const [images, setImages] = useState<SelectedImage[]>([]);
   const [audios, setAudios] = useState<SelectedAudio[]>([]);
   const [saving, setSaving] = useState(false);
+  // Track which Note (or initial-content draft) we have already hydrated
+  // local form state from, so we re-sync only when the source actually
+  // changes. See https://react.dev/reference/react/useState#storing-information-from-previous-renders
+  // for the "adjust state during render" pattern that avoids the
+  // react-hooks/set-state-in-effect anti-pattern.
+  const [hydratedSourceId, setHydratedSourceId] = useState<string | null>(null);
 
   const isEdit = !!noteId;
-
-  useEffect(() => {
-    if (initialContent !== undefined && !existingNote && !noteId) {
-      setContent(initialContent);
-    }
-  }, [initialContent, existingNote, noteId]);
 
   const { data: note, isLoading } = useQuery({
     queryKey: ['note', noteId, user?.id],
@@ -57,15 +57,23 @@ export default function NoteEditScreen() {
     enabled: !!user?.id && !!token,
   });
 
-  useEffect(() => {
-    if (existingNote) {
-      setContent(existingNote.content);
-      setTags(existingNote.tags ?? []);
-    } else if (note) {
-      setContent(note.content);
-      setTags(note.tags ?? []);
+  // Source of truth, in priority order:
+  //   1. existingNote handed to us via route params (instant edit)
+  //   2. note fetched from server when only noteId was provided
+  //   3. initialContent draft (e.g. share-extension entry point)
+  const sourceNote = existingNote ?? note;
+  const sourceId = sourceNote?.id ?? (initialContent !== undefined && !noteId ? '__draft__' : null);
+
+  if (sourceId && sourceId !== hydratedSourceId) {
+    setHydratedSourceId(sourceId);
+    if (sourceNote) {
+      setContent(sourceNote.content);
+      setTags(sourceNote.tags ?? []);
+    } else {
+      // initialContent draft path
+      setContent(initialContent ?? '');
     }
-  }, [existingNote, note]);
+  }
 
   const handleSave = async () => {
     if (!user || !token) return;
