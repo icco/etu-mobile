@@ -1,0 +1,30 @@
+---
+description: Never push directly to main; always open a PR
+alwaysApply: true
+---
+
+# Never push directly to `main`
+
+`git push` to `main` (or `master`, or any default branch) is **forbidden**, full stop. This includes pushing local commits whose only sin is that the local branch happened to be `main`.
+
+User phrasings that are **not** permission to push to main:
+
+- "commit and push"
+- "push often"
+- "push into the PRs"
+- "ship it" / "land this"
+- "go fix it" / "just do it"
+
+All of those mean: open a PR and push commits to that PR's branch.
+
+Required workflow for every change in this repo:
+
+1. `git checkout -b <descriptive-branch-name>` off `main`.
+2. Commit the work on that branch.
+3. `git push -u origin <branch-name>`.
+4. `gh pr create` with a real title and body.
+5. Push follow-up commits to the same branch.
+
+If the user says "push to main" using those exact words, confirm once with `AskQuestion` before doing it. Treat any ambiguity as a no.
+
+If commits are already on local `main` that haven't been pushed: create a branch at `HEAD`, hard-reset local `main` to `origin/main`, push the branch, open the PR. Tell the user.
