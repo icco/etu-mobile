@@ -176,5 +176,6 @@ jobs:
           cd ios
           xcodebuild -workspace EtuMobileApp.xcworkspace -scheme EtuMobileApp \
             -configuration Debug -sdk iphonesimulator \
-            -destination 'platform=iOS Simulator,name=iPhone 16' \
-            -derivedDataPath build ONLY_ACTIVE_ARCH=NO
+            -destination 'generic/platform=iOS Simulator' \
+            -derivedDataPath build ONLY_ACTIVE_ARCH=NO \
+            CODE_SIGNING_ALLOWED=NO build
