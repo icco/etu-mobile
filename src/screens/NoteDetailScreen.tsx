@@ -129,12 +129,12 @@ export default function NoteDetailScreen() {
           <View style={styles.mediaSection}>
             <Text style={styles.mediaTitle}>Images ({images.length})</Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.imageList}>
-              {images.map((image, index) => {
+              {images.map((image) => {
                 const imageUrl = getImageUrl(image);
                 if (!imageUrl) return null;
                 return (
                   <TouchableOpacity
-                    key={index}
+                    key={image.id}
                     onPress={() => setSelectedImage(imageUrl)}
                     activeOpacity={0.7}
                   >
@@ -150,7 +150,7 @@ export default function NoteDetailScreen() {
           <View style={styles.mediaSection}>
             <Text style={styles.mediaTitle}>Audio ({audios.length})</Text>
             {audios.map((audio, index) => (
-                <View key={index} style={styles.audioItem}>
+                <View key={audio.id} style={styles.audioItem}>
                   <View style={styles.audioInfo}>
                     <Text style={styles.audioName} numberOfLines={1}>
                       {`Audio ${index + 1}`}

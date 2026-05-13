@@ -124,7 +124,7 @@ export default function ImagePicker({
       {images.length > 0 && (
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.imageList}>
           {images.map((image, index) => (
-            <View key={index} style={styles.imageContainer}>
+            <View key={image.uri} style={styles.imageContainer}>
               <Image source={{ uri: image.uri }} style={styles.thumbnail} />
               <TouchableOpacity
                 style={styles.removeButton}
