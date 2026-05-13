@@ -295,7 +295,7 @@ export default function AudioPicker({
       {audios.length > 0 && (
         <View style={styles.audioList}>
           {audios.map((audio, index) => (
-            <View key={index} style={styles.audioItem}>
+            <View key={audio.uri} style={styles.audioItem}>
               <View style={styles.audioInfo}>
                 <Text style={styles.audioName} numberOfLines={1}>
                   {audio.name}

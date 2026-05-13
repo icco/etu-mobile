@@ -21,7 +21,6 @@ export default function ApiKeysScreen() {
   const [modalVisible, setModalVisible] = useState(false);
   const [newName, setNewName] = useState('');
   const [creating, setCreating] = useState(false);
-  const [, setRawKeyShown] = useState<string | null>(null);
 
   const { data: keys = [], isLoading } = useQuery({
     queryKey: ['apiKeys', user?.id],
@@ -37,11 +36,9 @@ export default function ApiKeysScreen() {
       void queryClient.invalidateQueries({ queryKey: ['apiKeys', user.id] });
       setModalVisible(false);
       setNewName('');
-      setRawKeyShown(rawKey);
       Alert.alert(
         'API key created',
         `Copy it now – you won't see it again.\n\n${rawKey}`,
-        [{ text: 'OK', onPress: () => setRawKeyShown(null) }]
       );
     } catch (e) {
       Alert.alert('Error', e instanceof Error ? e.message : 'Failed to create key');
