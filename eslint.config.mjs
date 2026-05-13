@@ -35,21 +35,20 @@ export default tseslint.config(
   {
     files: ['**/*.{tsx,jsx}'],
     ...eslintReact.configs['recommended-typescript'],
+    plugins: {
+      ...eslintReact.configs['recommended-typescript'].plugins,
+      'react-hooks': reactHooks,
+    },
+    rules: {
+      ...eslintReact.configs['recommended-typescript'].rules,
+      ...reactHooks.configs.recommended.rules,
+    },
     languageOptions: {
       parserOptions: {
         ecmaFeatures: {
           jsx: true,
         },
       },
-    },
-  },
-  {
-    files: ['**/*.{tsx,jsx}'],
-    plugins: {
-      'react-hooks': reactHooks,
-    },
-    rules: {
-      ...reactHooks.configs.recommended.rules,
     },
   },
   {
