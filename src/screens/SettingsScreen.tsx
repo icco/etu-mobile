@@ -162,7 +162,7 @@ export default function SettingsScreen() {
       <Text style={[styles.sectionTitle, styles.sectionTitleSpaced]}>Subscription</Text>
       <TouchableOpacity
         style={styles.linkBtn}
-        onPress={() => { void Linking.openURL('https://etu.natwelch.com/settings'); }}
+        onPress={() => { void Linking.openURL('https://etu.timeclimbers.com/settings'); }}
       >
         <Text style={styles.linkBtnText}>Manage subscription (web) →</Text>
       </TouchableOpacity>
