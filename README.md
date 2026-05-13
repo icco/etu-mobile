@@ -59,14 +59,14 @@ cp .env.example .env
 
 # Edit .env and set GRPC_BACKEND_URL to your etu-backend URL
 # Example: GRPC_BACKEND_URL=http://localhost:50051
-# For production: GRPC_BACKEND_URL=https://grpc.etu.natwelch.com
+# For production: GRPC_BACKEND_URL=https://grpc.etu.timeclimbers.com
 ```
 
 ## Environment Variables
 
 | Variable | Required | Description | Example |
 |----------|----------|-------------|---------|
-| `GRPC_BACKEND_URL` | Yes | URL of the etu-backend gRPC service | `http://localhost:50051` (dev), `https://grpc.etu.natwelch.com` (prod) |
+| `GRPC_BACKEND_URL` | Yes | URL of the etu-backend gRPC service | `http://localhost:50051` (dev), `https://grpc.etu.timeclimbers.com` (prod) |
 | `SENTRY_DSN` | No | When set, `logError` / `logException` and `ErrorBoundary` report to [Sentry](https://sentry.io) | DSN from your Sentry project |
 
 **Important**: The app will log a warning if `GRPC_BACKEND_URL` is not set and fall back to `localhost:50051`. For production builds, always set this variable.
@@ -414,7 +414,7 @@ cd ios && pod install && cd ..
 
 ## Subscription Management
 
-Subscription management is currently handled through the web interface. The mobile app provides a link to [etu.natwelch.com/settings](https://etu.natwelch.com/settings) where users can manage their Stripe subscriptions ($5/year).
+Subscription management is currently handled through the web interface. The mobile app provides a link to [etu.timeclimbers.com/settings](https://etu.timeclimbers.com/settings) where users can manage their Stripe subscriptions ($5/year).
 
 **Future**: In-app subscriptions via RevenueCat or native IAP are planned.
 
