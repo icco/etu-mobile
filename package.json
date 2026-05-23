@@ -35,7 +35,7 @@
     "react-native-markdown-display": "^7.0.2",
     "react-native-nitro-modules": "^0.35.5",
     "react-native-nitro-sound": "^0.2.10",
-    "react-native-safe-area-context": "^5.7.0",
+    "react-native-safe-area-context": "^5.8.0",
     "react-native-screens": "^4.25.0"
   },
   "devDependencies": {
