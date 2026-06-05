@@ -62,7 +62,7 @@
     "prettier": "^3.8.3",
     "react-test-renderer": "^19.2.6",
     "typescript": "^6.0.3",
-    "typescript-eslint": "^8.59.3"
+    "typescript-eslint": "^8.60.1"
   },
   "engines": {
     "node": ">=25"
