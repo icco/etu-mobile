@@ -1016,10 +1016,10 @@
   resolved "https://registry.yarnpkg.com/@connectrpc/connect-web/-/connect-web-2.1.1.tgz#155eb30cd8cfc91142870277ab300d313f9d8dcf"
   integrity sha512-J8317Q2MaFRCT1jzVR1o06bZhDIBmU0UAzWx6xOIXzOq8+k71/+k7MUF7AwcBUX+34WIvbm5syRgC5HXQA8fOg==
 
-"@connectrpc/connect@^2.1.1":
-  version "2.1.1"
-  resolved "https://registry.yarnpkg.com/@connectrpc/connect/-/connect-2.1.1.tgz#a9623190d218890bec2d68e56037cb124a33e857"
-  integrity sha512-JzhkaTvM73m2K1URT6tv53k2RwngSmCXLZJgK580qNQOXRzZRR/BCMfZw3h+90JpnG6XksP5bYT+cz0rpUzUWQ==
+"@connectrpc/connect@^2.1.2":
+  version "2.1.2"
+  resolved "https://registry.yarnpkg.com/@connectrpc/connect/-/connect-2.1.2.tgz#75c0fc60680b2cfe95bf97c5c69961b315ca2f46"
+  integrity sha512-MXkBijtcX09R10Eb6sFeIetc6w6746eio6xtfuyVOH7oQAacT1X0GzMIQFux6Qy8cq3W/T5qX5Bei8YbFtmRGA==
 
 "@emnapi/core@^1.4.3":
   version "1.10.0"
