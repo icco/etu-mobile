@@ -3,6 +3,7 @@
  */
 
 import React from 'react';
+import { ActivityIndicator } from 'react-native';
 import { render, fireEvent } from '@testing-library/react-native';
 import { useQuery } from '@tanstack/react-query';
 import SettingsScreen from '../src/screens/SettingsScreen';
@@ -62,6 +63,40 @@ describe('SettingsScreen stats section', () => {
     expect(getByText(globalStats.totalBlips.toLocaleString())).toBeTruthy();
     expect(getByText(globalStats.uniqueTags.toLocaleString())).toBeTruthy();
     expect(getByText(globalStats.wordsWritten.toLocaleString())).toBeTruthy();
+  });
+
+  it('shows loading indicators while stats queries are loading', () => {
+    mockedUseQuery.mockImplementation(({ queryKey }: { queryKey: unknown[] }) => {
+      if (queryKey[0] === 'stats') {
+        return { data: undefined, isLoading: true, error: null };
+      }
+      return { data: undefined, isLoading: false, error: null };
+    });
+
+    const { getByText, queryByText, UNSAFE_getAllByType } = render(<SettingsScreen />);
+    fireEvent.press(getByText('View statistics →'));
+
+    expect(getByText('Your Statistics')).toBeTruthy();
+    expect(getByText('Community Statistics')).toBeTruthy();
+    expect(UNSAFE_getAllByType(ActivityIndicator)).toHaveLength(2);
+    expect(queryByText('Blips')).toBeNull();
+    expect(queryByText('Failed to load stats')).toBeNull();
+  });
+
+  it('shows error text when stats queries fail', () => {
+    mockedUseQuery.mockImplementation(({ queryKey }: { queryKey: unknown[] }) => {
+      if (queryKey[0] === 'stats') {
+        return { data: undefined, isLoading: false, error: new Error('boom') };
+      }
+      return { data: undefined, isLoading: false, error: null };
+    });
+
+    const { getByText, getAllByText, queryByText } = render(<SettingsScreen />);
+    fireEvent.press(getByText('View statistics →'));
+
+    expect(getAllByText('Failed to load stats')).toHaveLength(2);
+    expect(getAllByText('boom')).toHaveLength(2);
+    expect(queryByText('Blips')).toBeNull();
   });
 
   it('returns to the main section via the back button', () => {
