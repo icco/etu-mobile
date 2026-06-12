@@ -12,14 +12,16 @@ import {
 } from 'react-native';
 import { useAuth } from '../context/AuthContext';
 import { getUserSettings, updateUserSettings } from '../api/settings';
-import { listNotes } from '../api/notes';
+import { getStats } from '../api/stats';
+import type { Stats } from '../api/stats';
+import { getErrorMessage } from '../utils/errors';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import ApiKeysScreen from './ApiKeysScreen';
 
 export default function SettingsScreen() {
   const { user, token, logout, refreshUser } = useAuth();
   const queryClient = useQueryClient();
-  const [activeSection, setActiveSection] = useState<'main' | 'apikeys'>('main');
+  const [activeSection, setActiveSection] = useState<'main' | 'apikeys' | 'stats'>('main');
   const [name, setName] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -36,10 +38,16 @@ export default function SettingsScreen() {
     enabled: !!user?.id && !!token && activeSection === 'main',
   });
 
-  const { data: noteStats } = useQuery({
-    queryKey: ['noteStats', user?.id],
-    queryFn: () => listNotes({ userId: user!.id, token: token!, limit: 1, offset: 0 }),
-    enabled: !!user?.id && !!token && activeSection === 'main',
+  const userStatsQuery = useQuery({
+    queryKey: ['stats', user?.id],
+    queryFn: () => getStats(token!, user!.id),
+    enabled: !!user?.id && !!token && activeSection === 'stats',
+  });
+
+  const globalStatsQuery = useQuery({
+    queryKey: ['stats', 'global'],
+    queryFn: () => getStats(token!),
+    enabled: !!token && activeSection === 'stats',
   });
 
   if (profile?.name && profile.name !== hydratedName) {
@@ -79,6 +87,58 @@ export default function SettingsScreen() {
   };
 
   if (!user || !token) return null;
+
+  const renderStatsBlock = (
+    title: string,
+    query: { data?: Stats; isLoading: boolean; error: unknown },
+    spaced: boolean
+  ) => (
+    <>
+      <Text style={[styles.sectionTitle, spaced && styles.sectionTitleSpaced]}>
+        {title}
+      </Text>
+      {query.isLoading ? (
+        <ActivityIndicator size="small" color="#0a84ff" style={styles.loader} />
+      ) : query.error ? (
+        <>
+          <Text style={styles.errorText}>Failed to load stats</Text>
+          <Text style={styles.errorDetail}>{getErrorMessage(query.error)}</Text>
+        </>
+      ) : (
+        <>
+          <Text style={styles.label}>Blips</Text>
+          <Text style={styles.value}>
+            {query.data ? query.data.totalBlips.toLocaleString() : '—'}
+          </Text>
+          <Text style={styles.label}>Tags</Text>
+          <Text style={styles.value}>
+            {query.data ? query.data.uniqueTags.toLocaleString() : '—'}
+          </Text>
+          <Text style={styles.label}>Words written</Text>
+          <Text style={styles.value}>
+            {query.data ? query.data.wordsWritten.toLocaleString() : '—'}
+          </Text>
+        </>
+      )}
+    </>
+  );
+
+  if (activeSection === 'stats') {
+    return (
+      <View style={styles.container}>
+        <TouchableOpacity
+          style={styles.backBtn}
+          onPress={() => setActiveSection('main')}
+        >
+          <Text style={styles.backBtnText}>← Settings</Text>
+        </TouchableOpacity>
+        <ScrollView contentContainerStyle={styles.scroll}>
+          {renderStatsBlock('Your Statistics', userStatsQuery, false)}
+          {renderStatsBlock('Community Statistics', globalStatsQuery, true)}
+        </ScrollView>
+      </View>
+    );
+  }
 
   if (activeSection === 'apikeys') {
     return (
@@ -142,11 +202,16 @@ export default function SettingsScreen() {
         </>
       )}
 
-      <Text style={[styles.sectionTitle, styles.sectionTitleSpaced]}>Usage</Text>
-      <Text style={styles.label}>Notes</Text>
-      <Text style={styles.value}>
-        {noteStats?.total != null ? noteStats.total.toLocaleString() : '—'}
+      <Text style={[styles.sectionTitle, styles.sectionTitleSpaced]}>Statistics</Text>
+      <Text style={styles.hint}>
+        See your journaling activity and community totals.
       </Text>
+      <TouchableOpacity
+        style={styles.linkBtn}
+        onPress={() => setActiveSection('stats')}
+      >
+        <Text style={styles.linkBtnText}>View statistics →</Text>
+      </TouchableOpacity>
 
       <Text style={[styles.sectionTitle, styles.sectionTitleSpaced]}>API Keys</Text>
       <Text style={styles.hint}>
@@ -201,6 +266,8 @@ const styles = StyleSheet.create({
   disabled: { opacity: 0.7 },
   saveBtnText: { color: '#fff', fontSize: 16, fontWeight: '600' },
   hint: { color: '#666', fontSize: 14, marginBottom: 12 },
+  errorText: { color: '#ff453a', fontSize: 16, marginBottom: 4 },
+  errorDetail: { color: '#888', fontSize: 14, marginBottom: 16 },
   linkBtn: { marginBottom: 8 },
   linkBtnText: { color: '#0a84ff', fontSize: 16 },
   sectionTitleSpaced: { marginTop: 32 },
