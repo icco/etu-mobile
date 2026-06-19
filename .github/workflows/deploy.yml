@@ -75,7 +75,7 @@ jobs:
     if: needs.check-secrets.outputs.has_play_store_secrets == 'true'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           persist-credentials: false
 
@@ -127,7 +127,7 @@ jobs:
     if: needs.check-secrets.outputs.has_apple_secrets == 'true'
     runs-on: macos-15
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           persist-credentials: false
 
