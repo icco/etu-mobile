@@ -39,7 +39,7 @@
     "react-native-screens": "^4.25.2"
   },
   "devDependencies": {
-    "@babel/core": "^7.29.0",
+    "@babel/core": "^7.29.6",
     "@babel/preset-env": "^7.29.5",
     "@babel/runtime": "^7.29.2",
     "@eslint-react/eslint-plugin": "^5.8.7",
