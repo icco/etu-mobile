@@ -26,8 +26,8 @@ describe('ErrorBoundary', () => {
     console.error = originalError;
   });
 
-  it('renders children when there is no error', () => {
-    render(
+  it('renders children when there is no error', async () => {
+    await render(
       <ErrorBoundary>
         <ThrowError shouldThrow={false} />
       </ErrorBoundary>
@@ -36,8 +36,8 @@ describe('ErrorBoundary', () => {
     expect(screen.getByText('No error')).toBeTruthy();
   });
 
-  it('renders error UI when an error is caught', () => {
-    render(
+  it('renders error UI when an error is caught', async () => {
+    await render(
       <ErrorBoundary>
         <ThrowError shouldThrow={true} />
       </ErrorBoundary>
@@ -46,8 +46,8 @@ describe('ErrorBoundary', () => {
     expect(screen.getByText(/Something went wrong/i)).toBeTruthy();
   });
 
-  it('displays error message in error UI', () => {
-    render(
+  it('displays error message in error UI', async () => {
+    await render(
       <ErrorBoundary>
         <ThrowError shouldThrow={true} />
       </ErrorBoundary>
@@ -56,8 +56,8 @@ describe('ErrorBoundary', () => {
     expect(screen.getByText(/Test error/i)).toBeTruthy();
   });
 
-  it('provides a way to retry after error', () => {
-    const { getByText } = render(
+  it('provides a way to retry after error', async () => {
+    const { getByText } = await render(
       <ErrorBoundary>
         <ThrowError shouldThrow={true} />
       </ErrorBoundary>
