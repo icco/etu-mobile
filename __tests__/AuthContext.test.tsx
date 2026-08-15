@@ -35,8 +35,8 @@ describe('AuthContext', () => {
     mockedAuthApi.clearStoredAuth.mockResolvedValue();
   });
 
-  it('provides auth context', () => {
-    const { result } = renderHook(() => useAuth(), { wrapper });
+  it('provides auth context', async () => {
+    const { result } = await renderHook(() => useAuth(), { wrapper });
     
     expect(result.current).toBeDefined();
     expect(result.current.user).toBeNull();
@@ -52,7 +52,7 @@ describe('AuthContext', () => {
       token: mockToken,
     });
 
-    const { result } = renderHook(() => useAuth(), { wrapper });
+    const { result } = await renderHook(() => useAuth(), { wrapper });
 
     await waitFor(() => {
       expect(result.current.isLoading).toBe(false);
@@ -67,7 +67,7 @@ describe('AuthContext', () => {
     const mockUser = createMockUser('123', 'test@example.com');
     mockedAuthApi.loginWithApiKey.mockResolvedValue(mockUser);
 
-    const { result } = renderHook(() => useAuth(), { wrapper });
+    const { result } = await renderHook(() => useAuth(), { wrapper });
 
     await waitFor(() => {
       expect(result.current.isLoading).toBe(false);
@@ -90,7 +90,7 @@ describe('AuthContext', () => {
     mockedAuthApi.getStoredAuth.mockResolvedValueOnce(null); // Initial load
     mockedAuthApi.getStoredAuth.mockResolvedValueOnce({ user: mockUser, token: mockToken }); // After login
 
-    const { result } = renderHook(() => useAuth(), { wrapper });
+    const { result } = await renderHook(() => useAuth(), { wrapper });
 
     await waitFor(() => {
       expect(result.current.isLoading).toBe(false);
@@ -108,7 +108,7 @@ describe('AuthContext', () => {
     const mockUser = createMockUser('123', 'test@example.com');
     mockedAuthApi.register.mockResolvedValue(mockUser);
 
-    const { result } = renderHook(() => useAuth(), { wrapper });
+    const { result } = await renderHook(() => useAuth(), { wrapper });
 
     await waitFor(() => {
       expect(result.current.isLoading).toBe(false);
@@ -130,7 +130,7 @@ describe('AuthContext', () => {
       token: mockToken,
     });
 
-    const { result } = renderHook(() => useAuth(), { wrapper });
+    const { result } = await renderHook(() => useAuth(), { wrapper });
 
     await waitFor(() => {
       expect(result.current.isAuthenticated).toBe(true);
@@ -154,7 +154,7 @@ describe('AuthContext', () => {
       token: mockToken,
     });
 
-    const { result } = renderHook(() => useAuth(), { wrapper });
+    const { result } = await renderHook(() => useAuth(), { wrapper });
 
     await waitFor(() => {
       expect(result.current.isAuthenticated).toBe(true);
@@ -177,7 +177,7 @@ describe('AuthContext', () => {
       .mockResolvedValueOnce({ user: mockUser, token: mockToken })
       .mockResolvedValueOnce({ user: updatedUser, token: mockToken });
 
-    const { result } = renderHook(() => useAuth(), { wrapper });
+    const { result } = await renderHook(() => useAuth(), { wrapper });
 
     await waitFor(() => {
       expect(result.current.user).toEqual(mockUser);

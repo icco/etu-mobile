@@ -10,7 +10,7 @@ import { render } from '@testing-library/react-native';
 import MarkdownView from '../src/components/MarkdownView';
 
 describe('MarkdownView', () => {
-  it('renders headings, emphasis, code, links, and lists', () => {
+  it('renders headings, emphasis, code, links, and lists', async () => {
     const content = [
       '# Title',
       '## Subtitle',
@@ -24,7 +24,7 @@ describe('MarkdownView', () => {
       '[a link](https://example.com)',
     ].join('\n');
 
-    const { getByText } = render(<MarkdownView content={content} />);
+    const { getByText } = await render(<MarkdownView content={content} />);
 
     expect(getByText('Title')).toBeTruthy();
     expect(getByText('Subtitle')).toBeTruthy();
@@ -37,8 +37,8 @@ describe('MarkdownView', () => {
     expect(getByText('a link')).toBeTruthy();
   });
 
-  it('renders a placeholder for empty content', () => {
-    const { getByText } = render(<MarkdownView content="" />);
+  it('renders a placeholder for empty content', async () => {
+    const { getByText } = await render(<MarkdownView content="" />);
     expect(getByText('No content')).toBeTruthy();
   });
 });

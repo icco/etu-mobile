@@ -98,7 +98,12 @@ export default function SettingsScreen() {
         {title}
       </Text>
       {query.isLoading ? (
-        <ActivityIndicator size="small" color="#0a84ff" style={styles.loader} />
+        <ActivityIndicator
+          testID="stats-loader"
+          size="small"
+          color="#0a84ff"
+          style={styles.loader}
+        />
       ) : query.error ? (
         <>
           <Text style={styles.errorText}>Failed to load stats</Text>
