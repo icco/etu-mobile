@@ -1951,13 +1951,13 @@
   resolved "https://registry.yarnpkg.com/@react-native/gradle-plugin/-/gradle-plugin-0.85.3.tgz#79f94aa38bc68be9b331cfd197de5bb53109465a"
   integrity sha512-39dY2j50Q1pntejzwt3XL7vwXtrj8jcIfHq6E+gyu3jzYxZJVvMkMutQ39vSg6zinIQOX36oQDhidXUbCXzgoA==
 
-"@react-native/jest-preset@^0.85.3":
-  version "0.85.3"
-  resolved "https://registry.yarnpkg.com/@react-native/jest-preset/-/jest-preset-0.85.3.tgz#e7ce02f0fdf2b51d06097598f24a3e4f234478bb"
-  integrity sha512-ALPSrM0q2fU+5AXcOXzDKx7rxVKPMvygAZfsTWLdrGRVWIqf/HEfM0R8euQqIKUqmEuQ1TxMWN+px3h6gc4vow==
+"@react-native/jest-preset@^0.87.0":
+  version "0.87.0"
+  resolved "https://registry.yarnpkg.com/@react-native/jest-preset/-/jest-preset-0.87.0.tgz#8ba984899e5b10a1a2775c52f340d71acfca5837"
+  integrity sha512-aNK/CXEfOIQPIobwywB0SmtsaTANV1ONXZmRx/glwdHeFfudDvoHbYNudKAwH1d/HBzfXZONCJXuc0UtRca60w==
   dependencies:
     "@jest/create-cache-key-function" "^29.7.0"
-    "@react-native/js-polyfills" "0.85.3"
+    "@react-native/js-polyfills" "0.87.0"
     babel-jest "^29.7.0"
     jest-environment-node "^29.7.0"
     regenerator-runtime "^0.13.2"
@@ -1966,6 +1966,11 @@
   version "0.85.3"
   resolved "https://registry.yarnpkg.com/@react-native/js-polyfills/-/js-polyfills-0.85.3.tgz#f3eef60ee619f51f78f8db7489abc192e685508f"
   integrity sha512-U2+aMshIXf1uFn77tpBb/xhHWB9vkVrMpt7kkucAugF8hJKYTDGB587X7WwelHduK2KBfhl4giSv0rzZGoef9A==
+
+"@react-native/js-polyfills@0.87.0":
+  version "0.87.0"
+  resolved "https://registry.yarnpkg.com/@react-native/js-polyfills/-/js-polyfills-0.87.0.tgz#f87e692d3f1293d75d627ed0147d71e3f4f87fbf"
+  integrity sha512-iwX3S/6XnR/TkOIk6Cz+FjeToDM/a4M1Cz/o1tfDakULjhKMI/UBtta1DsJgeg5c4WIJjkD4c8XlAJEb8pWOtg==
 
 "@react-native/metro-babel-transformer@0.85.3":
   version "0.85.3"
