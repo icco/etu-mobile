@@ -2625,17 +2625,17 @@
   dependencies:
     "@sinonjs/commons" "^3.0.1"
 
-"@tanstack/query-core@5.101.4":
-  version "5.101.4"
-  resolved "https://registry.yarnpkg.com/@tanstack/query-core/-/query-core-5.101.4.tgz#c01b4289b3094144d8ef96235aa506242cf83efa"
-  integrity sha512-gNwcvOJcRbLWPOLG/2OBm+zM+Yv+MKsXKEOWC57USuZDEsI71hEErQsiEGx5wX9rzWWkfwM0fVSPoiIFSsxfiw==
+"@tanstack/query-core@5.102.7":
+  version "5.102.7"
+  resolved "https://registry.yarnpkg.com/@tanstack/query-core/-/query-core-5.102.7.tgz#a65a32394067230acefff3fa53bc9f133975bf1d"
+  integrity sha512-4TH8KQrCLoNs9Zvl1LW1iaZ9cZx3dGTgfZ1BnLrcRxMNnX/toe/dGbfvF/DkvbzRyfLfpMKZkembz3o0rnugtw==
 
-"@tanstack/react-query@^5.101.0":
-  version "5.101.4"
-  resolved "https://registry.yarnpkg.com/@tanstack/react-query/-/react-query-5.101.4.tgz#044137754d79aaa30a82f6e6c42488be79c86ea7"
-  integrity sha512-yRg2pfOCxIs4ZJW3XYYHU/WgtD04FHSnfHlpRT7h7pR77hwkdRG4wxbKe4aq6P0RvXUTBSQpQeadS1SUYUe+KA==
+"@tanstack/react-query@^5.102.7":
+  version "5.102.7"
+  resolved "https://registry.yarnpkg.com/@tanstack/react-query/-/react-query-5.102.7.tgz#932d3541cf43d8909c4792aa6ba0810165f8cd88"
+  integrity sha512-bbd8T4jDIj9aPbNn11SsjNH8apKY4zspkrw63JRsNDXjpW5SRF7X0ipi7yrGd8DCs8QhYfhQJKqEj1YLru1DbQ==
   dependencies:
-    "@tanstack/query-core" "5.101.4"
+    "@tanstack/query-core" "5.102.7"
 
 "@testing-library/react-native@^14.0.1":
   version "14.0.1"
