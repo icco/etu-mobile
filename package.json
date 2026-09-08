@@ -64,7 +64,7 @@
     "typescript-eslint": "^8.60.1"
   },
   "engines": {
-    "node": ">=25"
+    "node": ">=26"
   },
   "resolutions": {
     "jest-environment-node": "^30.4.1",
