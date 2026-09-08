@@ -82,7 +82,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v7
         with:
-          node-version: '26'
+          node-version: '25'
           cache: 'yarn'
           registry-url: 'https://npm.pkg.github.com'
           scope: '@icco'
@@ -138,7 +138,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v7
         with:
-          node-version: '26'
+          node-version: '25'
           cache: 'yarn'
           registry-url: 'https://npm.pkg.github.com'
           scope: '@icco'
