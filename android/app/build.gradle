@@ -80,7 +80,7 @@ android {
 
     namespace "com.etumobileapp"
     defaultConfig {
-        applicationId "com.etumobileapp"
+        applicationId "com.timeclimbers.etu"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 3
@@ -101,6 +101,11 @@ android {
                 keyAlias System.getenv("ANDROID_KEY_ALIAS") ?: ""
                 keyPassword System.getenv("ANDROID_KEY_PASSWORD") ?: ""
             } else {
+                // Debug fallback keeps debug builds working on a fresh clone, but a
+                // release build must never be signed with it.
+                if (gradle.startParameter.taskNames.any { it.toLowerCase().contains('release') }) {
+                    throw new GradleException("android/app/release.keystore is missing. Restore it from 1Password before building a release.")
+                }
                 storeFile file('debug.keystore')
                 storePassword 'android'
                 keyAlias 'androiddebugkey'
