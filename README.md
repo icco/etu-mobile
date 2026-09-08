@@ -208,7 +208,7 @@ Create an App Store Connect API key in App Store Connect â†’ Users and Access â†
 **Android** (`android/app/build.gradle`):
 - `versionCode`: Integer version (must increment for each release)
 - `versionName`: User-visible version string (e.g., "1.0", "1.1")
-- `applicationId`: `com.etumobileapp`
+- `applicationId`: `com.timeclimbers.etu`
 
 **iOS** (configured in Xcode project):
 - Bundle Identifier: `com.etumobileapp`
@@ -265,7 +265,7 @@ Use this checklist before **Production** (internal / closed testing first is rec
 
 ### Console checklist
 
-1. Create the app with package name **`com.etumobileapp`** (must match `applicationId` in Gradle).
+1. Create the app with package name **`com.timeclimbers.etu`** (must match `applicationId` in Gradle).
 2. **App signing**: use Play App Signing; upload key matches your CI/local release keystore.
 3. **Store listing**: title, short description, full description, icon, feature graphic, phone screenshots (tablet if required by policy).
 4. **Privacy policy**: public HTTPS URL describing data collection and use (backend URL, account, notes, optional crash reports if `SENTRY_DSN` is set).
