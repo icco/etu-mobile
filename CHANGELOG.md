@@ -9,8 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - Android `applicationId` is now `com.timeclimbers.etu` (Play package name; `namespace` unchanged)
-- Reverted react-native 0.87.1 (#206) back to 0.85.3 — it needs a real migration (Node engines,
-  Gradle 9.4.1, AGP 9 built-in Kotlin, `proguard-android.txt` removal), tracked separately
+- Reverted react-native 0.87.1 (#206) back to 0.85.3 — it forces AGP 9, which removed the
+  `BaseExtension` every external Kotlin Gradle plugin needs, and six deps still apply
+  `kotlin-android` (five already at their latest release). Unbuildable until they catch up.
 - Gradle wrapper `networkTimeout` 10s -> 120s; 10s is too short to fetch a distribution
 
 ### Fixed
