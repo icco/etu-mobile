@@ -28,7 +28,7 @@
     "markdown-it": "^15.0.0",
     "react": "^19.2.6",
     "react-native": "^0.85.3",
-    "react-native-config": "^1.6.1",
+    "react-native-config": "^1.7.2",
     "react-native-fs": "^2.20.0",
     "react-native-image-picker": "^8.2.1",
     "react-native-keychain": "^10.0.0",
