@@ -1544,10 +1544,10 @@
   resolved "https://registry.yarnpkg.com/@humanwhocodes/retry/-/retry-0.4.3.tgz#c2b9d2e374ee62c586d3adbea87199b1d7a7a6ba"
   integrity sha512-bV0Tgo9K4hfPCek+aMAn81RppFKv2ySDQeMoSZuvTASywNTnVJCArCZE2FWqpvIatKu7VMRLWlR1EazvVhDyhQ==
 
-"@icco/etu-proto@^2026.8":
-  version "2026.8.31123434"
-  resolved "https://npm.pkg.github.com/download/@icco/etu-proto/2026.8.31123434/2463a5125c288dd4763eae4331f8e3dd778a99c7#2463a5125c288dd4763eae4331f8e3dd778a99c7"
-  integrity sha512-0OtQzqG+5F2Tp7Te56xZnF6RAjIxfbl9RabRwj1ulicvmv7xGhkI1IU2MOUt3t4jPn2LbvC3ufMa5Kqg6hkRng==
+"@icco/etu-proto@^2026.9":
+  version "2026.9.13115724"
+  resolved "https://npm.pkg.github.com/download/@icco/etu-proto/2026.9.13115724/2916e9f3796720111215c846bf09f897ba9a7200#2916e9f3796720111215c846bf09f897ba9a7200"
+  integrity sha512-4pWiDi6/Gp1aB1UPudTVov7guCbNyzFPvkQZFJkrlm9RMriInp9Br0Hp3moMcduqOVZGQXag7P+1+EOtc8tJLg==
   dependencies:
     "@bufbuild/protobuf" "^2.0.0"
 
