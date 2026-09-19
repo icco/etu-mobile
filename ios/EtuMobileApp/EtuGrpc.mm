@@ -37,7 +37,7 @@ RCT_EXPORT_METHOD(unary:(NSString *)callId endpoint:(NSString *)endpoint method:
                   resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject) {
   NSURL *url = [NSURL URLWithString:endpoint];
   BOOL tls = [url.scheme isEqualToString:@"https"];
-  BOOL local = [@[@"localhost", @"127.0.0.1"] containsObject:url.host];
+  BOOL local = [@[@"localhost", @"127.0.0.1", @"10.0.2.2"] containsObject:url.host];
   if (!url.host || url.user || url.query || (url.path.length && ![url.path isEqualToString:@"/"]) ||
       (!tls && !([url.scheme isEqualToString:@"http"] && local))) {
     reject(@"3", @"Invalid gRPC endpoint", nil);

@@ -8,8 +8,7 @@ function isLocalHost(hostname: string): boolean {
   return (
     hostname === 'localhost' ||
     hostname === '127.0.0.1' ||
-    hostname === '0.0.0.0' ||
-    hostname.endsWith('.local')
+    hostname === '10.0.2.2'
   );
 }
 
@@ -35,14 +34,14 @@ const getBaseUrl = (): string => {
  *     prepended `http://` to bare hostnames, which let a misconfigured
  *     env var downgrade the entire app to cleartext gRPC.
  */
-function resolveUrl(raw: string): string {
+export function resolveUrl(raw: string): string {
   // Bare hostnames (no scheme) — assume https in production, http in dev.
   if (!/^[a-z][a-z0-9+.-]*:\/\//i.test(raw)) {
     const scheme = __DEV__ ? 'http' : 'https';
     if (!__DEV__) {
       logWarning('GRPC_BACKEND_URL has no scheme; defaulting to https://', { raw });
     }
-    return `${scheme}://${raw}`;
+    raw = `${scheme}://${raw}`;
   }
 
   let parsed: URL;

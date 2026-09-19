@@ -55,3 +55,9 @@ Stored user data now uses protobuf JSON to preserve bigint timestamp fields,
 which cannot be serialized with plain `JSON.stringify(user)`. Legacy sessions
 remain readable. `__tests__/auth.test.ts` covers login, persistence, legacy data,
 and unsuccessful/incomplete login responses using real protobuf schemas.
+
+Token and user are stored together in one Keychain record. Newly issued keys
+are saved as pending before profile RPCs, so interrupted login can resume after
+a retry or restart without issuing another key. If the initial Keychain write
+fails, the pending response stays in memory for retry; it cannot survive a process
+exit until secure storage succeeds.

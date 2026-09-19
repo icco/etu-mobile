@@ -1,6 +1,6 @@
 import * as Keychain from 'react-native-keychain';
 import { fromJson, toJson, type JsonValue } from '@bufbuild/protobuf';
-import { UserSchema } from '@icco/etu-proto';
+import { UserSchema, CreateApiKeyResponseSchema } from '@icco/etu-proto';
 import { createLoginSession } from './login';
 import {
   authClient,
@@ -12,6 +12,15 @@ import { logError, logWarning, logInfo, logException } from '../utils/logger';
 
 const AUTH_KEY = 'etu_auth';
 const USER_KEY = 'etu_user';
+const SESSION_USER = 'etu_session';
+type Session = { token: string; user?: JsonValue; email?: string; login?: JsonValue };
+// Retain an issued key if the first secure-storage write fails; retry that write
+// before another Login RPC. Persisted pending sessions also survive restarts.
+let pendingSession: Session | undefined;
+
+async function storeSession(session: Session): Promise<void> {
+  await Keychain.setGenericPassword(SESSION_USER, JSON.stringify(session), { service: AUTH_KEY });
+}
 
 export interface StoredAuth {
   token: string;
@@ -23,6 +32,13 @@ export async function getStoredAuth(): Promise<StoredAuth | null> {
     const creds = await Keychain.getGenericPassword({ service: AUTH_KEY });
     if (!creds || !creds.password) {
       return null;
+    }
+    if (creds.username === SESSION_USER) {
+      const session = JSON.parse(creds.password) as Session;
+      if (session.user) return { token: session.token, user: fromJson(UserSchema, session.user) };
+      // Finish a previously interrupted login without issuing another key.
+      const user = await loginWithApiKey(session.token);
+      return { token: session.token, user };
     }
     const userJson = await Keychain.getGenericPassword({ service: USER_KEY });
     if (!userJson || !userJson.password) {
@@ -43,11 +59,8 @@ export async function getStoredAuth(): Promise<StoredAuth | null> {
 
 export async function setStoredAuth(token: string, user: User): Promise<void> {
   try {
-    const userJson = JSON.stringify({ version: 1, user: toJson(UserSchema, user) });
-    await Keychain.setGenericPassword('etu_user', userJson, {
-      service: USER_KEY,
-    });
-    await Keychain.setGenericPassword('etu', token, { service: AUTH_KEY });
+    await storeSession({ token, user: toJson(UserSchema, user) });
+    pendingSession = undefined;
     logInfo('Auth credentials stored successfully');
   } catch (error) {
     logError('Failed to store auth credentials', {
@@ -61,6 +74,7 @@ export async function clearStoredAuth(): Promise<void> {
   try {
     await Keychain.resetGenericPassword({ service: AUTH_KEY });
     await Keychain.resetGenericPassword({ service: USER_KEY });
+    pendingSession = undefined;
     logInfo('Auth credentials cleared successfully');
   } catch (error) {
     logError('Failed to clear auth credentials', {
@@ -142,8 +156,20 @@ export async function loginWithEmailPassword(
   password: string
 ): Promise<User> {
   try {
-    const token = await createLoginSession(email, password);
-    const user = await loginWithApiKey(token);
+    const saved = await Keychain.getGenericPassword({ service: AUTH_KEY });
+    const session = saved && saved.username === SESSION_USER ? JSON.parse(saved.password) as Session : undefined;
+    const pending = pendingSession ?? (session && !session.user ? session : undefined);
+    if (pending && pending.email !== email) {
+      throw new Error('Finish signing in with the previous account before switching accounts');
+    }
+    if (pending) {
+      pendingSession = pending;
+    } else {
+      const login = await createLoginSession(email, password);
+      pendingSession = { token: login.rawKey, email, login: toJson(CreateApiKeyResponseSchema, login) };
+    }
+    await storeSession(pendingSession);
+    const user = await loginWithApiKey(pendingSession.token);
     logInfo('Authentication successful', { userId: user.id });
     return user;
   } catch (error) {
