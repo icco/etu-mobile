@@ -81,6 +81,8 @@ android {
     namespace "com.etumobileapp"
     defaultConfig {
         applicationId "com.timeclimbers.etu"
+        // react-native-config must reflect the namespace, not applicationId.
+        resValue "string", "build_config_package", "com.etumobileapp"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 3
@@ -94,7 +96,7 @@ android {
             keyPassword 'android'
         }
         release {
-            def releaseKeystore = file('release.keystore')
+            def releaseKeystore = file(System.getenv("ANDROID_KEYSTORE_PATH") ?: 'release.keystore')
             if (releaseKeystore.exists()) {
                 storeFile releaseKeystore
                 storePassword System.getenv("ANDROID_KEYSTORE_PASSWORD") ?: ""
@@ -104,7 +106,7 @@ android {
                 // Debug fallback keeps debug builds working on a fresh clone, but a
                 // release build must never be signed with it.
                 if (gradle.startParameter.taskNames.any { it.toLowerCase().contains('release') }) {
-                    throw new GradleException("android/app/release.keystore is missing. Restore it from 1Password before building a release.")
+                    throw new GradleException("Release keystore is missing. Set ANDROID_KEYSTORE_PATH or restore android/app/release.keystore from 1Password before building a release.")
                 }
                 storeFile file('debug.keystore')
                 storePassword 'android'
