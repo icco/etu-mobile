@@ -37,7 +37,8 @@
     "react-native-nitro-modules": "^0.37.1",
     "react-native-nitro-sound": "0.2.17",
     "react-native-safe-area-context": "^5.9.1",
-    "react-native-screens": "^4.25.2"
+    "react-native-screens": "^4.25.2",
+    "text-encoding": "^0.7.0"
   },
   "devDependencies": {
     "@babel/core": "^7.29.6",
