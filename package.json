@@ -26,6 +26,8 @@
     "@sentry/react-native": "^8.24.0",
     "@tanstack/react-query": "^5.102.7",
     "fast-xml-parser": "^5.11.1",
+    "jest-environment-node": "^30.4.1",
+    "jest-mock": "^30.4.1",
     "markdown-it": "^15.0.0",
     "react": "19.2.3",
     "react-native": "^0.85.3",

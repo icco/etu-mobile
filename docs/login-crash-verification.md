@@ -30,12 +30,34 @@ Android release instructions, then:
 
 These steps passed on the connected Android phone with the patched release.
 
-## Remaining login blocker
+## Full sign-in follow-up
 
 The production endpoint `https://grpc.etu.timeclimbers.com` currently rejects
 Connect requests (`application/json`) with HTTP 415 and gRPC status 3, reporting
 an invalid gRPC request content type. It also rejects `application/grpc-web+proto`.
 The mobile app uses Connect's web transport, while the backend exposes native
-gRPC. The encoding fix lets login reach this server response; it does not make
-the protocols compatible. Successful end-to-end sign-in still requires a
-compatible server endpoint/transport and verification of session issuance.
+gRPC. The follow-up replaces the web transport with native gRPC networking:
+grpc-java/OkHttp on Android and gRPC ObjC on iOS. Typed TypeScript clients retain
+protobuf serialization and pass binary messages to native modules. TLS,
+deadlines, cancellation and gRPC status handling are provided by the native SDKs.
+
+The backend's new `AuthService.Login` RPC exchanges credentials for a revocable
+user API key, followed by `VerifyApiKey` and `GetUser` to load the user profile.
+Deploy etu-backend PR #147 before enabling fresh email/password sign-in.
+
+The signed Android release loaded real notes directly from the production gRPC
+endpoint on the connected phone. After backend PR #147 was deployed, fresh
+email/password login on the Android emulator succeeded with the real account.
+The timeline loaded, a full process restart restored the session, and Settings
+opened without a crash. The native iOS simulator build passed in macOS CI.
+
+Stored user data now uses protobuf JSON to preserve bigint timestamp fields,
+which cannot be serialized with plain `JSON.stringify(user)`. Legacy sessions
+remain readable. `__tests__/auth.test.ts` covers login, persistence, legacy data,
+and unsuccessful/incomplete login responses using real protobuf schemas.
+
+Token and user are stored together in one Keychain record. Newly issued keys
+are saved as pending before profile RPCs, so interrupted login can resume after
+a retry or restart without issuing another key. If the initial Keychain write
+fails, the pending response stays in memory for retry; it cannot survive a process
+exit until secure storage succeeds.

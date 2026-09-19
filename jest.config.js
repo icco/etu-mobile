@@ -7,7 +7,7 @@ module.exports = {
     '^@icco/etu-proto$': '<rootDir>/__mocks__/etu-proto.js',
   },
   transformIgnorePatterns: [
-    'node_modules/(?!(@react-navigation|react-native|@react-native|react-native-markdown-display|@connectrpc|@bufbuild)/)',
+    'node_modules/(?!(@react-navigation|react-native|@react-native|react-native-markdown-display|@connectrpc|@bufbuild|@icco)/)',
   ],
   collectCoverageFrom: [
     'src/**/*.{ts,tsx}',

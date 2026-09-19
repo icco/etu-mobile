@@ -1,15 +1,14 @@
-import { createConnectTransport } from '@connectrpc/connect-web';
+import { createNativeGrpcTransport } from './nativeGrpc';
 import Config from 'react-native-config';
 import { logError, logWarning } from '../utils/logger';
 
-const DEV_FALLBACK_URL = 'http://localhost:50051';
+const DEFAULT_GRPC_URL = 'https://grpc.etu.timeclimbers.com';
 
 function isLocalHost(hostname: string): boolean {
   return (
     hostname === 'localhost' ||
     hostname === '127.0.0.1' ||
-    hostname === '0.0.0.0' ||
-    hostname.endsWith('.local')
+    hostname === '10.0.2.2'
   );
 }
 
@@ -17,11 +16,10 @@ const getBaseUrl = (): string => {
   const url = Config?.GRPC_BACKEND_URL;
   if (!url || typeof url !== 'string') {
     if (__DEV__) {
-      logWarning('GRPC_BACKEND_URL not set, using localhost:50051');
-      return DEV_FALLBACK_URL;
+      logWarning('GRPC_BACKEND_URL not set, using the production gRPC endpoint');
+      return DEFAULT_GRPC_URL;
     }
-    logError('GRPC_BACKEND_URL not configured for production build');
-    return DEV_FALLBACK_URL;
+    return DEFAULT_GRPC_URL;
   }
   return url;
 };
@@ -36,14 +34,14 @@ const getBaseUrl = (): string => {
  *     prepended `http://` to bare hostnames, which let a misconfigured
  *     env var downgrade the entire app to cleartext gRPC.
  */
-function resolveUrl(raw: string): string {
+export function resolveUrl(raw: string): string {
   // Bare hostnames (no scheme) — assume https in production, http in dev.
   if (!/^[a-z][a-z0-9+.-]*:\/\//i.test(raw)) {
     const scheme = __DEV__ ? 'http' : 'https';
     if (!__DEV__) {
       logWarning('GRPC_BACKEND_URL has no scheme; defaulting to https://', { raw });
     }
-    return `${scheme}://${raw}`;
+    raw = `${scheme}://${raw}`;
   }
 
   let parsed: URL;
@@ -51,7 +49,7 @@ function resolveUrl(raw: string): string {
     parsed = new URL(raw);
   } catch {
     logError('GRPC_BACKEND_URL is not a valid URL, falling back', { raw });
-    return DEV_FALLBACK_URL;
+    return DEFAULT_GRPC_URL;
   }
 
   if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
@@ -59,7 +57,7 @@ function resolveUrl(raw: string): string {
       raw,
       protocol: parsed.protocol,
     });
-    return DEV_FALLBACK_URL;
+    return DEFAULT_GRPC_URL;
   }
 
   if (parsed.protocol === 'http:' && !isLocalHost(parsed.hostname)) {
@@ -82,14 +80,10 @@ const baseUrl = getBaseUrl();
 const url = resolveUrl(baseUrl);
 
 export function createTransport() {
-  return createConnectTransport({
-    baseUrl: url,
-    // Timeout chosen for mobile network conditions - allows time for slow 3G/4G
-    defaultTimeoutMs: 30000,
-  });
+  return createNativeGrpcTransport(url.replace(/\/$/, ''));
 }
 
-let cachedTransport: ReturnType<typeof createConnectTransport> | null = null;
+let cachedTransport: ReturnType<typeof createNativeGrpcTransport> | null = null;
 
 export function getTransport() {
   if (!cachedTransport) {
