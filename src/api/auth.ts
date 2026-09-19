@@ -1,4 +1,7 @@
 import * as Keychain from 'react-native-keychain';
+import { fromJson, toJson, type JsonValue } from '@bufbuild/protobuf';
+import { UserSchema, CreateApiKeyResponseSchema } from '@icco/etu-proto';
+import { createLoginSession } from './login';
 import {
   authClient,
   apiKeysClient,
@@ -9,6 +12,15 @@ import { logError, logWarning, logInfo, logException } from '../utils/logger';
 
 const AUTH_KEY = 'etu_auth';
 const USER_KEY = 'etu_user';
+const SESSION_USER = 'etu_session';
+type Session = { token: string; user?: JsonValue; email?: string; login?: JsonValue };
+// Retain an issued key if the first secure-storage write fails; retry that write
+// before another Login RPC. Persisted pending sessions also survive restarts.
+let pendingSession: Session | undefined;
+
+async function storeSession(session: Session): Promise<void> {
+  await Keychain.setGenericPassword(SESSION_USER, JSON.stringify(session), { service: AUTH_KEY });
+}
 
 export interface StoredAuth {
   token: string;
@@ -21,12 +33,21 @@ export async function getStoredAuth(): Promise<StoredAuth | null> {
     if (!creds || !creds.password) {
       return null;
     }
+    if (creds.username === SESSION_USER) {
+      const session = JSON.parse(creds.password) as Session;
+      if (session.user) return { token: session.token, user: fromJson(UserSchema, session.user) };
+      // Finish a previously interrupted login without issuing another key.
+      const user = await loginWithApiKey(session.token);
+      return { token: session.token, user };
+    }
     const userJson = await Keychain.getGenericPassword({ service: USER_KEY });
     if (!userJson || !userJson.password) {
       logWarning('Auth token found but user data missing');
       return null;
     }
-    const user = JSON.parse(userJson.password) as User;
+    const saved = JSON.parse(userJson.password) as User | { version: 1; user: JsonValue };
+    // Keep existing sessions readable; new sessions use protobuf JSON for int64 timestamps.
+    const user = 'version' in saved && saved.version === 1 ? fromJson(UserSchema, saved.user) : saved as User;
     return { token: creds.password, user };
   } catch (error) {
     logError('Failed to retrieve stored auth', {
@@ -38,10 +59,8 @@ export async function getStoredAuth(): Promise<StoredAuth | null> {
 
 export async function setStoredAuth(token: string, user: User): Promise<void> {
   try {
-    await Keychain.setGenericPassword('etu', token, { service: AUTH_KEY });
-    await Keychain.setGenericPassword('etu_user', JSON.stringify(user), {
-      service: USER_KEY,
-    });
+    await storeSession({ token, user: toJson(UserSchema, user) });
+    pendingSession = undefined;
     logInfo('Auth credentials stored successfully');
   } catch (error) {
     logError('Failed to store auth credentials', {
@@ -55,6 +74,7 @@ export async function clearStoredAuth(): Promise<void> {
   try {
     await Keychain.resetGenericPassword({ service: AUTH_KEY });
     await Keychain.resetGenericPassword({ service: USER_KEY });
+    pendingSession = undefined;
     logInfo('Auth credentials cleared successfully');
   } catch (error) {
     logError('Failed to clear auth credentials', {
@@ -136,38 +156,22 @@ export async function loginWithEmailPassword(
   password: string
 ): Promise<User> {
   try {
-    const res = await authClient.client.authenticate(
-      { email, password },
-      {} // no auth required for authenticate
-    );
-    if (!res.success || !res.user) {
-      logWarning('Authentication failed for user', { emailHash: hashEmail(email) });
-      throw new Error('Invalid email or password');
+    const saved = await Keychain.getGenericPassword({ service: AUTH_KEY });
+    const session = saved && saved.username === SESSION_USER ? JSON.parse(saved.password) as Session : undefined;
+    const pending = pendingSession ?? (session && !session.user ? session : undefined);
+    if (pending && pending.email !== email) {
+      throw new Error('Finish signing in with the previous account before switching accounts');
     }
-    const user = res.user;
+    if (pending) {
+      pendingSession = pending;
+    } else {
+      const login = await createLoginSession(email, password);
+      pendingSession = { token: login.rawKey, email, login: toJson(CreateApiKeyResponseSchema, login) };
+    }
+    await storeSession(pendingSession);
+    const user = await loginWithApiKey(pendingSession.token);
     logInfo('Authentication successful', { userId: user.id });
-    
-    // Backend does not return a token in proto yet; create an API key for this app session
-    try {
-      const keyRes = await apiKeysClient.client.createApiKey(
-        { userId: user.id, name: 'etu-mobile' },
-        {} // backend may accept session from authenticate; if not, user must use API key login
-      );
-      if (keyRes.rawKey) {
-        await setStoredAuth(keyRes.rawKey, user);
-        logInfo('API key created and stored for session');
-        return user;
-      }
-    } catch (error) {
-      // If CreateApiKey requires auth, user must use "Login with API key" from web Settings
-      logError('Failed to create API key after authentication', {
-        error: error instanceof Error ? error.message : String(error),
-        userId: user.id,
-      });
-    }
-    throw new Error(
-      'Login succeeded but no session token. Create an API key in Etu web Settings and use "Login with API key".'
-    );
+    return user;
   } catch (error) {
     logException(error instanceof Error ? error : new Error(String(error)), {
       method: 'loginWithEmailPassword',

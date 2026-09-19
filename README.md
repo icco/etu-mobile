@@ -19,7 +19,7 @@ Notes support **markdown content, tags, image uploads, and audio uploads**. Imag
 
 ## Security
 
-Dependencies are kept at latest versions. Transitive vulnerabilities in `markdown-it` and `fast-xml-parser` are pinned via package `overrides`. ESLint 9 is used with `@eslint/compat` and FlatCompat so the React Native config and plugins work with the new flat config format.
+Dependency overrides, the hoisted React Native dependency layout, and approved dependency build scripts are configured in `pnpm-workspace.yaml`.
 
 **Security Features**:
 - Secure token storage using React Native Keychain
@@ -60,8 +60,7 @@ pnpm install
 # Copy environment configuration
 cp .env.example .env
 
-# Edit .env and set GRPC_BACKEND_URL to your etu-backend URL
-# Example: GRPC_BACKEND_URL=http://localhost:50051
+# Edit .env and set GRPC_BACKEND_URL to the native gRPC endpoint
 # For production: GRPC_BACKEND_URL=https://grpc.etu.timeclimbers.com
 ```
 
@@ -69,10 +68,10 @@ cp .env.example .env
 
 | Variable | Required | Description | Example |
 |----------|----------|-------------|---------|
-| `GRPC_BACKEND_URL` | Yes | URL of the etu-backend gRPC service | `http://localhost:50051` (dev), `https://grpc.etu.timeclimbers.com` (prod) |
+| `GRPC_BACKEND_URL` | No | Native gRPC endpoint; defaults to production | `https://grpc.etu.timeclimbers.com` |
 | `SENTRY_DSN` | No | When set, `logError` / `logException` and `ErrorBoundary` report to [Sentry](https://sentry.io) | DSN from your Sentry project |
 
-**Important**: The app will log a warning if `GRPC_BACKEND_URL` is not set and fall back to `localhost:50051`. For production builds, always set this variable.
+**Important**: Networking uses native gRPC over HTTP/2 (grpc-java/OkHttp on Android and gRPC ObjC on iOS), while TypeScript retains typed Connect clients and protobuf serialization. Rebuild the native app after updating, and run `pod install` for iOS. Email/password login requires the backend `AuthService.Login` RPC from etu-backend PR #147. It issues a revocable user API key; no web gateway or server secret in the app is needed.
 
 After adding `@sentry/react-native`, run `cd ios && pod install` before building iOS.
 
@@ -183,7 +182,7 @@ The build fails if the release keystore is missing; it does not substitute a
 debug key for a release.
 
 Set `GRPC_BACKEND_URL=https://grpc.etu.timeclimbers.com` in your local `.env`
-for the production backend. With `JAVA_HOME` and `ANDROID_HOME` configured,
+for the production endpoint. With `JAVA_HOME` and `ANDROID_HOME` configured,
 run from `android/`:
 
 ```bash
@@ -303,7 +302,7 @@ Use this checklist before **Production** (internal / closed testing first is rec
 
 Declare in Play Console what the app actually uses:
 
-- **Network**: notes and auth go to your configured gRPC host (`GRPC_BACKEND_URL`).
+- **Network**: notes and auth go directly to your native gRPC endpoint (`GRPC_BACKEND_URL`).
 - **Account**: email/password or API key; tokens stored with the OS secure store (Keychain / Keystore-backed).
 - **Photos / images**: attach images to notes (`READ_MEDIA_IMAGES`, camera, storage on older APIs).
 - **Audio files**: attach or pick audio (`READ_MEDIA_AUDIO`).
@@ -432,11 +431,11 @@ cd ios && pod install && cd ..
 
 **Solution**:
 
-1. Verify `GRPC_BACKEND_URL` is set correctly in `.env`
-2. Ensure backend is running: `curl http://localhost:50051` should respond
-3. For iOS simulator: use `http://localhost:50051` (localhost works)
-4. For Android emulator: use `http://10.0.2.2:50051` (special Android localhost)
-5. For physical devices: use your computer's IP address (e.g., `http://192.168.1.100:50051`)
+1. Verify `GRPC_BACKEND_URL` points to the native gRPC endpoint, without a path.
+2. Check that the backend has `AuthService.Login` deployed for email/password sign-in.
+3. For local builds, use `http://localhost:50051` for a local native gRPC server.
+4. For Android over USB, use `adb reverse tcp:50051 tcp:50051` to reach that local server.
+5. Rebuild after changing `.env`; release builds require HTTPS for remote hosts.
 
 ## Subscription Management
 
