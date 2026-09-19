@@ -3,6 +3,7 @@
   "version": "1.1.0",
   "private": true,
   "scripts": {
+    "postinstall": "patch-package",
     "android": "react-native run-android",
     "build": "tsc",
     "ios": "react-native run-ios",
@@ -58,6 +59,7 @@
     "eslint-config-prettier": "^10.1.5",
     "eslint-plugin-react-hooks": "^7.0.0",
     "jest": "^30.4.2",
+    "patch-package": "8.0.1",
     "prettier": "^3.8.3",
     "test-renderer": "^1.2.0",
     "typescript": "^6.0.3",

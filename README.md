@@ -172,6 +172,29 @@ Workflows run on **pushes** to `main`, `implement`, or `develop`, on **all pull 
 
 ### Android Release Signing (Optional)
 
+For local release builds, set `ANDROID_KEYSTORE_PATH` to an existing keystore
+outside the checkout, or use the default `android/app/release.keystore`.
+Provide `ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEY_ALIAS`, and
+`ANDROID_KEY_PASSWORD` through your environment or password manager.
+The build fails if the release keystore is missing; it does not substitute a
+debug key for a release.
+
+Set `GRPC_BACKEND_URL=https://grpc.etu.timeclimbers.com` in your local `.env`
+for the production backend. With `JAVA_HOME` and `ANDROID_HOME` configured,
+run from `android/`:
+
+```bash
+./gradlew assembleRelease -PreactNativeArchitectures=arm64-v8a
+```
+
+The standalone APK is `android/app/build/outputs/apk/release/app-release.apk`.
+It includes the JavaScript bundle and does not require Metro.
+
+`yarn install` applies a small Gradle plugin patch upgrading Foojay's resolver
+from 0.5.0 to 1.0.0, avoiding its reference to `JvmVendorSpec.IBM_SEMERU`,
+removed in Gradle 9. Gradle has 4 GiB heap and 1 GiB metaspace for release
+compilation and lint.
+
 Set these to build and upload a signed release AAB:
 
 | Secret | Description |
