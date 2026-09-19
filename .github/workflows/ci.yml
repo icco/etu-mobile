@@ -30,8 +30,8 @@ permissions:
   packages: read
 
 env:
-  NODE_VERSION: '26.0.0'
-  PNPM_VERSION: '12.4.2'
+  NODE_VERSION: '26'
+  PNPM_VERSION: '12'
 
 jobs:
   lint:
