@@ -266,6 +266,9 @@ importers:
       '@react-native/babel-preset':
         specifier: ^0.86.0
         version: 0.86.2(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1)
+      '@react-native/gradle-plugin':
+        specifier: 0.85.3
+        version: 0.85.3
       '@react-native/jest-preset':
         specifier: ^0.85.3
         version: 0.85.3(@babel/core@7.29.7(supports-color@8.1.1))(react@19.2.3)(supports-color@8.1.1)
