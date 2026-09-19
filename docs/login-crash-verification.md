@@ -46,8 +46,10 @@ user API key, followed by `VerifyApiKey` and `GetUser` to load the user profile.
 Deploy etu-backend PR #147 before enabling fresh email/password sign-in.
 
 The signed Android release loaded real notes directly from the production gRPC
-endpoint using the persisted session. Fresh password-login verification awaits
-deployment of the backend RPC. This Mac has no Xcode; iOS compilation runs in CI.
+endpoint on the connected phone. After backend PR #147 was deployed, fresh
+email/password login on the Android emulator succeeded with the real account.
+The timeline loaded, a full process restart restored the session, and Settings
+opened without a crash. The native iOS simulator build passed in macOS CI.
 
 Stored user data now uses protobuf JSON to preserve bigint timestamp fields,
 which cannot be serialized with plain `JSON.stringify(user)`. Legacy sessions
