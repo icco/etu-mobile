@@ -17,6 +17,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - Release builds now fail if `android/app/release.keystore` is missing instead of silently signing with the debug key
 
+## [1.1.1] - 2026-09-19
+
+### Fixed
+- Restore the `EtuMobileApp` JavaScript registration name expected by the Android and iOS entry points, fixing the immediate launch crash.
+- Pin React to 19.2.3 to match React Native's renderer and avoid its fatal version-mismatch error.
+- Add a regression check that the app registration name matches both native entry points.
+
 ## [1.1.0] - 2026-06-12
 
 ### Added
