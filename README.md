@@ -19,7 +19,7 @@ Notes support **markdown content, tags, image uploads, and audio uploads**. Imag
 
 ## Security
 
-Dependencies are kept at latest versions. Transitive vulnerabilities in `markdown-it` and `fast-xml-parser` are overridden via `resolutions`. ESLint 9 is used with `@eslint/compat` and FlatCompat so the React Native config and plugins work with the new flat config format.
+Dependency overrides, the hoisted React Native dependency layout, and approved dependency build scripts are configured in `pnpm-workspace.yaml`.
 
 **Security Features**:
 - Secure token storage using React Native Keychain
@@ -30,9 +30,9 @@ Dependencies are kept at latest versions. Transitive vulnerabilities in `markdow
 
 ## Prerequisites
 
-- Node.js 25+
+- Node.js 26.x
 - Running [etu-backend](https://github.com/icco/etu-backend) gRPC service
-- **GitHub Packages auth**: The app depends on `@icco/etu-proto` from GitHub Packages. Set `NPM_TOKEN` (or add `//npm.pkg.github.com/:_authToken=YOUR_TOKEN` to `~/.npmrc`) so `npm install` can fetch it. Use a classic PAT with `read:packages` scope.
+- **GitHub Packages auth**: The app depends on `@icco/etu-proto` from GitHub Packages. Set `NPM_TOKEN` (or add `//npm.pkg.github.com/:_authToken=YOUR_TOKEN` to `~/.npmrc`) so `pnpm install` can fetch it. Use a classic PAT with `read:packages` scope.
 
 ### iOS Additional Prerequisites
 
@@ -48,11 +48,14 @@ Dependencies are kept at latest versions. Transitive vulnerabilities in `markdow
 ## Setup
 
 ```bash
-# Set token for @icco scope (required for yarn install)
+# Enable Corepack's pinned pnpm version
+corepack enable
+
+# Set token for @icco scope (required for pnpm install)
 export NPM_TOKEN=your_github_pat_with_read_packages
 
 # Install dependencies
-yarn install
+pnpm install
 
 # Copy environment configuration
 cp .env.example .env
@@ -81,7 +84,7 @@ After adding `@sentry/react-native`, run `cd ios && pod install` before building
 cd ios && pod install && cd ..
 
 # Run on iOS simulator
-npm run ios
+pnpm ios
 
 # Run on specific iOS device
 npx react-native run-ios --device "iPhone 15 Pro"
@@ -94,7 +97,7 @@ npx react-native run-ios --configuration Release
 
 ```bash
 # Run on Android emulator or connected device
-npm run android
+pnpm android
 
 # Run release build
 npx react-native run-android --variant=release
@@ -107,22 +110,22 @@ adb devices
 
 ```bash
 # Start Metro bundler
-npm start
+pnpm start
 
 # Run linter
-npm run lint
+pnpm lint
 
 # Run type checker
-npm run typecheck
+pnpm typecheck
 
 # Run tests
-npm test
+pnpm test
 
 # Run tests with coverage
-npm run test:coverage
+pnpm test:coverage
 
 # Watch mode for tests
-npm run test:watch
+pnpm test:watch
 ```
 
 ## Testing
@@ -137,9 +140,9 @@ The app includes comprehensive test coverage for utilities and core functionalit
 Test files are located in `__tests__/` directory. Run tests with:
 
 ```bash
-npm test                 # Run all tests
-npm run test:coverage    # Run with coverage report
-npm run test:watch       # Watch mode for development
+pnpm test                 # Run all tests
+pnpm test:coverage        # Run with coverage report
+pnpm test:watch           # Watch mode for development
 ```
 
 ## Verifying changes without a local build
@@ -147,7 +150,7 @@ npm run test:watch       # Watch mode for development
 If you cannot run Android Studio, Xcode, or emulators locally, use **GitHub Actions on your PR**:
 
 1. Open the PR → **Checks** tab → wait for **CI** to finish.
-2. **Lint** job: ESLint, `tsc`, and **Jest** (`yarn test`). Run **`yarn test:coverage`** locally when you want the coverage table; the 50% thresholds in `jest.config.js` apply to that command and are not enforced on every PR until the suite grows.
+2. **Lint** job: ESLint, `tsc`, and **Jest** (`pnpm test`). Run **`pnpm test:coverage`** locally when you want the coverage table; the 50% thresholds in `jest.config.js` apply to that command and are not enforced on every PR until the suite grows.
 3. **Android** job: downloads **`app-debug`** (installable debug APK). If repo signing secrets are absent, **`app-release-bundle-ci`** is a release-mode AAB built with the Gradle debug-signing fallback (validates Hermes, native modules, and release Gradle — not for Play upload). With `ANDROID_KEYSTORE_*` secrets, **`app-release-aab`** is the signed bundle.
 4. **iOS** job: compiles the Debug simulator build (catches Pod/native breakages).
 
@@ -157,11 +160,11 @@ You can also run CI manually: **Actions** → **CI** → **Run workflow**. Concu
 
 Workflows run on **pushes** to `main`, `implement`, or `develop`, on **all pull requests**, and on **workflow_dispatch** (manual):
 
-- **Lint**: ESLint, TypeScript, Jest (`yarn test`).
+- **Lint**: ESLint, TypeScript, Jest (`pnpm test`).
 - **Android**: `assembleDebug` + artifact `app-debug`; signed `app-release-aab` when keystore secrets exist; otherwise `bundleRelease` smoke + artifact **`app-release-bundle-ci`**.
 - **iOS**: `pod install` + simulator `xcodebuild` (no `.app` artifact uploaded today).
 
-`yarn install` uses `NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN || secrets.GITHUB_TOKEN }}` — same-repo workflows usually work with the default `GITHUB_TOKEN`; set **`NPM_TOKEN`** (PAT with `read:packages`) if installs fail (e.g. some fork PRs).
+`pnpm install` uses `NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN || secrets.GITHUB_TOKEN }}` — same-repo workflows usually work with the default `GITHUB_TOKEN`; set **`NPM_TOKEN`** (PAT with `read:packages`) if installs fail (e.g. some fork PRs).
 
 ### Required Secrets
 
@@ -189,7 +192,7 @@ run from `android/`:
 The standalone APK is `android/app/build/outputs/apk/release/app-release.apk`.
 It includes the JavaScript bundle and does not require Metro.
 
-`yarn install` applies a small Gradle plugin patch upgrading Foojay's resolver
+`pnpm install` applies a small Gradle plugin patch upgrading Foojay's resolver
 from 0.5.0 to 1.0.0, avoiding its reference to `JvmVendorSpec.IBM_SEMERU`,
 removed in Gradle 9. Gradle has 4 GiB heap and 1 GiB metaspace for release
 compilation and lint.
@@ -361,13 +364,13 @@ The app communicates with [etu-backend](https://github.com/icco/etu-backend) usi
 
 ### NPM Install Fails
 
-**Error**: `401 Unauthorized` when running `yarn install`
+**Error**: `401 Unauthorized` when running `pnpm install`
 
 **Solution**: Set GitHub PAT with `read:packages` scope:
 
 ```bash
 export NPM_TOKEN=ghp_your_token_here
-yarn install
+pnpm install
 ```
 
 Or add to `~/.npmrc`:
@@ -417,8 +420,8 @@ npx react-native start --reset-cache
 # Clear all caches
 rm -rf node_modules
 rm -rf ios/Pods
-rm yarn.lock
-yarn install
+rm pnpm-lock.yaml
+pnpm install
 cd ios && pod install && cd ..
 ```
 
@@ -458,10 +461,10 @@ Subscription management is currently handled through the web interface. The mobi
 
 Contributions are welcome! Please ensure:
 
-1. Tests pass: `npm test`
-2. Linting passes: `npm run lint`
-3. TypeScript compiles: `npm run typecheck`
-4. Coverage is maintained: `npm run test:coverage`
+1. Tests pass: `pnpm test`
+2. Linting passes: `pnpm lint`
+3. TypeScript compiles: `pnpm typecheck`
+4. Coverage is maintained: `pnpm test:coverage`
 
 ## License
 

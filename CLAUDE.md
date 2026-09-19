@@ -4,9 +4,9 @@ Etu mobile — React Native journaling app talking Connect RPC to etu-backend vi
 
 ## Commands
 
-- `yarn test` / `yarn test:coverage` (Jest, 50% coverage threshold)
-- `yarn lint` (eslint --fix) and `yarn typecheck` (tsc --noEmit)
-- `yarn start` (Metro), `npm run android` / `npm run ios` to run the app
+- `pnpm test` / `pnpm test:coverage` (Jest, 50% coverage threshold)
+- `pnpm lint` (eslint --fix) and `pnpm typecheck` (tsc --noEmit)
+- `pnpm start` (Metro), `pnpm android` / `pnpm ios` to run the app
 
 ## Architecture
 
