@@ -1,4 +1,7 @@
 import * as Keychain from 'react-native-keychain';
+import { fromJson, toJson, type JsonValue } from '@bufbuild/protobuf';
+import { UserSchema } from '@icco/etu-proto';
+import { getMobileApiUrl } from './transport';
 import {
   authClient,
   apiKeysClient,
@@ -26,7 +29,9 @@ export async function getStoredAuth(): Promise<StoredAuth | null> {
       logWarning('Auth token found but user data missing');
       return null;
     }
-    const user = JSON.parse(userJson.password) as User;
+    const saved = JSON.parse(userJson.password) as User | { version: 1; user: JsonValue };
+    // Keep existing sessions readable; new sessions use protobuf JSON for int64 timestamps.
+    const user = 'version' in saved && saved.version === 1 ? fromJson(UserSchema, saved.user) : saved as User;
     return { token: creds.password, user };
   } catch (error) {
     logError('Failed to retrieve stored auth', {
@@ -38,10 +43,11 @@ export async function getStoredAuth(): Promise<StoredAuth | null> {
 
 export async function setStoredAuth(token: string, user: User): Promise<void> {
   try {
-    await Keychain.setGenericPassword('etu', token, { service: AUTH_KEY });
-    await Keychain.setGenericPassword('etu_user', JSON.stringify(user), {
+    const userJson = JSON.stringify({ version: 1, user: toJson(UserSchema, user) });
+    await Keychain.setGenericPassword('etu_user', userJson, {
       service: USER_KEY,
     });
+    await Keychain.setGenericPassword('etu', token, { service: AUTH_KEY });
     logInfo('Auth credentials stored successfully');
   } catch (error) {
     logError('Failed to store auth credentials', {
@@ -135,45 +141,36 @@ export async function loginWithEmailPassword(
   email: string,
   password: string
 ): Promise<User> {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 30000);
   try {
-    const res = await authClient.client.authenticate(
-      { email, password },
-      {} // no auth required for authenticate
-    );
-    if (!res.success || !res.user) {
-      logWarning('Authentication failed for user', { emailHash: hashEmail(email) });
-      throw new Error('Invalid email or password');
+    const response = await fetch(`${getMobileApiUrl()}/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password }),
+      signal: controller.signal as RequestInit['signal'],
+    });
+    if (!response.ok) {
+      throw new Error(response.status === 401 ? 'Invalid email or password' :
+        `Login service unavailable (HTTP ${response.status})`);
     }
-    const user = res.user;
+    const session = await response.json() as { token?: unknown; user?: JsonValue };
+    if (typeof session.token !== 'string' || !session.token || !session.user) {
+      throw new Error('Login response missing session');
+    }
+    const user = fromJson(UserSchema, session.user);
+    if (!user.id) throw new Error('Login response missing user');
+    await setStoredAuth(session.token, user);
     logInfo('Authentication successful', { userId: user.id });
-    
-    // Backend does not return a token in proto yet; create an API key for this app session
-    try {
-      const keyRes = await apiKeysClient.client.createApiKey(
-        { userId: user.id, name: 'etu-mobile' },
-        {} // backend may accept session from authenticate; if not, user must use API key login
-      );
-      if (keyRes.rawKey) {
-        await setStoredAuth(keyRes.rawKey, user);
-        logInfo('API key created and stored for session');
-        return user;
-      }
-    } catch (error) {
-      // If CreateApiKey requires auth, user must use "Login with API key" from web Settings
-      logError('Failed to create API key after authentication', {
-        error: error instanceof Error ? error.message : String(error),
-        userId: user.id,
-      });
-    }
-    throw new Error(
-      'Login succeeded but no session token. Create an API key in Etu web Settings and use "Login with API key".'
-    );
+    return user;
   } catch (error) {
     logException(error instanceof Error ? error : new Error(String(error)), {
       method: 'loginWithEmailPassword',
       emailHash: hashEmail(email),
     });
     throw error;
+  } finally {
+    clearTimeout(timeout);
   }
 }
 

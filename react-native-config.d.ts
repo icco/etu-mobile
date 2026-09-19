@@ -1,6 +1,7 @@
 declare module 'react-native-config' {
   export interface NativeConfig {
-    GRPC_BACKEND_URL?: string;
+    /** HTTP mobile gateway on etu-web (not the native gRPC endpoint). */
+    MOBILE_API_URL?: string;
     /** Optional Sentry DSN; when set, errors are reported via @sentry/react-native */
     SENTRY_DSN?: string;
   }

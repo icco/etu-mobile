@@ -2,7 +2,7 @@ import { createConnectTransport } from '@connectrpc/connect-web';
 import Config from 'react-native-config';
 import { logError, logWarning } from '../utils/logger';
 
-const DEV_FALLBACK_URL = 'http://localhost:50051';
+const DEFAULT_MOBILE_API_URL = 'https://etu.timeclimbers.com/api/mobile';
 
 function isLocalHost(hostname: string): boolean {
   return (
@@ -14,14 +14,13 @@ function isLocalHost(hostname: string): boolean {
 }
 
 const getBaseUrl = (): string => {
-  const url = Config?.GRPC_BACKEND_URL;
+  const url = Config?.MOBILE_API_URL;
   if (!url || typeof url !== 'string') {
     if (__DEV__) {
-      logWarning('GRPC_BACKEND_URL not set, using localhost:50051');
-      return DEV_FALLBACK_URL;
+      logWarning('MOBILE_API_URL not set, using the production mobile gateway');
+      return DEFAULT_MOBILE_API_URL;
     }
-    logError('GRPC_BACKEND_URL not configured for production build');
-    return DEV_FALLBACK_URL;
+    return DEFAULT_MOBILE_API_URL;
   }
   return url;
 };
@@ -41,7 +40,7 @@ function resolveUrl(raw: string): string {
   if (!/^[a-z][a-z0-9+.-]*:\/\//i.test(raw)) {
     const scheme = __DEV__ ? 'http' : 'https';
     if (!__DEV__) {
-      logWarning('GRPC_BACKEND_URL has no scheme; defaulting to https://', { raw });
+      logWarning('MOBILE_API_URL has no scheme; defaulting to https://', { raw });
     }
     return `${scheme}://${raw}`;
   }
@@ -50,21 +49,21 @@ function resolveUrl(raw: string): string {
   try {
     parsed = new URL(raw);
   } catch {
-    logError('GRPC_BACKEND_URL is not a valid URL, falling back', { raw });
-    return DEV_FALLBACK_URL;
+    logError('MOBILE_API_URL is not a valid URL, falling back', { raw });
+    return DEFAULT_MOBILE_API_URL;
   }
 
   if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
-    logError('GRPC_BACKEND_URL has unsupported protocol, falling back', {
+    logError('MOBILE_API_URL has unsupported protocol, falling back', {
       raw,
       protocol: parsed.protocol,
     });
-    return DEV_FALLBACK_URL;
+    return DEFAULT_MOBILE_API_URL;
   }
 
   if (parsed.protocol === 'http:' && !isLocalHost(parsed.hostname)) {
     if (__DEV__) {
-      logWarning('GRPC_BACKEND_URL uses plaintext http:// for non-local host; upgrading to https://', {
+      logWarning('MOBILE_API_URL uses plaintext http:// for non-local host; upgrading to https://', {
         raw,
       });
     } else {
@@ -81,9 +80,14 @@ function resolveUrl(raw: string): string {
 const baseUrl = getBaseUrl();
 const url = resolveUrl(baseUrl);
 
+export function getMobileApiUrl(): string {
+  return url.replace(/\/$/, '');
+}
+
 export function createTransport() {
   return createConnectTransport({
-    baseUrl: url,
+    baseUrl: `${getMobileApiUrl()}/rpc`,
+    useBinaryFormat: false,
     // Timeout chosen for mobile network conditions - allows time for slow 3G/4G
     defaultTimeoutMs: 30000,
   });

@@ -30,12 +30,25 @@ Android release instructions, then:
 
 These steps passed on the connected Android phone with the patched release.
 
-## Remaining login blocker
+## Full sign-in follow-up
 
 The production endpoint `https://grpc.etu.timeclimbers.com` currently rejects
 Connect requests (`application/json`) with HTTP 415 and gRPC status 3, reporting
 an invalid gRPC request content type. It also rejects `application/grpc-web+proto`.
 The mobile app uses Connect's web transport, while the backend exposes native
-gRPC. The encoding fix lets login reach this server response; it does not make
-the protocols compatible. Successful end-to-end sign-in still requires a
-compatible server endpoint/transport and verification of session issuance.
+gRPC. The follow-up uses the etu-web `/api/mobile` gateway: `/login` exchanges
+valid credentials for a user-scoped API key, and `/rpc` translates Connect JSON
+requests into native gRPC with the user's key. Deploy that gateway before
+distributing the follow-up mobile build.
+
+The phone successfully signed in using the real account credentials through a
+local gateway connected to production. Timeline, random notes, tags, settings,
+and note detail requests returned HTTP 200. Restarting the app retained the
+session and loaded notes again. Device testing used `adb reverse` with a local
+gateway URL and a temporary Gradle init script allowing loopback HTTP; neither
+override is part of the production configuration.
+
+Stored user data now uses protobuf JSON to preserve bigint timestamp fields,
+which cannot be serialized with plain `JSON.stringify(user)`. Legacy sessions
+remain readable. `__tests__/auth.test.ts` covers login, persistence, legacy data,
+and unsuccessful/incomplete login responses using real protobuf schemas.

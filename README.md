@@ -57,19 +57,18 @@ yarn install
 # Copy environment configuration
 cp .env.example .env
 
-# Edit .env and set GRPC_BACKEND_URL to your etu-backend URL
-# Example: GRPC_BACKEND_URL=http://localhost:50051
-# For production: GRPC_BACKEND_URL=https://grpc.etu.timeclimbers.com
+# Edit .env and set MOBILE_API_URL to the etu-web mobile gateway
+# For production: MOBILE_API_URL=https://etu.timeclimbers.com/api/mobile
 ```
 
 ## Environment Variables
 
 | Variable | Required | Description | Example |
 |----------|----------|-------------|---------|
-| `GRPC_BACKEND_URL` | Yes | URL of the etu-backend gRPC service | `http://localhost:50051` (dev), `https://grpc.etu.timeclimbers.com` (prod) |
+| `MOBILE_API_URL` | No | etu-web mobile gateway; defaults to production | `https://etu.timeclimbers.com/api/mobile` |
 | `SENTRY_DSN` | No | When set, `logError` / `logException` and `ErrorBoundary` report to [Sentry](https://sentry.io) | DSN from your Sentry project |
 
-**Important**: The app will log a warning if `GRPC_BACKEND_URL` is not set and fall back to `localhost:50051`. For production builds, always set this variable.
+**Important**: Deploy the etu-web mobile gateway before distributing this app. The native gRPC endpoint (`grpc.etu.timeclimbers.com`) cannot serve React Native fetch/Connect requests. The gateway authenticates credentials, issues a user API key, and forwards subsequent RPCs with that key. Legacy `GRPC_BACKEND_URL` settings are no longer used by mobile.
 
 After adding `@sentry/react-native`, run `cd ios && pod install` before building iOS.
 
@@ -179,8 +178,8 @@ Provide `ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEY_ALIAS`, and
 The build fails if the release keystore is missing; it does not substitute a
 debug key for a release.
 
-Set `GRPC_BACKEND_URL=https://grpc.etu.timeclimbers.com` in your local `.env`
-for the production backend. With `JAVA_HOME` and `ANDROID_HOME` configured,
+Set `MOBILE_API_URL=https://etu.timeclimbers.com/api/mobile` in your local `.env`
+for the production gateway. With `JAVA_HOME` and `ANDROID_HOME` configured,
 run from `android/`:
 
 ```bash
@@ -300,7 +299,7 @@ Use this checklist before **Production** (internal / closed testing first is rec
 
 Declare in Play Console what the app actually uses:
 
-- **Network**: notes and auth go to your configured gRPC host (`GRPC_BACKEND_URL`).
+- **Network**: notes and auth go through your configured mobile gateway (`MOBILE_API_URL`).
 - **Account**: email/password or API key; tokens stored with the OS secure store (Keychain / Keystore-backed).
 - **Photos / images**: attach images to notes (`READ_MEDIA_IMAGES`, camera, storage on older APIs).
 - **Audio files**: attach or pick audio (`READ_MEDIA_AUDIO`).
@@ -429,11 +428,11 @@ cd ios && pod install && cd ..
 
 **Solution**:
 
-1. Verify `GRPC_BACKEND_URL` is set correctly in `.env`
-2. Ensure backend is running: `curl http://localhost:50051` should respond
-3. For iOS simulator: use `http://localhost:50051` (localhost works)
-4. For Android emulator: use `http://10.0.2.2:50051` (special Android localhost)
-5. For physical devices: use your computer's IP address (e.g., `http://192.168.1.100:50051`)
+1. Verify `MOBILE_API_URL` points to the deployed etu-web `/api/mobile` gateway.
+2. Check that etu-web has its backend URL and server API key configured.
+3. For local debug builds, run etu-web on port 3000 and use `http://localhost:3000/api/mobile`.
+4. For Android over USB, use `adb reverse tcp:3000 tcp:3000` to reach that local gateway.
+5. Rebuild after changing `.env`; release builds require HTTPS for remote hosts.
 
 ## Subscription Management
 
