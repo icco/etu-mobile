@@ -19,7 +19,7 @@ Notes support **markdown content, tags, image uploads, and audio uploads**. Imag
 
 ## Security
 
-Dependencies are kept at latest versions. Transitive vulnerabilities in `markdown-it` and `fast-xml-parser` are overridden via `resolutions`. ESLint 9 is used with `@eslint/compat` and FlatCompat so the React Native config and plugins work with the new flat config format.
+Dependencies are kept at latest versions. Transitive vulnerabilities in `markdown-it` and `fast-xml-parser` are pinned via package `overrides`. ESLint 9 is used with `@eslint/compat` and FlatCompat so the React Native config and plugins work with the new flat config format.
 
 **Security Features**:
 - Secure token storage using React Native Keychain
