@@ -30,7 +30,7 @@ Dependencies are kept at latest versions. Transitive vulnerabilities in `markdow
 
 ## Prerequisites
 
-- Node.js 26+
+- Node.js 26.x
 - Running [etu-backend](https://github.com/icco/etu-backend) gRPC service
 - **GitHub Packages auth**: The app depends on `@icco/etu-proto` from GitHub Packages. Set `NPM_TOKEN` (or add `//npm.pkg.github.com/:_authToken=YOUR_TOKEN` to `~/.npmrc`) so `pnpm install` can fetch it. Use a classic PAT with `read:packages` scope.
 
