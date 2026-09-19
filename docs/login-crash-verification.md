@@ -12,7 +12,7 @@ The release crash reported on September 19, 2026 had two distinct traces:
 
 ## Regression checks
 
-`yarn test __tests__/polyfills.test.ts --runInBand` runs real generated schemas in
+`pnpm test __tests__/polyfills.test.ts --runInBand` runs real generated schemas in
 fresh processes with missing text encoders, rather than Jest's mocked proto
 package. It checks schema initialization, Unicode binary round trips, strict
 UTF-8 decoding, and preservation of an existing encoder.

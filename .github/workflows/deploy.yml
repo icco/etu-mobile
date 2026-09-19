@@ -39,6 +39,10 @@ permissions:
   contents: read
   packages: read
 
+env:
+  NODE_VERSION: '26'
+  PNPM_VERSION: '12.4.2'
+
 jobs:
   check-secrets:
     name: Check required secrets
@@ -79,17 +83,19 @@ jobs:
         with:
           persist-credentials: false
 
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+          run_install: false
+
       - name: Setup Node
         uses: actions/setup-node@v7
         with:
-          node-version: '25'
-          cache: 'yarn'
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
           registry-url: 'https://npm.pkg.github.com'
           scope: '@icco'
-        # The yarn cache runs `yarn cache dir` against the .npmrc this action
-        # writes, so the token has to be in the env here too.
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN || secrets.GITHUB_TOKEN }}
 
       - name: Setup Java
         uses: actions/setup-java@v6.0.1
@@ -101,7 +107,7 @@ jobs:
         uses: gradle/actions/setup-gradle@v6
 
       - name: Install dependencies
-        run: yarn install --frozen-lockfile
+        run: pnpm install --frozen-lockfile
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN || secrets.GITHUB_TOKEN }}
 
@@ -135,20 +141,22 @@ jobs:
         with:
           persist-credentials: false
 
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+          run_install: false
+
       - name: Setup Node
         uses: actions/setup-node@v7
         with:
-          node-version: '25'
-          cache: 'yarn'
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
           registry-url: 'https://npm.pkg.github.com'
           scope: '@icco'
-        # The yarn cache runs `yarn cache dir` against the .npmrc this action
-        # writes, so the token has to be in the env here too.
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN || secrets.GITHUB_TOKEN }}
 
       - name: Install dependencies
-        run: yarn install --frozen-lockfile
+        run: pnpm install --frozen-lockfile
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN || secrets.GITHUB_TOKEN }}
 
