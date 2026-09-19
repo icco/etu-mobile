@@ -39,7 +39,7 @@ jest.mock('react-native-nitro-sound', () => ({
 jest.mock('react-native-config', () => ({
   __esModule: true,
   default: {
-    MOBILE_API_URL: 'http://localhost:3000/api/mobile',
+    GRPC_BACKEND_URL: 'http://localhost:50051',
     SENTRY_DSN: '',
   },
 }));

@@ -1,7 +1,7 @@
 import * as Keychain from 'react-native-keychain';
 import { fromJson, toJson, type JsonValue } from '@bufbuild/protobuf';
 import { UserSchema } from '@icco/etu-proto';
-import { getMobileApiUrl } from './transport';
+import { createLoginSession } from './login';
 import {
   authClient,
   apiKeysClient,
@@ -141,26 +141,9 @@ export async function loginWithEmailPassword(
   email: string,
   password: string
 ): Promise<User> {
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 30000);
   try {
-    const response = await fetch(`${getMobileApiUrl()}/login`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password }),
-      signal: controller.signal as RequestInit['signal'],
-    });
-    if (!response.ok) {
-      throw new Error(response.status === 401 ? 'Invalid email or password' :
-        `Login service unavailable (HTTP ${response.status})`);
-    }
-    const session = await response.json() as { token?: unknown; user?: JsonValue };
-    if (typeof session.token !== 'string' || !session.token || !session.user) {
-      throw new Error('Login response missing session');
-    }
-    const user = fromJson(UserSchema, session.user);
-    if (!user.id) throw new Error('Login response missing user');
-    await setStoredAuth(session.token, user);
+    const token = await createLoginSession(email, password);
+    const user = await loginWithApiKey(token);
     logInfo('Authentication successful', { userId: user.id });
     return user;
   } catch (error) {
@@ -169,8 +152,6 @@ export async function loginWithEmailPassword(
       emailHash: hashEmail(email),
     });
     throw error;
-  } finally {
-    clearTimeout(timeout);
   }
 }
 

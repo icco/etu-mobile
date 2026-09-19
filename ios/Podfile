@@ -15,6 +15,7 @@ if linkage != nil
 end
 
 target 'EtuMobileApp' do
+  pod 'gRPC', '~> 1.75'
   config = use_native_modules!
 
   use_react_native!(

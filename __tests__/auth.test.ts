@@ -1,25 +1,31 @@
-import { create, toJson } from '@bufbuild/protobuf';
+import { create } from '@bufbuild/protobuf';
 import { UserSchema } from '@icco/etu-proto';
 import * as Keychain from 'react-native-keychain';
 import { getStoredAuth, loginWithEmailPassword, setStoredAuth } from '../src/api/auth';
+import { createLoginSession } from '../src/api/login';
+import { authClient, apiKeysClient } from '../src/api/client';
 
 jest.mock('@icco/etu-proto', () => jest.requireActual<typeof import('@icco/etu-proto')>('../node_modules/@icco/etu-proto/dist/etu_pb.js'));
 jest.mock('../src/utils/logger');
-jest.mock('../src/api/client', () => ({ createHeaders: (token: string) => ({ Authorization: token }) }));
-jest.mock('../src/api/transport', () => ({ getMobileApiUrl: () => 'https://example.com/api/mobile' }));
+jest.mock('../src/api/client', () => ({
+  createHeaders: (token: string) => ({ Authorization: token }),
+  apiKeysClient: { client: { verifyApiKey: jest.fn() } },
+  authClient: { client: { getUser: jest.fn() } },
+}));
+jest.mock('../src/api/login');
 
 const user = create(UserSchema, {
   id: 'user-1', email: 'test@example.com',
   createdAt: { seconds: 1789830000n, nanos: 123000000 },
 });
 const store = new Map<string, string>();
-const fetchMock = jest.fn<ReturnType<typeof fetch>, Parameters<typeof fetch>>();
-const originalFetch = globalThis.fetch;
 
 beforeEach(() => {
   jest.clearAllMocks();
   store.clear();
-  globalThis.fetch = fetchMock as typeof fetch;
+  jest.mocked(createLoginSession).mockResolvedValue('etu_test');
+  jest.mocked(apiKeysClient.client.verifyApiKey).mockResolvedValue({ valid: true, userId: user.id } as never);
+  jest.mocked(authClient.client.getUser).mockResolvedValue({ user } as never);
   jest.mocked(Keychain.setGenericPassword).mockImplementation((_username, password, options) => {
     store.set(options!.service!, password);
     return Promise.resolve({ service: options!.service!, storage: 'KeystoreAESGCM' as Keychain.STORAGE_TYPE });
@@ -30,14 +36,10 @@ beforeEach(() => {
   });
 });
 
-afterEach(() => { globalThis.fetch = originalFetch; });
-
 it('exchanges credentials for a session and restores protobuf timestamps after restart', async () => {
-  fetchMock.mockResolvedValue(new Response(JSON.stringify({ token: 'etu_test', user: toJson(UserSchema, user) })));
   expect(await loginWithEmailPassword('test@example.com', 'password')).toEqual(user);
-  expect(fetchMock).toHaveBeenCalledWith('https://example.com/api/mobile/login', expect.objectContaining({
-    method: 'POST', body: JSON.stringify({ email: 'test@example.com', password: 'password' }),
-  }));
+  expect(createLoginSession).toHaveBeenCalledWith('test@example.com', 'password');
+  expect(authClient.client.getUser).toHaveBeenCalledWith({ userId: user.id }, { headers: { Authorization: 'etu_test' } });
   expect(await getStoredAuth()).toEqual({ token: 'etu_test', user });
 });
 
@@ -52,16 +54,14 @@ it('keeps legacy stored sessions readable', async () => {
   expect(await getStoredAuth()).toEqual({ token: 'legacy-key', user: { id: 'legacy-user', email: 'test@example.com' } });
 });
 
-it.each([401, 503])('does not store a session after HTTP %s', async (status) => {
-  fetchMock.mockResolvedValue(new Response('{}', { status }));
-  await expect(loginWithEmailPassword('test@example.com', 'password')).rejects.toThrow(
-    status === 401 ? 'Invalid email or password' : 'Login service unavailable',
-  );
+it('does not store a session after failed login', async () => {
+  jest.mocked(createLoginSession).mockRejectedValue(new Error('Invalid credentials'));
+  await expect(loginWithEmailPassword('test@example.com', 'password')).rejects.toThrow('Invalid credentials');
   expect(Keychain.setGenericPassword).not.toHaveBeenCalled();
 });
 
-it('rejects incomplete session responses', async () => {
-  fetchMock.mockResolvedValue(new Response(JSON.stringify({ user: toJson(UserSchema, user) })));
-  await expect(loginWithEmailPassword('test@example.com', 'password')).rejects.toThrow('Login response missing session');
+it('does not persist a session if user retrieval fails', async () => {
+  jest.mocked(authClient.client.getUser).mockRejectedValue(new Error('User unavailable'));
+  await expect(loginWithEmailPassword('test@example.com', 'password')).rejects.toThrow('User unavailable');
   expect(Keychain.setGenericPassword).not.toHaveBeenCalled();
 });
