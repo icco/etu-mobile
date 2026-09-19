@@ -36,17 +36,18 @@ The production endpoint `https://grpc.etu.timeclimbers.com` currently rejects
 Connect requests (`application/json`) with HTTP 415 and gRPC status 3, reporting
 an invalid gRPC request content type. It also rejects `application/grpc-web+proto`.
 The mobile app uses Connect's web transport, while the backend exposes native
-gRPC. The follow-up uses the etu-web `/api/mobile` gateway: `/login` exchanges
-valid credentials for a user-scoped API key, and `/rpc` translates Connect JSON
-requests into native gRPC with the user's key. Deploy that gateway before
-distributing the follow-up mobile build.
+gRPC. The follow-up replaces the web transport with native gRPC networking:
+grpc-java/OkHttp on Android and gRPC ObjC on iOS. Typed TypeScript clients retain
+protobuf serialization and pass binary messages to native modules. TLS,
+deadlines, cancellation and gRPC status handling are provided by the native SDKs.
 
-The phone successfully signed in using the real account credentials through a
-local gateway connected to production. Timeline, random notes, tags, settings,
-and note detail requests returned HTTP 200. Restarting the app retained the
-session and loaded notes again. Device testing used `adb reverse` with a local
-gateway URL and a temporary Gradle init script allowing loopback HTTP; neither
-override is part of the production configuration.
+The backend's new `AuthService.Login` RPC exchanges credentials for a revocable
+user API key, followed by `VerifyApiKey` and `GetUser` to load the user profile.
+Deploy etu-backend PR #147 before enabling fresh email/password sign-in.
+
+The signed Android release loaded real notes directly from the production gRPC
+endpoint using the persisted session. Fresh password-login verification awaits
+deployment of the backend RPC. This Mac has no Xcode; iOS compilation runs in CI.
 
 Stored user data now uses protobuf JSON to preserve bigint timestamp fields,
 which cannot be serialized with plain `JSON.stringify(user)`. Legacy sessions
