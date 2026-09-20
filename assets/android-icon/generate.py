@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Regenerate Android icons from the adjacent SVGs; requires ImageMagick 7."""
+"""Regenerate Android icons; requires resvg-js and ImageMagick 7 on PATH."""
 
 import json
 from pathlib import Path
@@ -19,7 +19,7 @@ BACKGROUND = FOREGROUND.attrib['data-background']
 
 
 def paths(root):
-    return '\n'.join(ET.tostring(p, encoding='unicode') for p in root if p.tag == NS + 'path')
+    return '\n'.join(ET.tostring(p, encoding='unicode').strip() for p in root if p.tag == NS + 'path')
 
 
 def svg(body, viewbox='0 0 108 108'):
@@ -31,8 +31,11 @@ def render(body, destination, size):
     with tempfile.TemporaryDirectory() as directory:
         source = Path(directory) / 'render.svg'
         source.write_text(body)
-        subprocess.run(['magick', '-background', 'none', '-density', '768', str(source),
-                        '-resize', f'{size}x{size}', '-strip', f'PNG32:{destination}'], check=True)
+        raster = Path(directory) / 'render.png'
+        subprocess.run(['resvg-js', '--no-system-font', '--fit-width', str(size * 4),
+                        str(source), str(raster)], check=True, capture_output=True)
+        subprocess.run(['magick', str(raster), '-resize', f'{size}x{size}',
+                        '-strip', f'PNG32:{destination}'], check=True)
 
 
 def vector(source, destination):
