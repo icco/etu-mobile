@@ -7,19 +7,20 @@ export type RootStackParamList = {
   Login: undefined;
   Register: undefined;
   MainTabs: undefined;
+  Capture: undefined;
   NoteDetail: { noteId: string };
   NoteEdit: { noteId?: string; note?: Note; initialContent?: string };
 };
 
 export type MainTabParamList = {
   Timeline: undefined;
-  Capture: undefined;
   Random: undefined;
   Search: undefined;
   Settings: undefined;
 };
 
-export type RootStackNavigationProp = NativeStackNavigationProp<RootStackParamList>;
+export type RootStackNavigationProp =
+  NativeStackNavigationProp<RootStackParamList>;
 
 export type MainTabNavigationProp<T extends keyof MainTabParamList> =
   CompositeNavigationProp<

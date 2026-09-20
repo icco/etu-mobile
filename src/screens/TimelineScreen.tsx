@@ -6,6 +6,7 @@ import {
   StyleSheet,
   ActivityIndicator,
   RefreshControl,
+  Pressable,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useInfiniteQuery, useQueryClient } from '@tanstack/react-query';
@@ -15,6 +16,8 @@ import NoteCard from '../components/NoteCard';
 import type { Note } from '../api/client';
 import { protoTimestampToDate, formatDateGroup } from '../utils/date';
 import { isAuthError, getErrorMessage } from '../utils/errors';
+import { useAppTheme, useThemedStyles, type Colors } from '../theme';
+import NewNoteButton from '../components/NewNoteButton';
 
 const PAGE_SIZE = 50;
 
@@ -33,10 +36,15 @@ function groupNotesByDate(notes: Note[]): GroupedNotes {
     if (!groups[label]) groups[label] = [];
     groups[label].push(note);
   }
-  return Object.entries(groups).map(([label, groupNotes]) => ({ label, notes: groupNotes }));
+  return Object.entries(groups).map(([label, groupNotes]) => ({
+    label,
+    notes: groupNotes,
+  }));
 }
 
 export default function TimelineScreen() {
+  const { colors } = useAppTheme();
+  const styles = useThemedStyles(createStyles);
   const navigation = useNavigation();
   const queryClient = useQueryClient();
   const { user, token, handleAuthError } = useAuth();
@@ -73,7 +81,10 @@ export default function TimelineScreen() {
     }
   }, [error, handleAuthError]);
 
-  const allNotes = useMemo(() => (data?.pages ?? []).flatMap(p => p.notes), [data?.pages]);
+  const allNotes = useMemo(
+    () => (data?.pages ?? []).flatMap(p => p.notes),
+    [data?.pages],
+  );
 
   const grouped = useMemo(() => groupNotesByDate(allNotes), [allNotes]);
 
@@ -93,7 +104,7 @@ export default function TimelineScreen() {
   if (isLoading) {
     return (
       <View style={styles.centered}>
-        <ActivityIndicator size="large" color="#0a84ff" />
+        <ActivityIndicator size="large" color={colors.primary} />
       </View>
     );
   }
@@ -103,76 +114,123 @@ export default function TimelineScreen() {
       <View style={styles.centered}>
         <Text style={styles.errorText}>Failed to load notes</Text>
         <Text style={styles.errorDetail}>{getErrorMessage(error)}</Text>
+        <Pressable
+          accessibilityRole="button"
+          onPress={onRefresh}
+          style={styles.retry}
+          android_ripple={{ color: colors.ripple }}
+        >
+          <Text style={styles.retryText}>Try again</Text>
+        </Pressable>
+        <NewNoteButton />
       </View>
     );
   }
 
-  const sections = grouped.flatMap((g) => [
+  const sections = grouped.flatMap(g => [
     { type: 'header' as const, key: g.label, label: g.label },
-    ...g.notes.map((n) => ({ type: 'note' as const, key: n.id, note: n })),
+    ...g.notes.map(n => ({ type: 'note' as const, key: n.id, note: n })),
   ]);
 
   const isPullRefreshing = isFetching && !isFetchingNextPage && !isLoading;
 
   return (
-    <FlatList
-      data={sections}
-      keyExtractor={(item) => item.key}
-      contentContainerStyle={styles.list}
-      refreshControl={
-        <RefreshControl
-          refreshing={isPullRefreshing}
-          onRefresh={onRefresh}
-          tintColor="#0a84ff"
-        />
-      }
-      onEndReached={onEndReached}
-      onEndReachedThreshold={0.35}
-      ListFooterComponent={
-        isFetchingNextPage ? (
-          <View style={styles.footer}>
-            <ActivityIndicator size="small" color="#0a84ff" />
-          </View>
-        ) : null
-      }
-      renderItem={({ item }) => {
-        if (item.type === 'header') {
-          return <Text style={styles.sectionHeader}>{item.label}</Text>;
-        }
-        return (
-          <NoteCard
-            note={item.note}
-            onPress={() =>
-              (navigation as { navigate: (name: string, params?: object) => void }).navigate('NoteDetail', { noteId: item.note.id })
-            }
+    <View style={styles.container}>
+      <FlatList
+        data={sections}
+        keyExtractor={item => item.key}
+        contentContainerStyle={styles.list}
+        refreshControl={
+          <RefreshControl
+            refreshing={isPullRefreshing}
+            onRefresh={onRefresh}
+            tintColor={colors.primary}
+            colors={[colors.primary]}
+            progressBackgroundColor={colors.surface}
           />
-        );
-      }}
-      ListEmptyComponent={
-        <View style={styles.empty}>
-          <Text style={styles.emptyText}>No notes yet</Text>
-          <Text style={styles.emptyHint}>Tap Capture to add one</Text>
-        </View>
-      }
-    />
+        }
+        onEndReached={onEndReached}
+        onEndReachedThreshold={0.35}
+        ListFooterComponent={
+          isFetchingNextPage ? (
+            <View style={styles.footer}>
+              <ActivityIndicator size="small" color={colors.primary} />
+            </View>
+          ) : null
+        }
+        renderItem={({ item }) => {
+          if (item.type === 'header') {
+            return <Text style={styles.sectionHeader}>{item.label}</Text>;
+          }
+          return (
+            <NoteCard
+              note={item.note}
+              onPress={() =>
+                (
+                  navigation as {
+                    navigate: (name: string, params?: object) => void;
+                  }
+                ).navigate('NoteDetail', { noteId: item.note.id })
+              }
+            />
+          );
+        }}
+        ListEmptyComponent={
+          <View style={styles.empty}>
+            <Text style={styles.emptyText}>No notes yet</Text>
+            <Text style={styles.emptyHint}>
+              A thought, a photo, a moment. Tap New note to keep it here.
+            </Text>
+          </View>
+        }
+      />
+      <NewNoteButton />
+    </View>
   );
 }
 
-const styles = StyleSheet.create({
-  centered: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#111' },
-  list: { paddingVertical: 8, paddingBottom: 32 },
-  footer: { paddingVertical: 16, alignItems: 'center' },
-  sectionHeader: {
-    color: '#888',
-    fontSize: 13,
-    fontWeight: '600',
-    marginTop: 16,
-    marginBottom: 4,
-    marginHorizontal: 16,
-  },
-  empty: { padding: 48, alignItems: 'center' },
-  emptyText: { color: '#fff', fontSize: 18 },
-  emptyHint: { color: '#666', fontSize: 14, marginTop: 8 },
-  errorText: { color: '#ff453a', fontSize: 18, marginBottom: 8 },
-  errorDetail: { color: '#888', fontSize: 14, textAlign: 'center', paddingHorizontal: 32 },
-});
+const createStyles = (colors: Colors) =>
+  StyleSheet.create({
+    container: { flex: 1, backgroundColor: colors.background },
+    centered: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      backgroundColor: colors.background,
+    },
+    list: { paddingVertical: 8, paddingBottom: 96, flexGrow: 1 },
+    footer: { paddingVertical: 16, alignItems: 'center' },
+    sectionHeader: {
+      color: colors.textSecondary,
+      fontSize: 13,
+      fontWeight: '600',
+      marginTop: 20,
+      marginBottom: 6,
+      marginHorizontal: 24,
+      letterSpacing: 0.5,
+    },
+    empty: { padding: 48, alignItems: 'center' },
+    emptyText: { color: colors.text, fontSize: 22, fontWeight: '600' },
+    emptyHint: {
+      color: colors.textSecondary,
+      fontSize: 15,
+      lineHeight: 23,
+      marginTop: 12,
+      textAlign: 'center',
+    },
+    errorText: { color: colors.error, fontSize: 18, marginBottom: 8 },
+    errorDetail: {
+      color: colors.textSecondary,
+      fontSize: 14,
+      textAlign: 'center',
+      paddingHorizontal: 32,
+    },
+    retry: {
+      marginTop: 20,
+      minHeight: 48,
+      padding: 16,
+      borderRadius: 24,
+      backgroundColor: colors.primaryContainer,
+    },
+    retryText: { color: colors.onPrimaryContainer, fontWeight: '600' },
+  });

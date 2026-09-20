@@ -1,6 +1,7 @@
 import React, { Component, ErrorInfo, ReactNode } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { logException } from '../utils/logger';
+import { useThemedStyles, type Colors } from '../theme';
 
 interface Props {
   children: ReactNode;
@@ -30,50 +31,69 @@ export default class ErrorBoundary extends Component<Props, State> {
   render(): ReactNode {
     if (this.state.hasError && this.state.error) {
       return (
-        <View style={styles.container}>
-          <Text style={styles.title}>Something went wrong</Text>
-          <Text style={styles.message} numberOfLines={5}>
-            {this.state.error.message}
-          </Text>
-          <TouchableOpacity style={styles.button} onPress={this.handleRetry}>
-            <Text style={styles.buttonText}>Try again</Text>
-          </TouchableOpacity>
-        </View>
+        <ErrorFallback error={this.state.error} onRetry={this.handleRetry} />
       );
     }
     return this.props.children;
   }
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#111',
-    padding: 24,
-  },
-  title: {
-    color: '#fff',
-    fontSize: 20,
-    fontWeight: '600',
-    marginBottom: 12,
-  },
-  message: {
-    color: '#888',
-    fontSize: 14,
-    textAlign: 'center',
-    marginBottom: 24,
-  },
-  button: {
-    backgroundColor: '#0a84ff',
-    paddingHorizontal: 24,
-    paddingVertical: 14,
-    borderRadius: 10,
-  },
-  buttonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-});
+function ErrorFallback({
+  error,
+  onRetry,
+}: {
+  error: Error;
+  onRetry: () => void;
+}) {
+  const styles = useThemedStyles(createStyles);
+  return (
+    <View style={styles.container}>
+      <Text style={styles.title}>Something went wrong</Text>
+      <Text style={styles.message} numberOfLines={5}>
+        {error.message}
+      </Text>
+      <TouchableOpacity
+        accessibilityRole="button"
+        style={styles.button}
+        onPress={onRetry}
+      >
+        <Text style={styles.buttonText}>Try again</Text>
+      </TouchableOpacity>
+    </View>
+  );
+}
+
+const createStyles = (colors: Colors) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      backgroundColor: colors.background,
+      padding: 24,
+    },
+    title: {
+      color: colors.text,
+      fontSize: 20,
+      fontWeight: '600',
+      marginBottom: 12,
+    },
+    message: {
+      color: colors.textSecondary,
+      fontSize: 14,
+      textAlign: 'center',
+      marginBottom: 24,
+    },
+    button: {
+      backgroundColor: colors.primary,
+      paddingHorizontal: 24,
+      paddingVertical: 14,
+      borderRadius: 24,
+      minHeight: 48,
+    },
+    buttonText: {
+      color: colors.onPrimary,
+      fontSize: 16,
+      fontWeight: '600',
+    },
+  });

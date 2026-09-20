@@ -83,6 +83,10 @@ jest.mock('@react-navigation/bottom-tabs', () => ({
   }),
 }));
 
+jest.mock('@react-navigation/elements', () => ({
+  useHeaderHeight: () => 64,
+}));
+
 // Mock @tanstack/react-query for testing
 jest.mock('@tanstack/react-query', () => ({
   ...jest.requireActual('@tanstack/react-query'),

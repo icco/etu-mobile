@@ -13,9 +13,13 @@ import NoteDetailScreen from '../screens/NoteDetailScreen';
 import NoteEditScreen from '../screens/NoteEditScreen';
 import SearchScreen from '../screens/SearchScreen';
 import { View, ActivityIndicator, StyleSheet } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useAppTheme } from '../theme';
+import Icon, { type IconName } from '../components/Icon';
+import type { MainTabParamList, RootStackParamList } from './types';
 
 /** Single root stack so deep links resolve whether user is on a tab or a pushed screen. */
-const linking = {
+export const linking = {
   prefixes: ['etu://open'],
   config: {
     screens: {
@@ -25,7 +29,6 @@ const linking = {
         path: '',
         screens: {
           Timeline: '',
-          Capture: 'capture',
           Random: 'random',
           Search: 'search',
           Settings: 'settings',
@@ -33,32 +36,66 @@ const linking = {
       },
       NoteDetail: 'note/:noteId',
       NoteEdit: 'edit',
+      Capture: 'capture',
     },
   },
 };
 
-const Stack = createNativeStackNavigator();
-const Tab = createBottomTabNavigator();
+const Stack = createNativeStackNavigator<RootStackParamList>();
+const Tab = createBottomTabNavigator<MainTabParamList>();
 
-const stackScreenOptions = {
-  headerStyle: { backgroundColor: '#111' },
-  headerTintColor: '#fff',
-  contentStyle: { backgroundColor: '#111' },
-} as const;
+const tabIcons: Record<keyof MainTabParamList, IconName> = {
+  Timeline: 'timeline',
+  Random: 'random',
+  Search: 'search',
+  Settings: 'settings',
+};
 
 function MainTabs() {
+  const { colors } = useAppTheme();
+  const insets = useSafeAreaInsets();
   return (
     <Tab.Navigator
-      screenOptions={{
-        headerStyle: { backgroundColor: '#111' },
-        headerTintColor: '#fff',
-        tabBarStyle: { backgroundColor: '#111', borderTopColor: '#333' },
-        tabBarActiveTintColor: '#0a84ff',
-        tabBarInactiveTintColor: '#888',
-      }}
+      screenOptions={({ route }) => ({
+        headerStyle: { backgroundColor: colors.background },
+        headerTintColor: colors.text,
+        headerTitleStyle: { fontSize: 24, fontWeight: '600' },
+        headerTitleAlign: 'left',
+        headerShadowVisible: false,
+        sceneStyle: { backgroundColor: colors.background },
+        tabBarStyle: {
+          backgroundColor: colors.surface,
+          borderTopWidth: 0,
+          elevation: 0,
+          height: 80 + insets.bottom,
+          paddingTop: 10,
+          paddingBottom: insets.bottom + 10,
+        },
+        tabBarLabelStyle: { fontSize: 12, fontWeight: '600', marginTop: 4 },
+        tabBarLabelPosition: 'below-icon',
+        tabBarActiveTintColor: colors.text,
+        tabBarInactiveTintColor: colors.textSecondary,
+        tabBarHideOnKeyboard: true,
+        tabBarIcon: ({ focused }) => (
+          <View
+            style={[
+              styles.indicator,
+              {
+                backgroundColor: focused
+                  ? colors.primaryContainer
+                  : 'transparent',
+              },
+            ]}
+          >
+            <Icon
+              name={tabIcons[route.name]}
+              color={focused ? colors.onPrimaryContainer : colors.textSecondary}
+            />
+          </View>
+        ),
+      })}
     >
       <Tab.Screen name="Timeline" component={TimelineScreen} />
-      <Tab.Screen name="Capture" component={CaptureScreen} />
       <Tab.Screen name="Random" component={RandomScreen} />
       <Tab.Screen name="Search" component={SearchScreen} />
       <Tab.Screen name="Settings" component={SettingsScreen} />
@@ -67,23 +104,32 @@ function MainTabs() {
 }
 
 function LoadingScreen() {
+  const { colors } = useAppTheme();
   return (
-    <View style={styles.loading}>
-      <ActivityIndicator size="large" color="#0a84ff" />
+    <View style={[styles.loading, { backgroundColor: colors.background }]}>
+      <ActivityIndicator size="large" color={colors.primary} />
     </View>
   );
 }
 
 export default function RootNavigator() {
   const { isAuthenticated, isLoading } = useAuth();
+  const { colors, navigation: theme } = useAppTheme();
 
   if (isLoading) {
     return <LoadingScreen />;
   }
 
   return (
-    <NavigationContainer linking={linking}>
-      <Stack.Navigator screenOptions={stackScreenOptions}>
+    <NavigationContainer linking={linking} theme={theme}>
+      <Stack.Navigator
+        screenOptions={{
+          headerStyle: { backgroundColor: colors.background },
+          headerTintColor: colors.text,
+          headerShadowVisible: false,
+          contentStyle: { backgroundColor: colors.background },
+        }}
+      >
         {!isAuthenticated ? (
           <>
             <Stack.Screen name="Login" component={LoginScreen} />
@@ -91,9 +137,28 @@ export default function RootNavigator() {
           </>
         ) : (
           <>
-            <Stack.Screen name="MainTabs" component={MainTabs} options={{ headerShown: false }} />
-            <Stack.Screen name="NoteDetail" component={NoteDetailScreen} />
-            <Stack.Screen name="NoteEdit" component={NoteEditScreen} />
+            <Stack.Screen
+              name="MainTabs"
+              component={MainTabs}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="Capture"
+              component={CaptureScreen}
+              options={{ title: 'Capture' }}
+            />
+            <Stack.Screen
+              name="NoteDetail"
+              component={NoteDetailScreen}
+              options={{ title: 'Note' }}
+            />
+            <Stack.Screen
+              name="NoteEdit"
+              component={NoteEditScreen}
+              options={({ route }) => ({
+                title: route.params?.noteId ? 'Edit note' : 'New note',
+              })}
+            />
           </>
         )}
       </Stack.Navigator>
@@ -106,6 +171,12 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#111',
+  },
+  indicator: {
+    width: 64,
+    height: 32,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });

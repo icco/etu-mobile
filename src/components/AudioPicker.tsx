@@ -17,6 +17,7 @@ import {
 } from '@react-native-documents/picker';
 import RNFS from 'react-native-fs';
 import Sound from 'react-native-nitro-sound';
+import { useThemedStyles, type Colors } from '../theme';
 
 export interface SelectedAudio {
   uri: string;
@@ -55,6 +56,7 @@ export default function AudioPicker({
   maxAudios = MAX_AUDIOS,
   maxSizeMB = MAX_SIZE_MB,
 }: AudioPickerProps) {
+  const styles = useThemedStyles(createStyles);
   const maxSizeBytes = maxSizeMB * 1024 * 1024;
   const [isRecording, setIsRecording] = useState(false);
   const [recordingTime, setRecordingTime] = useState(0);
@@ -89,7 +91,10 @@ export default function AudioPicker({
       }));
 
       const copyResults = await keepLocalCopy({
-        files: filesToCopy as [{ uri: string; fileName: string }, ...{ uri: string; fileName: string }[]],
+        files: filesToCopy as [
+          { uri: string; fileName: string },
+          ...{ uri: string; fileName: string }[],
+        ],
         destination: 'cachesDirectory',
       });
 
@@ -104,7 +109,7 @@ export default function AudioPicker({
         if (!ALLOWED_MIME_TYPES.includes(mimeType)) {
           Alert.alert(
             'Invalid Format',
-            `${file.name ?? 'File'} is not a supported audio format`
+            `${file.name ?? 'File'} is not a supported audio format`,
           );
           continue;
         }
@@ -114,14 +119,17 @@ export default function AudioPicker({
         if (fileSize > maxSizeBytes) {
           Alert.alert(
             'File Too Large',
-            `${file.name ?? 'File'} exceeds ${maxSizeMB} MiB limit`
+            `${file.name ?? 'File'} exceeds ${maxSizeMB} MiB limit`,
           );
           continue;
         }
 
         // Check if we've reached the limit
         if (audios.length + newAudios.length >= maxAudios) {
-          Alert.alert('Limit Reached', `Maximum ${maxAudios} audio files allowed`);
+          Alert.alert(
+            'Limit Reached',
+            `Maximum ${maxAudios} audio files allowed`,
+          );
           break;
         }
 
@@ -151,7 +159,10 @@ export default function AudioPicker({
         onAudiosChange([...audios, ...newAudios]);
       }
     } catch (error) {
-      if (isErrorWithCode(error) && error.code === errorCodes.OPERATION_CANCELED) {
+      if (
+        isErrorWithCode(error) &&
+        error.code === errorCodes.OPERATION_CANCELED
+      ) {
         return;
       }
       console.error('Audio picker error:', error);
@@ -166,13 +177,18 @@ export default function AudioPicker({
 
   const ensureMicPermission = async (): Promise<boolean> => {
     if (Platform.OS !== 'android') return true;
-    const granted = await PermissionsAndroid.check(PermissionsAndroid.PERMISSIONS.RECORD_AUDIO);
+    const granted = await PermissionsAndroid.check(
+      PermissionsAndroid.PERMISSIONS.RECORD_AUDIO,
+    );
     if (granted) return true;
-    const result = await PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.RECORD_AUDIO, {
-      title: 'Microphone',
-      message: 'Etu needs microphone access to record audio for your notes.',
-      buttonPositive: 'Allow',
-    });
+    const result = await PermissionsAndroid.request(
+      PermissionsAndroid.PERMISSIONS.RECORD_AUDIO,
+      {
+        title: 'Microphone',
+        message: 'Etu needs microphone access to record audio for your notes.',
+        buttonPositive: 'Allow',
+      },
+    );
     return result === PermissionsAndroid.RESULTS.GRANTED;
   };
 
@@ -185,7 +201,10 @@ export default function AudioPicker({
     try {
       const ok = await ensureMicPermission();
       if (!ok) {
-        Alert.alert('Permission required', 'Microphone access is needed to record audio.');
+        Alert.alert(
+          'Permission required',
+          'Microphone access is needed to record audio.',
+        );
         return;
       }
       await Sound.startRecorder();
@@ -221,7 +240,7 @@ export default function AudioPicker({
       if (fileSize > maxSizeBytes) {
         Alert.alert(
           'File Too Large',
-          `Recording exceeds ${maxSizeMB} MiB limit. Try recording a shorter audio.`
+          `Recording exceeds ${maxSizeMB} MiB limit. Try recording a shorter audio.`,
         );
         // Delete the file
         await RNFS.unlink(result);
@@ -265,14 +284,22 @@ export default function AudioPicker({
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.label}>Audio ({audios.length}/{maxAudios})</Text>
+        <Text style={styles.label}>
+          Audio ({audios.length}/{maxAudios})
+        </Text>
         <View style={styles.headerButtons}>
           {audios.length < maxAudios && !isRecording && (
             <>
-              <TouchableOpacity style={styles.recordButton} onPress={() => void handleStartRecording()}>
-                <Text style={styles.recordButtonText}>🎙️ Record</Text>
+              <TouchableOpacity
+                style={styles.recordButton}
+                onPress={() => void handleStartRecording()}
+              >
+                <Text style={styles.recordButtonText}>Record</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={styles.addButton} onPress={() => void handleSelectAudios()}>
+              <TouchableOpacity
+                style={styles.addButton}
+                onPress={() => void handleSelectAudios()}
+              >
                 <Text style={styles.addButtonText}>+ Add Audio</Text>
               </TouchableOpacity>
             </>
@@ -284,10 +311,15 @@ export default function AudioPicker({
         <View style={styles.recordingIndicator}>
           <View style={styles.recordingHeader}>
             <View style={styles.recordingDot} />
-            <Text style={styles.recordingText}>Recording {formatRecordingTime(recordingTime)}</Text>
+            <Text style={styles.recordingText}>
+              Recording {formatRecordingTime(recordingTime)}
+            </Text>
           </View>
-          <TouchableOpacity style={styles.stopButton} onPress={() => void handleStopRecording()}>
-            <Text style={styles.stopButtonText}>⏹ Stop</Text>
+          <TouchableOpacity
+            style={styles.stopButton}
+            onPress={() => void handleStopRecording()}
+          >
+            <Text style={styles.stopButtonText}>Stop recording</Text>
           </TouchableOpacity>
         </View>
       )}
@@ -300,7 +332,9 @@ export default function AudioPicker({
                 <Text style={styles.audioName} numberOfLines={1}>
                   {audio.name}
                 </Text>
-                <Text style={styles.audioSize}>{formatFileSize(audio.size)}</Text>
+                <Text style={styles.audioSize}>
+                  {formatFileSize(audio.size)}
+                </Text>
               </View>
               <TouchableOpacity
                 style={styles.removeButton}
@@ -314,129 +348,145 @@ export default function AudioPicker({
       )}
 
       <Text style={styles.hint}>
-        Max {maxAudios} files, {maxSizeMB} MiB each. MP3, WAV, OGG, M4A, FLAC, AAC
+        Max {maxAudios} files, {maxSizeMB} MiB each. MP3, WAV, OGG, M4A, FLAC,
+        AAC
       </Text>
     </View>
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    marginBottom: 16,
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  headerButtons: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  label: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  addButton: {
-    backgroundColor: '#333',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 6,
-  },
-  addButtonText: {
-    color: '#0a84ff',
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  recordButton: {
-    backgroundColor: '#ff453a',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 6,
-  },
-  recordButtonText: {
-    color: '#fff',
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  recordingIndicator: {
-    backgroundColor: '#1c1c1e',
-    padding: 12,
-    borderRadius: 8,
-    marginBottom: 12,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  recordingHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  recordingDot: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-    backgroundColor: '#ff453a',
-  },
-  recordingText: {
-    color: '#fff',
-    fontSize: 14,
-    fontWeight: '500',
-  },
-  stopButton: {
-    backgroundColor: '#333',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 6,
-  },
-  stopButtonText: {
-    color: '#ff453a',
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  audioList: {
-    marginBottom: 8,
-  },
-  audioItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    backgroundColor: '#1c1c1e',
-    padding: 12,
-    borderRadius: 8,
-    marginBottom: 8,
-  },
-  audioInfo: {
-    flex: 1,
-    marginRight: 12,
-  },
-  audioName: {
-    color: '#fff',
-    fontSize: 14,
-    fontWeight: '500',
-    marginBottom: 4,
-  },
-  audioSize: {
-    color: '#666',
-    fontSize: 12,
-  },
-  removeButton: {
-    backgroundColor: '#333',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 6,
-  },
-  removeButtonText: {
-    color: '#ff453a',
-    fontSize: 12,
-    fontWeight: '600',
-  },
-  hint: {
-    color: '#666',
-    fontSize: 12,
-    marginTop: 4,
-  },
-});
+const createStyles = (colors: Colors) =>
+  StyleSheet.create({
+    container: {
+      marginBottom: 16,
+    },
+    header: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: 12,
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: 12,
+    },
+    headerButtons: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: 8,
+    },
+    label: {
+      color: colors.text,
+      fontSize: 16,
+      fontWeight: '600',
+    },
+    addButton: {
+      backgroundColor: colors.primaryContainer,
+      paddingHorizontal: 12,
+      paddingVertical: 12,
+      borderRadius: 24,
+      minHeight: 48,
+      justifyContent: 'center',
+    },
+    addButtonText: {
+      color: colors.onPrimaryContainer,
+      fontSize: 14,
+      fontWeight: '600',
+    },
+    recordButton: {
+      backgroundColor: colors.primaryContainer,
+      paddingHorizontal: 12,
+      paddingVertical: 12,
+      borderRadius: 24,
+      minHeight: 48,
+      justifyContent: 'center',
+    },
+    recordButtonText: {
+      color: colors.onPrimaryContainer,
+      fontSize: 14,
+      fontWeight: '600',
+    },
+    recordingIndicator: {
+      backgroundColor: colors.surface,
+      padding: 12,
+      borderRadius: 16,
+      marginBottom: 12,
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: 12,
+      justifyContent: 'space-between',
+      alignItems: 'center',
+    },
+    recordingHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+    },
+    recordingDot: {
+      width: 12,
+      height: 12,
+      borderRadius: 6,
+      backgroundColor: colors.error,
+    },
+    recordingText: {
+      color: colors.text,
+      fontSize: 14,
+      fontWeight: '500',
+    },
+    stopButton: {
+      backgroundColor: colors.surfaceRaised,
+      paddingHorizontal: 12,
+      paddingVertical: 12,
+      borderRadius: 24,
+      minHeight: 48,
+      justifyContent: 'center',
+    },
+    stopButtonText: {
+      color: colors.error,
+      fontSize: 14,
+      fontWeight: '600',
+    },
+    audioList: {
+      marginBottom: 8,
+    },
+    audioItem: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      backgroundColor: colors.surface,
+      padding: 12,
+      borderRadius: 8,
+      marginBottom: 8,
+    },
+    audioInfo: {
+      flex: 1,
+      marginRight: 12,
+    },
+    audioName: {
+      color: colors.text,
+      fontSize: 14,
+      fontWeight: '500',
+      marginBottom: 4,
+    },
+    audioSize: {
+      color: colors.textSecondary,
+      fontSize: 12,
+    },
+    removeButton: {
+      backgroundColor: colors.surfaceRaised,
+      paddingHorizontal: 12,
+      paddingVertical: 12,
+      borderRadius: 24,
+      minHeight: 48,
+      justifyContent: 'center',
+    },
+    removeButtonText: {
+      color: colors.error,
+      fontSize: 12,
+      fontWeight: '600',
+    },
+    hint: {
+      color: colors.textSecondary,
+      lineHeight: 18,
+      fontSize: 12,
+      marginTop: 4,
+    },
+  });

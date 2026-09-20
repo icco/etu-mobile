@@ -1,7 +1,9 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, Pressable, StyleSheet } from 'react-native';
 import type { Note } from '../api/client';
-import { protoTimestampToDate, formatDateGroup } from '../utils/date';
+import { protoTimestampToDate } from '../utils/date';
+import { useAppTheme, useThemedStyles, type Colors } from '../theme';
+import Icon from './Icon';
 
 interface NoteCardProps {
   note: Note;
@@ -9,74 +11,123 @@ interface NoteCardProps {
 }
 
 export default function NoteCard({ note, onPress }: NoteCardProps) {
+  const { colors } = useAppTheme();
+  const styles = useThemedStyles(createStyles);
   const date = protoTimestampToDate(note.createdAt);
-  const text = note.content ?? '';
-  const preview = text.slice(0, 120) + (text.length > 120 ? '…' : '');
   const tags = note.tags ?? [];
-  const hasImages = (note.images?.length ?? 0) > 0;
-  const hasAudios = (note.audios?.length ?? 0) > 0;
+  const images = note.images?.length ?? 0;
+  const audios = note.audios?.length ?? 0;
 
   return (
-    <TouchableOpacity style={styles.card} onPress={onPress} activeOpacity={0.7}>
-      <Text style={styles.preview} numberOfLines={3}>{preview}</Text>
-      {(hasImages || hasAudios) && (
-        <View style={styles.mediaIndicators}>
-          {hasImages && (
-            <View style={styles.indicator}>
-              <Text style={styles.indicatorText}>🖼️ {note.images?.length}</Text>
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={`${note.content || 'Note'}. ${date.toLocaleString()}`}
+      accessibilityHint="Opens this note"
+      onPress={onPress}
+      android_ripple={{ color: colors.ripple }}
+      style={({ pressed }) => [styles.card, pressed && styles.pressed]}
+    >
+      <Text style={styles.preview} numberOfLines={4}>
+        {note.content || 'An attached memory'}
+      </Text>
+      {tags.length > 0 && (
+        <View style={styles.tagRow}>
+          {tags.slice(0, 4).map(tag => (
+            <View key={tag} style={styles.tag}>
+              <Text style={styles.tagText} numberOfLines={1}>
+                {tag}
+              </Text>
             </View>
-          )}
-          {hasAudios && (
-            <View style={styles.indicator}>
-              <Text style={styles.indicatorText}>🔊 {note.audios?.length}</Text>
-            </View>
+          ))}
+          {tags.length > 4 && (
+            <Text style={styles.moreTags}>+{tags.length - 4}</Text>
           )}
         </View>
       )}
-      {tags.length > 0 ? (
-        <View style={styles.tagRow}>
-          {tags.slice(0, 5).map((tag) => (
-            <Text key={tag} style={styles.tag}>{tag}</Text>
-          ))}
+      <View style={styles.footer}>
+        <Text style={styles.date}>
+          {date.toLocaleDateString(undefined, {
+            month: 'short',
+            day: 'numeric',
+          })}
+          {' · '}
+          {date.toLocaleTimeString(undefined, {
+            hour: 'numeric',
+            minute: '2-digit',
+          })}
+        </Text>
+        <View style={styles.media}>
+          {images > 0 && (
+            <View
+              style={styles.indicator}
+              accessibilityLabel={`${images} images`}
+            >
+              <Icon name="image" size={16} color={colors.textSecondary} />
+              <Text style={styles.date}>{images}</Text>
+            </View>
+          )}
+          {audios > 0 && (
+            <View
+              style={styles.indicator}
+              accessibilityLabel={`${audios} audio attachments`}
+            >
+              <Icon name="audio" size={16} color={colors.textSecondary} />
+              <Text style={styles.date}>{audios}</Text>
+            </View>
+          )}
         </View>
-      ) : null}
-      <Text style={styles.date}>{formatDateGroup(date)}</Text>
-    </TouchableOpacity>
+      </View>
+    </Pressable>
   );
 }
 
-const styles = StyleSheet.create({
-  card: {
-    backgroundColor: '#1c1c1e',
-    borderRadius: 12,
-    padding: 16,
-    marginHorizontal: 16,
-    marginVertical: 6,
-  },
-  preview: { color: '#fff', fontSize: 15, lineHeight: 22 },
-  mediaIndicators: {
-    flexDirection: 'row',
-    marginTop: 8,
-    gap: 8,
-  },
-  indicator: {
-    backgroundColor: '#333',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 6,
-  },
-  indicatorText: {
-    color: '#fff',
-    fontSize: 12,
-  },
-  tagRow: { flexDirection: 'row', flexWrap: 'wrap', marginTop: 8, gap: 6 },
-  tag: {
-    backgroundColor: '#333',
-    color: '#0a84ff',
-    fontSize: 12,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 6,
-  },
-  date: { color: '#666', fontSize: 12, marginTop: 8 },
-});
+const createStyles = (colors: Colors) =>
+  StyleSheet.create({
+    card: {
+      backgroundColor: colors.surface,
+      borderRadius: 20,
+      padding: 20,
+      marginHorizontal: 16,
+      marginVertical: 6,
+      overflow: 'hidden',
+    },
+    pressed: { backgroundColor: colors.surfaceRaised },
+    preview: {
+      color: colors.text,
+      fontSize: 16,
+      lineHeight: 25,
+      letterSpacing: 0.1,
+    },
+    tagRow: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      alignItems: 'center',
+      marginTop: 16,
+      gap: 8,
+    },
+    tag: {
+      backgroundColor: colors.primaryContainer,
+      paddingHorizontal: 10,
+      paddingVertical: 5,
+      borderRadius: 8,
+      maxWidth: '100%',
+    },
+    tagText: {
+      color: colors.onPrimaryContainer,
+      fontSize: 12,
+      lineHeight: 18,
+      fontWeight: '500',
+    },
+    moreTags: { color: colors.textSecondary, fontSize: 12 },
+    footer: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      gap: 8,
+      marginTop: 16,
+    },
+    date: { color: colors.textSecondary, fontSize: 12, lineHeight: 18 },
+    media: { flexDirection: 'row', gap: 12 },
+    indicator: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  });

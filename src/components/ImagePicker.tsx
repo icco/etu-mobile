@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { launchImageLibrary } from 'react-native-image-picker';
 import RNFS from 'react-native-fs';
+import { useThemedStyles, type Colors } from '../theme';
 
 export interface SelectedImage {
   uri: string;
@@ -25,7 +26,12 @@ interface ImagePickerProps {
   maxSizeMB?: number;
 }
 
-const ALLOWED_MIME_TYPES = ['image/png', 'image/jpeg', 'image/webp', 'image/gif'];
+const ALLOWED_MIME_TYPES = [
+  'image/png',
+  'image/jpeg',
+  'image/webp',
+  'image/gif',
+];
 const MAX_IMAGES = 10;
 const MAX_SIZE_MB = 5;
 
@@ -35,6 +41,7 @@ export default function ImagePicker({
   maxImages = MAX_IMAGES,
   maxSizeMB = MAX_SIZE_MB,
 }: ImagePickerProps) {
+  const styles = useThemedStyles(createStyles);
   const maxSizeBytes = maxSizeMB * 1024 * 1024;
 
   const handleSelectImages = async () => {
@@ -63,7 +70,7 @@ export default function ImagePicker({
         if (!ALLOWED_MIME_TYPES.includes(mimeType)) {
           Alert.alert(
             'Invalid Format',
-            `${asset.fileName || 'Image'} is not a supported format. Allowed: PNG, JPEG, WebP, GIF`
+            `${asset.fileName || 'Image'} is not a supported format. Allowed: PNG, JPEG, WebP, GIF`,
           );
           continue;
         }
@@ -73,7 +80,7 @@ export default function ImagePicker({
         if (fileSize > maxSizeBytes) {
           Alert.alert(
             'File Too Large',
-            `${asset.fileName || 'Image'} exceeds ${maxSizeMB} MiB limit`
+            `${asset.fileName || 'Image'} exceeds ${maxSizeMB} MiB limit`,
           );
           continue;
         }
@@ -113,20 +120,31 @@ export default function ImagePicker({
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.label}>Images ({images.length}/{maxImages})</Text>
+        <Text style={styles.label}>
+          Images ({images.length}/{maxImages})
+        </Text>
         {images.length < maxImages && (
-          <TouchableOpacity style={styles.addButton} onPress={() => void handleSelectImages()}>
+          <TouchableOpacity
+            style={styles.addButton}
+            onPress={() => void handleSelectImages()}
+          >
             <Text style={styles.addButtonText}>+ Add Images</Text>
           </TouchableOpacity>
         )}
       </View>
 
       {images.length > 0 && (
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.imageList}>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          style={styles.imageList}
+        >
           {images.map((image, index) => (
             <View key={image.uri} style={styles.imageContainer}>
               <Image source={{ uri: image.uri }} style={styles.thumbnail} />
               <TouchableOpacity
+                accessibilityRole="button"
+                accessibilityLabel={`Remove image ${index + 1}`}
                 style={styles.removeButton}
                 onPress={() => handleRemoveImage(index)}
               >
@@ -144,65 +162,71 @@ export default function ImagePicker({
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    marginBottom: 16,
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  label: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  addButton: {
-    backgroundColor: '#333',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 6,
-  },
-  addButtonText: {
-    color: '#0a84ff',
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  imageList: {
-    marginBottom: 8,
-  },
-  imageContainer: {
-    marginRight: 12,
-    position: 'relative',
-  },
-  thumbnail: {
-    width: 80,
-    height: 80,
-    borderRadius: 8,
-    backgroundColor: '#333',
-  },
-  removeButton: {
-    position: 'absolute',
-    top: -8,
-    right: -8,
-    backgroundColor: '#ff453a',
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  removeButtonText: {
-    color: '#fff',
-    fontSize: 18,
-    fontWeight: 'bold',
-    lineHeight: 18,
-  },
-  hint: {
-    color: '#666',
-    fontSize: 12,
-    marginTop: 4,
-  },
-});
+const createStyles = (colors: Colors) =>
+  StyleSheet.create({
+    container: {
+      marginBottom: 16,
+    },
+    header: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: 12,
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: 12,
+    },
+    label: {
+      color: colors.text,
+      fontSize: 16,
+      fontWeight: '600',
+    },
+    addButton: {
+      backgroundColor: colors.primaryContainer,
+      paddingHorizontal: 12,
+      paddingVertical: 12,
+      borderRadius: 24,
+      minHeight: 48,
+      justifyContent: 'center',
+    },
+    addButtonText: {
+      color: colors.onPrimaryContainer,
+      fontSize: 14,
+      fontWeight: '600',
+    },
+    imageList: {
+      marginBottom: 8,
+    },
+    imageContainer: {
+      marginRight: 12,
+      position: 'relative',
+    },
+    thumbnail: {
+      width: 120,
+      height: 120,
+      borderRadius: 16,
+      backgroundColor: colors.surfaceRaised,
+    },
+    removeButton: {
+      position: 'absolute',
+      top: 4,
+      right: 4,
+      backgroundColor: colors.error,
+      width: 48,
+      height: 48,
+      borderRadius: 24,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    removeButtonText: {
+      color: colors.onError,
+      fontSize: 24,
+      fontWeight: 'bold',
+      lineHeight: 28,
+    },
+    hint: {
+      color: colors.textSecondary,
+      lineHeight: 18,
+      fontSize: 12,
+      marginTop: 4,
+    },
+  });

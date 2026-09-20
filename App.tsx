@@ -12,13 +12,14 @@ import ErrorBoundary from './src/components/ErrorBoundary';
 import RootNavigator from './src/navigation/RootNavigator';
 import { shouldRetry, getRetryDelay, logApiError } from './src/utils/errors';
 import { initCrashReporting } from './src/utils/crashReporting';
+import { useAppTheme } from './src/theme';
 
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       // Retry failed queries based on error type
       retry: (failureCount, error) => shouldRetry(error, failureCount),
-      retryDelay: (attemptIndex) => getRetryDelay(attemptIndex),
+      retryDelay: attemptIndex => getRetryDelay(attemptIndex),
       // Stale time: consider data fresh for 5 minutes
       staleTime: 5 * 60 * 1000,
       // Cache time: keep unused data for 10 minutes
@@ -45,6 +46,7 @@ const queryClient = new QueryClient({
 });
 
 function App() {
+  const { dark, colors } = useAppTheme();
   useEffect(() => {
     initCrashReporting();
   }, []);
@@ -53,7 +55,10 @@ function App() {
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
         <SafeAreaProvider>
-          <StatusBar barStyle="light-content" backgroundColor="#111" />
+          <StatusBar
+            barStyle={dark ? 'light-content' : 'dark-content'}
+            backgroundColor={colors.background}
+          />
           <AuthProvider>
             <RootNavigator />
           </AuthProvider>
