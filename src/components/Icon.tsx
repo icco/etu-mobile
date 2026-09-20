@@ -1,17 +1,20 @@
 import React from 'react';
 import Svg, { Path } from 'react-native-svg';
 
-// Material Symbols, outlined, 24px. SVG avoids platform-dependent font glyphs.
-const paths = {
+// Navigation icons share a 24px grid, rounded ends, and a consistent stroke.
+// SVG keeps their appearance consistent across platforms and display densities.
+const outlinePaths = {
   timeline:
-    'M4 3h16v18H4V3Zm2 2v14h12V5H6Zm2 2h8v2H8V7Zm0 4h8v2H8v-2Zm0 4h5v2H8v-2Z',
-  add: 'M11 5h2v6h6v2h-6v6h-2v-6H5v-2h6V5Z',
+    'M5 7v3m0 4v3M7 5a2 2 0 1 1-4 0 2 2 0 0 1 4 0Zm0 7a2 2 0 1 1-4 0 2 2 0 0 1 4 0Zm0 7a2 2 0 1 1-4 0 2 2 0 0 1 4 0ZM11 5h10m-10 7h7m-7 7h10',
   random:
-    'm17 3 4 4-4 4V8h-2.5l-9 12H3L13.5 6H17V3ZM3 4h2.5l4 5.3-1.3 1.8L3 4Zm9.8 8.9 1.7 2.1H17v-3l4 4-4 4v-3h-3.5l-2-2.7 1.3-1.8Z',
-  search:
-    'M9.5 3a6.5 6.5 0 1 0 4.54 11.15L20 20l1-1-5.85-5.96A6.5 6.5 0 0 0 9.5 3Zm0 2a4.5 4.5 0 1 1 0 9 4.5 4.5 0 0 1 0-9Z',
+    'M3 7h2c4 0 10 10 14 10h2m-4-4 4 4-4 4M3 17h2c1.6 0 3.6-1.6 5.6-3.6m2.8-2.8C15.6 8.4 17.4 7 19 7h2m-4-4 4 4-4 4',
+  search: 'M17 10.5a6.5 6.5 0 1 1-13 0 6.5 6.5 0 0 1 13 0Zm-1.9 4.6L21 21',
   settings:
-    'm9 2-.5 3-2 1.2L3.7 5.1l-2 3.5L4 10.5v3l-2.3 1.9 2 3.5 2.8-1.1 2 1.2.5 3h6l.5-3 2-1.2 2.8 1.1 2-3.5-2.3-1.9v-3l2.3-1.9-2-3.5-2.8 1.1-2-1.2L15 2H9Zm1.7 2h2.6l.4 2.3 3.6 2.1 2.1-.8.8 1.4-1.8 1.5v5l1.8 1.5-.8 1.4-2.1-.8-3.6 2.1-.4 2.3h-2.6l-.4-2.3-3.6-2.1-2.1.8-.8-1.4 1.8-1.5v-5L3.8 9l.8-1.4 2.1.8 3.6-2.1.4-2.3ZM12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8Zm0 2a2 2 0 1 1 0 4 2 2 0 0 1 0-4Z',
+    'M9.5 3h5l.5 2.8 2 1.2 2.7-1 2 3.4-2.2 1.8v1.6l2.2 1.8-2 3.4-2.7-1-2 1.2-.5 2.8h-5L9 18.2 7 17l-2.7 1-2-3.4 2.2-1.8v-1.6L2.3 9.4l2-3.4L7 7l2-1.2L9.5 3ZM15.25 12a3.25 3.25 0 1 1-6.5 0 3.25 3.25 0 0 1 6.5 0Z',
+} as const;
+
+const paths = {
+  add: 'M11 5h2v6h6v2h-6v6h-2v-6H5v-2h6V5Z',
   image:
     'M3 3h18v18H3V3Zm2 2v14h14V5H5Zm1 12 4-5 3 4 2-3 3 4H6Zm9-10a2 2 0 1 0 0 4 2 2 0 0 0 0-4Z',
   audio:
@@ -22,7 +25,7 @@ const paths = {
   chevron: 'm9 5 7 7-7 7-1.4-1.4 5.6-5.6-5.6-5.6L9 5Z',
 } as const;
 
-export type IconName = keyof typeof paths;
+export type IconName = keyof typeof paths | keyof typeof outlinePaths;
 
 export default function Icon({
   name,
@@ -35,7 +38,22 @@ export default function Icon({
 }) {
   return (
     <Svg width={size} height={size} viewBox="0 0 24 24" accessible={false}>
-      <Path d={paths[name]} fill={color} fillRule="evenodd" />
+      {name in outlinePaths ? (
+        <Path
+          d={outlinePaths[name as keyof typeof outlinePaths]}
+          fill="none"
+          stroke={color}
+          strokeWidth={1.8}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      ) : (
+        <Path
+          d={paths[name as keyof typeof paths]}
+          fill={color}
+          fillRule="evenodd"
+        />
+      )}
     </Svg>
   );
 }

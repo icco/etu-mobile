@@ -73,6 +73,7 @@ function MainTabs() {
         },
         tabBarLabelStyle: { fontSize: 12, fontWeight: '600', marginTop: 4 },
         tabBarLabelPosition: 'below-icon',
+        tabBarIconStyle: { width: 64, height: 32 },
         tabBarActiveTintColor: colors.text,
         tabBarInactiveTintColor: colors.textSecondary,
         tabBarHideOnKeyboard: true,
@@ -89,6 +90,7 @@ function MainTabs() {
           >
             <Icon
               name={tabIcons[route.name]}
+              size={26}
               color={focused ? colors.onPrimaryContainer : colors.textSecondary}
             />
           </View>
