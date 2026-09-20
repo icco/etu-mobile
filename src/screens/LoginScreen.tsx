@@ -13,10 +13,13 @@ import {
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useAuth } from '../context/AuthContext';
+import { useAppTheme, useThemedStyles, type Colors } from '../theme';
 
 type Mode = 'key' | 'email';
 
 export default function LoginScreen() {
+  const { colors } = useAppTheme();
+  const styles = useThemedStyles(createStyles);
   const navigation = useNavigation();
   const { loginWithKey, login } = useAuth();
   const [mode, setMode] = useState<Mode>('key');
@@ -52,10 +55,7 @@ export default function LoginScreen() {
     try {
       await login(email, password);
     } catch (e) {
-      Alert.alert(
-        'Login',
-        e instanceof Error ? e.message : 'Login failed'
-      );
+      Alert.alert('Login', e instanceof Error ? e.message : 'Login failed');
     } finally {
       setLoading(false);
     }
@@ -78,7 +78,9 @@ export default function LoginScreen() {
             style={[styles.tab, mode === 'key' && styles.tabActive]}
             onPress={() => setMode('key')}
           >
-            <Text style={[styles.tabText, mode === 'key' && styles.tabTextActive]}>
+            <Text
+              style={[styles.tabText, mode === 'key' && styles.tabTextActive]}
+            >
               API Key
             </Text>
           </TouchableOpacity>
@@ -86,7 +88,9 @@ export default function LoginScreen() {
             style={[styles.tab, mode === 'email' && styles.tabActive]}
             onPress={() => setMode('email')}
           >
-            <Text style={[styles.tabText, mode === 'email' && styles.tabTextActive]}>
+            <Text
+              style={[styles.tabText, mode === 'email' && styles.tabTextActive]}
+            >
               Email
             </Text>
           </TouchableOpacity>
@@ -99,7 +103,8 @@ export default function LoginScreen() {
             <TextInput
               style={styles.input}
               placeholder="Paste your API key (from Etu web Settings)"
-              placeholderTextColor="#888"
+              placeholderTextColor={colors.textSecondary}
+              accessibilityLabel="API key"
               value={apiKey}
               onChangeText={setApiKey}
               autoCapitalize="none"
@@ -108,11 +113,13 @@ export default function LoginScreen() {
             />
             <TouchableOpacity
               style={[styles.button, loading && styles.buttonDisabled]}
-              onPress={() => { void handleLoginWithKey(); }}
+              onPress={() => {
+                void handleLoginWithKey();
+              }}
               disabled={loading}
             >
               {loading ? (
-                <ActivityIndicator color="#fff" />
+                <ActivityIndicator color={colors.onPrimary} />
               ) : (
                 <Text style={styles.buttonText}>Sign in with API key</Text>
               )}
@@ -123,7 +130,8 @@ export default function LoginScreen() {
             <TextInput
               style={styles.input}
               placeholder="Email"
-              placeholderTextColor="#888"
+              placeholderTextColor={colors.textSecondary}
+              accessibilityLabel="Email"
               value={email}
               onChangeText={setEmail}
               keyboardType="email-address"
@@ -133,18 +141,21 @@ export default function LoginScreen() {
             <TextInput
               style={styles.input}
               placeholder="Password"
-              placeholderTextColor="#888"
+              placeholderTextColor={colors.textSecondary}
+              accessibilityLabel="Password"
               value={password}
               onChangeText={setPassword}
               secureTextEntry
             />
             <TouchableOpacity
               style={[styles.button, loading && styles.buttonDisabled]}
-              onPress={() => { void handleLoginWithEmail(); }}
+              onPress={() => {
+                void handleLoginWithEmail();
+              }}
               disabled={loading}
             >
               {loading ? (
-                <ActivityIndicator color="#fff" />
+                <ActivityIndicator color={colors.onPrimary} />
               ) : (
                 <Text style={styles.buttonText}>Sign in</Text>
               )}
@@ -154,7 +165,13 @@ export default function LoginScreen() {
 
         <TouchableOpacity
           style={styles.link}
-          onPress={() => (navigation as { navigate: (name: string, params?: object) => void }).navigate('Register')}
+          onPress={() =>
+            (
+              navigation as {
+                navigate: (name: string, params?: object) => void;
+              }
+            ).navigate('Register')
+          }
         >
           <Text style={styles.linkText}>Create an account</Text>
         </TouchableOpacity>
@@ -167,52 +184,80 @@ export default function LoginScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#111' },
-  scroll: {
-    flexGrow: 1,
-    justifyContent: 'center',
-    padding: 24,
-    paddingTop: 80,
-  },
-  title: { fontSize: 32, fontWeight: '700', color: '#fff', textAlign: 'center' },
-  subtitle: { fontSize: 16, color: '#888', textAlign: 'center', marginTop: 8 },
-  toggle: { flexDirection: 'row', marginTop: 24, marginBottom: 16 },
-  tab: {
-    flex: 1,
-    paddingVertical: 12,
-    alignItems: 'center',
-    borderBottomWidth: 2,
-    borderBottomColor: '#333',
-  },
-  tabActive: { borderBottomColor: '#0a84ff' },
-  tabText: { color: '#888', fontSize: 16 },
-  tabTextActive: { color: '#0a84ff', fontWeight: '600' },
-  error: { color: '#ff453a', marginBottom: 12, fontSize: 14 },
-  input: {
-    backgroundColor: '#1c1c1e',
-    borderRadius: 10,
-    padding: 16,
-    fontSize: 16,
-    color: '#fff',
-    marginBottom: 12,
-  },
-  button: {
-    backgroundColor: '#0a84ff',
-    borderRadius: 10,
-    padding: 16,
-    alignItems: 'center',
-    marginTop: 8,
-  },
-  buttonDisabled: { opacity: 0.7 },
-  buttonText: { color: '#fff', fontSize: 16, fontWeight: '600' },
-  link: { marginTop: 24, alignItems: 'center' },
-  linkText: { color: '#0a84ff', fontSize: 16 },
-  hint: {
-    color: '#666',
-    fontSize: 12,
-    textAlign: 'center',
-    marginTop: 24,
-    paddingHorizontal: 16,
-  },
-});
+const createStyles = (colors: Colors) =>
+  StyleSheet.create({
+    container: { flex: 1, backgroundColor: colors.background },
+    scroll: {
+      flexGrow: 1,
+      justifyContent: 'center',
+      padding: 24,
+      paddingVertical: 48,
+    },
+    title: {
+      fontSize: 48,
+      fontWeight: '600',
+      letterSpacing: -2,
+      color: colors.primary,
+      textAlign: 'center',
+    },
+    subtitle: {
+      fontSize: 16,
+      color: colors.textSecondary,
+      textAlign: 'center',
+      marginTop: 12,
+    },
+    toggle: {
+      flexDirection: 'row',
+      marginTop: 32,
+      marginBottom: 24,
+      borderRadius: 28,
+      padding: 4,
+      backgroundColor: colors.surfaceRaised,
+    },
+    tab: {
+      flex: 1,
+      paddingVertical: 12,
+      alignItems: 'center',
+      minHeight: 48,
+      justifyContent: 'center',
+      borderRadius: 24,
+    },
+    tabActive: { backgroundColor: colors.primaryContainer },
+    tabText: { color: colors.textSecondary, fontSize: 16 },
+    tabTextActive: { color: colors.onPrimaryContainer, fontWeight: '600' },
+    error: { color: colors.error, marginBottom: 12, fontSize: 14 },
+    input: {
+      backgroundColor: colors.surface,
+      borderRadius: 16,
+      minHeight: 56,
+      padding: 16,
+      fontSize: 16,
+      color: colors.text,
+      marginBottom: 12,
+    },
+    button: {
+      backgroundColor: colors.primary,
+      borderRadius: 28,
+      minHeight: 56,
+      padding: 16,
+      alignItems: 'center',
+      marginTop: 8,
+    },
+    buttonDisabled: { opacity: 0.7 },
+    buttonText: { color: colors.onPrimary, fontSize: 16, fontWeight: '600' },
+    link: {
+      marginTop: 16,
+      minHeight: 48,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    linkText: { color: colors.primary, fontSize: 16 },
+    hint: {
+      color: colors.textSecondary,
+      fontSize: 13,
+      lineHeight: 20,
+      textAlign: 'center',
+      marginTop: 24,
+      paddingHorizontal: 16,
+    },
+  });

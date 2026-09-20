@@ -268,7 +268,7 @@ The app registers the URL scheme `etu://` with host `open` (see `AndroidManifest
 | URL | Screen |
 |-----|--------|
 | `etu://open` | Timeline (default tab) |
-| `etu://open/capture` | Capture |
+| `etu://open/capture` | Capture (also opened by the New note floating button) |
 | `etu://open/random` | Random |
 | `etu://open/search` | Search |
 | `etu://open/settings` | Settings |

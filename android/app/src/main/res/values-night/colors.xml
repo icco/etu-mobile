@@ -1,0 +1,5 @@
+<resources>
+    <color name="etu_background">#0D1117</color>
+    <color name="etu_accent">#88C0D0</color>
+    <bool name="etu_light_bars">false</bool>
+</resources>
