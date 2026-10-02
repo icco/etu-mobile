@@ -284,8 +284,8 @@ importers:
         specifier: ^0.86.3
         version: 0.86.3(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1)
       '@react-native/gradle-plugin':
-        specifier: 0.85.3
-        version: 0.85.3
+        specifier: 0.87.1
+        version: 0.87.1
       '@react-native/jest-preset':
         specifier: ^0.85.3
         version: 0.85.3(@babel/core@7.29.7(supports-color@8.1.1))(react@19.2.3)(supports-color@8.1.1)
@@ -1503,6 +1503,10 @@ packages:
   '@react-native/gradle-plugin@0.85.3':
     resolution: {integrity: sha512-39dY2j50Q1pntejzwt3XL7vwXtrj8jcIfHq6E+gyu3jzYxZJVvMkMutQ39vSg6zinIQOX36oQDhidXUbCXzgoA==}
     engines: {node: ^20.19.4 || ^22.13.0 || ^24.3.0 || >= 25.0.0}
+
+  '@react-native/gradle-plugin@0.87.1':
+    resolution: {integrity: sha512-bZ5X2BNxaSlfp2KlDtUM910QqW9G1yTIeZXghuv4ag8SAQLzm5Mf9j5GjJfT6ax2Qo2aRT15Vi3Tro/yLGJstA==}
+    engines: {node: ^22.13.0 || ^24.3.0 || >= 26.0.0}
 
   '@react-native/jest-preset@0.85.3':
     resolution: {integrity: sha512-ALPSrM0q2fU+5AXcOXzDKx7rxVKPMvygAZfsTWLdrGRVWIqf/HEfM0R8euQqIKUqmEuQ1TxMWN+px3h6gc4vow==}
@@ -6149,6 +6153,8 @@ snapshots:
       - utf-8-validate
 
   '@react-native/gradle-plugin@0.85.3': {}
+
+  '@react-native/gradle-plugin@0.87.1': {}
 
   '@react-native/jest-preset@0.85.3(@babel/core@7.29.7(supports-color@8.1.1))(react@19.2.3)(supports-color@8.1.1)':
     dependencies:
