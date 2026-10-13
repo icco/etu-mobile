@@ -302,6 +302,7 @@ export default function SettingsScreen() {
       {LEGAL_LINKS.map(({ label, path }) => (
         <TouchableOpacity
           key={path}
+          accessibilityRole="link"
           style={styles.linkBtn}
           onPress={() => {
             void Linking.openURL(`https://etu.timeclimbers.com/${path}`);
