@@ -21,6 +21,12 @@ import ApiKeysScreen from './ApiKeysScreen';
 import { useFocusEffect } from '@react-navigation/native';
 import { useAppTheme, useThemedStyles, type Colors } from '../theme';
 
+const LEGAL_LINKS = [
+  { label: 'Privacy policy', path: 'privacy' },
+  { label: 'Terms of service', path: 'terms' },
+  { label: 'Refund policy', path: 'refunds' },
+];
+
 export default function SettingsScreen() {
   const { colors, dark } = useAppTheme();
   const styles = useThemedStyles(createStyles);
@@ -289,6 +295,21 @@ export default function SettingsScreen() {
       >
         <Text style={styles.linkBtnText}>Manage subscription (web) →</Text>
       </TouchableOpacity>
+
+      <Text style={[styles.sectionTitle, styles.sectionTitleSpaced]}>
+        Legal
+      </Text>
+      {LEGAL_LINKS.map(({ label, path }) => (
+        <TouchableOpacity
+          key={path}
+          style={styles.linkBtn}
+          onPress={() => {
+            void Linking.openURL(`https://etu.timeclimbers.com/${path}`);
+          }}
+        >
+          <Text style={styles.linkBtnText}>{label} →</Text>
+        </TouchableOpacity>
+      ))}
 
       <TouchableOpacity
         style={styles.logoutBtn}
