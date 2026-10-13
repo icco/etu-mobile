@@ -30,7 +30,7 @@
     "jest-environment-node": "^30.4.1",
     "jest-mock": "^30.4.1",
     "markdown-it": "^15.0.0",
-    "react": "19.2.3",
+    "react": "19.3.0",
     "react-native": "^0.85.3",
     "react-native-config": "^1.7.2",
     "react-native-fs": "^2.20.0",
