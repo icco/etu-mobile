@@ -4,6 +4,7 @@
 
 import React from 'react';
 import { render, fireEvent } from '@testing-library/react-native';
+import { Linking } from 'react-native';
 import { useQuery } from '@tanstack/react-query';
 import SettingsScreen from '../src/screens/SettingsScreen';
 
@@ -104,5 +105,23 @@ describe('SettingsScreen stats section', () => {
     await fireEvent.press(getByText('← Settings'));
 
     expect(getByText('View statistics →')).toBeTruthy();
+  });
+});
+
+describe('SettingsScreen legal links', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockedUseQuery.mockReturnValue({ data: undefined, isLoading: false, error: null });
+  });
+
+  it.each([
+    ['Privacy policy →', 'https://etu.timeclimbers.com/privacy'],
+    ['Terms of service →', 'https://etu.timeclimbers.com/terms'],
+    ['Refund policy →', 'https://etu.timeclimbers.com/refunds'],
+  ])('opens %s', async (label, url) => {
+    const openURL = jest.spyOn(Linking, 'openURL').mockResolvedValue(true);
+    const { getByText } = await render(<SettingsScreen />);
+    await fireEvent.press(getByText(label));
+    expect(openURL).toHaveBeenCalledWith(url);
   });
 });
