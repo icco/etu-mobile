@@ -3,7 +3,7 @@
  * @format
  */
 
-import React, { useEffect } from 'react';
+import React from 'react';
 import { StatusBar } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -11,7 +11,6 @@ import { AuthProvider } from './src/context/AuthContext';
 import ErrorBoundary from './src/components/ErrorBoundary';
 import RootNavigator from './src/navigation/RootNavigator';
 import { shouldRetry, getRetryDelay, logApiError } from './src/utils/errors';
-import { initCrashReporting } from './src/utils/crashReporting';
 import { useAppTheme } from './src/theme';
 
 const queryClient = new QueryClient({
@@ -47,10 +46,6 @@ const queryClient = new QueryClient({
 
 function App() {
   const { dark, colors } = useAppTheme();
-  useEffect(() => {
-    initCrashReporting();
-  }, []);
-
   return (
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
