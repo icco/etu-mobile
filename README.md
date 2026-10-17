@@ -23,7 +23,8 @@ Dependency overrides, the hoisted React Native dependency layout, and approved d
 
 **Security Features**:
 - Secure token storage using React Native Keychain
-- Automatic logout on authentication errors (401/403)
+- Automatic logout on authentication errors (401/403); a "subscription required" denial keeps the session and shows the message
+- Sign out revokes the app-issued session key on the backend; registration signs in automatically
 - Smart retry logic with exponential backoff
 - Comprehensive error logging and monitoring
 - Request timeout protection (30s default)
@@ -354,7 +355,7 @@ The app communicates with [etu-backend](https://github.com/icco/etu-backend) usi
 
 1. **Email/Password Login**: Authenticate → Create API key → Store in keychain
 2. **API Key Login**: Verify key → Store in keychain
-3. **Session Management**: Auto-logout on 401/403 errors
+3. **Session Management**: Auto-logout on 401/403 errors (except "subscription required"); sign out revokes the session key
 
 ## Troubleshooting
 

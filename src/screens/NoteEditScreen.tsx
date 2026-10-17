@@ -15,6 +15,7 @@ import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '../context/AuthContext';
 import { getNote, createNote, updateNote, listTags } from '../api/notes';
+import { getErrorMessage } from '../utils/errors';
 import TagInput from '../components/TagInput';
 import ImagePicker, { SelectedImage } from '../components/ImagePicker';
 import AudioPicker, { SelectedAudio } from '../components/AudioPicker';
@@ -129,7 +130,7 @@ export default function NoteEditScreen() {
       void queryClient.invalidateQueries({ queryKey: ['notes', user.id] });
       navigation.goBack();
     } catch (e) {
-      Alert.alert('Error', e instanceof Error ? e.message : 'Failed to save');
+      Alert.alert('Error', getErrorMessage(e));
     } finally {
       setSaving(false);
     }

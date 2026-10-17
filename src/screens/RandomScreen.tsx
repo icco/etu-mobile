@@ -13,7 +13,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '../context/AuthContext';
 import { getRandomNotes } from '../api/notes';
 import NoteCard from '../components/NoteCard';
-import { isAuthError, getErrorMessage } from '../utils/errors';
+import { requiresSignOut, getErrorMessage } from '../utils/errors';
 import { useAppTheme, useThemedStyles, type Colors } from '../theme';
 import NewNoteButton from '../components/NewNoteButton';
 import Icon from '../components/Icon';
@@ -39,7 +39,7 @@ export default function RandomScreen() {
 
   // Handle auth errors
   React.useEffect(() => {
-    if (error && isAuthError(error)) {
+    if (error && requiresSignOut(error)) {
       void handleAuthError();
     }
   }, [error, handleAuthError]);

@@ -8,8 +8,11 @@ import { AuthProvider, useAuth } from '../src/context/AuthContext';
 import * as authApi from '../src/api/auth';
 import type { User } from '@icco/etu-proto';
 
+import * as logger from '../src/utils/logger';
+
 // Mock the auth API
 jest.mock('../src/api/auth');
+jest.mock('../src/utils/logger');
 
 const mockedAuthApi = authApi as jest.Mocked<typeof authApi>;
 
@@ -107,6 +110,9 @@ describe('AuthContext', () => {
   it('handles registration', async () => {
     const mockUser = createMockUser('123', 'test@example.com');
     mockedAuthApi.register.mockResolvedValue(mockUser);
+    mockedAuthApi.loginWithEmailPassword.mockResolvedValue(mockUser);
+    mockedAuthApi.getStoredAuth.mockResolvedValueOnce(null);
+    mockedAuthApi.getStoredAuth.mockResolvedValueOnce({ user: mockUser, token: 'etu_session', keyId: 'key-1' });
 
     const { result } = await renderHook(() => useAuth(), { wrapper });
 
@@ -119,7 +125,84 @@ describe('AuthContext', () => {
     });
 
     expect(mockedAuthApi.register).toHaveBeenCalledWith('test@example.com', 'password');
+    expect(mockedAuthApi.loginWithEmailPassword).toHaveBeenCalledWith('test@example.com', 'password');
     expect(result.current.user).toEqual(mockUser);
+    expect(result.current.token).toBe('etu_session');
+    expect(result.current.isAuthenticated).toBe(true);
+  });
+
+  it('reports when the account was created but auto sign-in failed', async () => {
+    const mockUser = createMockUser('123', 'alice@example.com');
+    mockedAuthApi.register.mockResolvedValue(mockUser);
+    mockedAuthApi.loginWithEmailPassword.mockRejectedValue(new Error('too many login requests'));
+
+    const { result } = await renderHook(() => useAuth(), { wrapper });
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false);
+    });
+
+    await expect(
+      act(async () => {
+        await result.current.register('alice@example.com', 'password');
+      }),
+    ).rejects.toThrow('Account created, but signing in failed: too many login requests');
+    expect(result.current.isAuthenticated).toBe(false);
+  });
+
+  it('revokes the session key on logout', async () => {
+    const mockUser = createMockUser('123', 'alice@example.com');
+    mockedAuthApi.getStoredAuth.mockResolvedValue({ user: mockUser, token: 'etu_session', keyId: 'key-1' });
+    mockedAuthApi.revokeSession.mockResolvedValue(true);
+
+    const { result } = await renderHook(() => useAuth(), { wrapper });
+    await waitFor(() => {
+      expect(result.current.isAuthenticated).toBe(true);
+    });
+
+    await act(async () => {
+      await result.current.logout();
+    });
+
+    expect(mockedAuthApi.revokeSession).toHaveBeenCalledWith({ user: mockUser, token: 'etu_session', keyId: 'key-1' });
+    expect(mockedAuthApi.clearStoredAuth).toHaveBeenCalled();
+    expect(result.current.isAuthenticated).toBe(false);
+  });
+
+  it('clears local state and logs when revoking fails', async () => {
+    const mockUser = createMockUser('123', 'alice@example.com');
+    mockedAuthApi.getStoredAuth.mockResolvedValue({ user: mockUser, token: 'etu_session', keyId: 'key-1' });
+    mockedAuthApi.revokeSession.mockRejectedValue(new Error('network down'));
+
+    const { result } = await renderHook(() => useAuth(), { wrapper });
+    await waitFor(() => {
+      expect(result.current.isAuthenticated).toBe(true);
+    });
+
+    await act(async () => {
+      await result.current.logout();
+    });
+
+    expect(logger.logError).toHaveBeenCalledWith('Failed to revoke session on logout', { error: 'network down' });
+    expect(mockedAuthApi.clearStoredAuth).toHaveBeenCalled();
+    expect(result.current.user).toBeNull();
+    expect(result.current.isAuthenticated).toBe(false);
+  });
+
+  it('does not revoke on auth errors', async () => {
+    const mockUser = createMockUser('123', 'alice@example.com');
+    mockedAuthApi.getStoredAuth.mockResolvedValue({ user: mockUser, token: 'etu_session', keyId: 'key-1' });
+
+    const { result } = await renderHook(() => useAuth(), { wrapper });
+    await waitFor(() => {
+      expect(result.current.isAuthenticated).toBe(true);
+    });
+
+    await act(async () => {
+      await result.current.handleAuthError();
+    });
+
+    expect(mockedAuthApi.revokeSession).not.toHaveBeenCalled();
+    expect(result.current.isAuthenticated).toBe(false);
   });
 
   it('handles logout', async () => {

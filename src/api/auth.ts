@@ -13,7 +13,7 @@ import { logError, logWarning, logInfo, logException } from '../utils/logger';
 const AUTH_KEY = 'etu_auth';
 const USER_KEY = 'etu_user';
 const SESSION_USER = 'etu_session';
-type Session = { token: string; user?: JsonValue; email?: string; login?: JsonValue };
+type Session = { token: string; user?: JsonValue; email?: string; login?: JsonValue; keyId?: string };
 // Retain an issued key if the first secure-storage write fails; retry that write
 // before another Login RPC. Persisted pending sessions also survive restarts.
 let pendingSession: Session | undefined;
@@ -25,6 +25,13 @@ async function storeSession(session: Session): Promise<void> {
 export interface StoredAuth {
   token: string;
   user: User;
+  keyId?: string;
+}
+
+function sessionKeyId(session: Session): string | undefined {
+  if (session.keyId) return session.keyId;
+  if (!session.login) return undefined;
+  return fromJson(CreateApiKeyResponseSchema, session.login).apiKey?.id || undefined;
 }
 
 export async function getStoredAuth(): Promise<StoredAuth | null> {
@@ -35,10 +42,12 @@ export async function getStoredAuth(): Promise<StoredAuth | null> {
     }
     if (creds.username === SESSION_USER) {
       const session = JSON.parse(creds.password) as Session;
-      if (session.user) return { token: session.token, user: fromJson(UserSchema, session.user) };
+      const keyId = sessionKeyId(session);
+      if (session.user) return { token: session.token, user: fromJson(UserSchema, session.user), keyId };
       // Finish a previously interrupted login without issuing another key.
+      pendingSession = session;
       const user = await loginWithApiKey(session.token);
-      return { token: session.token, user };
+      return { token: session.token, user, keyId };
     }
     const userJson = await Keychain.getGenericPassword({ service: USER_KEY });
     if (!userJson || !userJson.password) {
@@ -59,7 +68,8 @@ export async function getStoredAuth(): Promise<StoredAuth | null> {
 
 export async function setStoredAuth(token: string, user: User): Promise<void> {
   try {
-    await storeSession({ token, user: toJson(UserSchema, user) });
+    const keyId = pendingSession?.token === token ? sessionKeyId(pendingSession) : undefined;
+    await storeSession({ token, user: toJson(UserSchema, user), keyId });
     pendingSession = undefined;
     logInfo('Auth credentials stored successfully');
   } catch (error) {
@@ -82,6 +92,16 @@ export async function clearStoredAuth(): Promise<void> {
     });
     throw error;
   }
+}
+
+export async function revokeSession(auth: StoredAuth): Promise<boolean> {
+  if (!auth.keyId) return false;
+  const res = await apiKeysClient.client.deleteApiKey(
+    { userId: auth.user.id, keyId: auth.keyId },
+    { headers: createHeaders(auth.token) }
+  );
+  logInfo('Revoked mobile session key', { keyId: auth.keyId, deleted: res.success });
+  return res.success;
 }
 
 export async function loginWithApiKey(apiKey: string): Promise<User> {
@@ -140,7 +160,6 @@ export async function register(email: string, password: string): Promise<User> {
     }
     const user = res.user;
     logInfo('User registered successfully', { userId: user.id });
-    // Backend may return a token in future; for now user must create API key in web and use "Login with API key"
     return user;
   } catch (error) {
     logException(error instanceof Error ? error : new Error(String(error)), {
@@ -166,7 +185,12 @@ export async function loginWithEmailPassword(
       pendingSession = pending;
     } else {
       const login = await createLoginSession(email, password);
-      pendingSession = { token: login.rawKey, email, login: toJson(CreateApiKeyResponseSchema, login) };
+      pendingSession = {
+        token: login.rawKey,
+        email,
+        login: toJson(CreateApiKeyResponseSchema, login),
+        keyId: login.apiKey?.id || undefined,
+      };
     }
     await storeSession(pendingSession);
     const user = await loginWithApiKey(pendingSession.token);

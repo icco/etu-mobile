@@ -1,7 +1,7 @@
 import { create } from '@bufbuild/protobuf';
 import { UserSchema, CreateApiKeyResponseSchema } from '@icco/etu-proto';
 import * as Keychain from 'react-native-keychain';
-import { clearStoredAuth, getStoredAuth, loginWithEmailPassword, setStoredAuth } from '../src/api/auth';
+import { clearStoredAuth, getStoredAuth, loginWithEmailPassword, revokeSession, setStoredAuth } from '../src/api/auth';
 import { createLoginSession } from '../src/api/login';
 import { authClient, apiKeysClient } from '../src/api/client';
 
@@ -9,7 +9,7 @@ jest.mock('@icco/etu-proto', () => jest.requireActual<typeof import('@icco/etu-p
 jest.mock('../src/utils/logger');
 jest.mock('../src/api/client', () => ({
   createHeaders: (token: string) => ({ Authorization: token }),
-  apiKeysClient: { client: { verifyApiKey: jest.fn() } },
+  apiKeysClient: { client: { verifyApiKey: jest.fn(), deleteApiKey: jest.fn() } },
   authClient: { client: { getUser: jest.fn() } },
 }));
 jest.mock('../src/api/login');
@@ -98,4 +98,31 @@ it('restores a persisted pending session without needing credentials again', asy
   usernames.set('etu_auth', 'etu_session');
   expect(await getStoredAuth()).toEqual({ token: 'pending-key', user });
   expect(createLoginSession).not.toHaveBeenCalled();
+});
+
+it('remembers the session key id across restarts so logout can revoke it', async () => {
+  jest.mocked(createLoginSession).mockResolvedValue(
+    create(CreateApiKeyResponseSchema, { rawKey: 'etu_alice', apiKey: { id: 'key-1', name: 'etu-mobile' } }),
+  );
+  await loginWithEmailPassword('alice@example.com', 'password');
+  expect(await getStoredAuth()).toEqual({ token: 'etu_alice', user, keyId: 'key-1' });
+});
+
+it('revokes a session key with its own token', async () => {
+  jest.mocked(apiKeysClient.client.deleteApiKey).mockResolvedValue({ success: true } as never);
+  expect(await revokeSession({ token: 'etu_alice', user, keyId: 'key-1' })).toBe(true);
+  expect(apiKeysClient.client.deleteApiKey).toHaveBeenCalledWith(
+    { userId: user.id, keyId: 'key-1' },
+    { headers: { Authorization: 'etu_alice' } },
+  );
+});
+
+it('skips revoking keys the app did not issue', async () => {
+  expect(await revokeSession({ token: 'etu_pasted', user })).toBe(false);
+  expect(apiKeysClient.client.deleteApiKey).not.toHaveBeenCalled();
+});
+
+it('propagates revoke failures', async () => {
+  jest.mocked(apiKeysClient.client.deleteApiKey).mockRejectedValue(new Error('Unavailable'));
+  await expect(revokeSession({ token: 'etu_alice', user, keyId: 'key-1' })).rejects.toThrow('Unavailable');
 });
