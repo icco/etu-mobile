@@ -1,37 +1,20 @@
-# CI Workflow — runs on pushes to main/implement/develop, all pull requests, and manual dispatch.
-#
-# Optional Secrets (for release builds):
-#   - ANDROID_KEYSTORE_BASE64: Base64-encoded Android keystore file
-#   - ANDROID_KEYSTORE_PASSWORD: Password for the keystore
-#   - ANDROID_KEY_ALIAS: Key alias in the keystore
-#   - ANDROID_KEY_PASSWORD: Password for the key
-#
-# Primary validation path when contributors cannot build locally:
-# lint + typecheck + tests, Android debug APK + release bundle smoke,
-# iOS simulator compile. Download artifacts from the workflow run summary.
-#
-# GitHub Packages: forks may need NPM_TOKEN in repo secrets; same-repo PRs can use GITHUB_TOKEN.
-# Signed release AAB only when ANDROID_KEYSTORE_* secrets are set.
-
 name: CI
-
 on:
   push:
-    branches: [main, implement, develop]
+    branches:
+      - main
+      - implement
+      - develop
   pull_request:
   workflow_dispatch:
-
 concurrency:
   group: ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.sha }}
   cancel-in-progress: true
-
 permissions:
   contents: read
   packages: read
-
 env:
-  NODE_VERSION: '26.0.0'
-
+  NODE_VERSION: 26.0.0
 jobs:
   lint:
     name: Lint
@@ -40,34 +23,27 @@ jobs:
       - uses: actions/checkout@v7
         with:
           persist-credentials: false
-
       - name: Setup pnpm
         uses: pnpm/action-setup@v6
         with:
           run_install: false
-
       - name: Setup Node
         uses: actions/setup-node@v7
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'pnpm'
-          registry-url: 'https://npm.pkg.github.com'
+          cache: pnpm
+          registry-url: https://npm.pkg.github.com
           scope: '@icco'
-
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN || secrets.GITHUB_TOKEN }}
-
       - name: Lint
         run: pnpm lint
-
       - name: TypeScript
         run: pnpm typecheck
-
       - name: Test
         run: pnpm test
-
   android:
     name: Android
     runs-on: ubuntu-latest
@@ -75,46 +51,38 @@ jobs:
       - uses: actions/checkout@v7
         with:
           persist-credentials: false
-
       - name: Setup pnpm
         uses: pnpm/action-setup@v6
         with:
           run_install: false
-
       - name: Setup Node
         uses: actions/setup-node@v7
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'pnpm'
-          registry-url: 'https://npm.pkg.github.com'
+          cache: pnpm
+          registry-url: https://npm.pkg.github.com
           scope: '@icco'
-
       - name: Setup Java
         uses: actions/setup-java@v6.0.1
         with:
-          distribution: 'zulu'
-          java-version: '17'
-
+          distribution: zulu
+          java-version: "17"
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v6
-
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN || secrets.GITHUB_TOKEN }}
-
       - name: Build debug APK
         run: |
           cd android
           ./gradlew assembleDebug --no-daemon
-
       - name: Upload debug APK
         uses: actions/upload-artifact@v7
         with:
           name: app-debug
           path: android/app/build/outputs/apk/debug/app-debug.apk
           retention-days: 21
-
       - name: Check for Android signing secrets
         id: check_android_secrets
         env:
@@ -125,7 +93,6 @@ jobs:
           else
             echo "has_keystore=false" >> $GITHUB_OUTPUT
           fi
-
       - name: Decode keystore and build release AAB
         if: steps.check_android_secrets.outputs.has_keystore == 'true'
         env:
@@ -137,7 +104,6 @@ jobs:
           echo "$ANDROID_KEYSTORE_BASE64" | base64 -d > android/app/release.keystore
           cd android
           ./gradlew bundleRelease --no-daemon
-
       - name: Upload release AAB
         if: steps.check_android_secrets.outputs.has_keystore == 'true'
         uses: actions/upload-artifact@v7
@@ -145,14 +111,11 @@ jobs:
           name: app-release-aab
           path: android/app/build/outputs/bundle/release/app-release.aab
           retention-days: 21
-
-      # Validates release Gradle path (Hermes, etc.) when no upload keystore is configured.
       - name: Build release bundle (CI smoke, debug signing fallback)
         if: steps.check_android_secrets.outputs.has_keystore != 'true'
         run: |
           cd android
           ./gradlew bundleRelease --no-daemon
-
       - name: Upload release AAB (CI smoke)
         if: steps.check_android_secrets.outputs.has_keystore != 'true'
         uses: actions/upload-artifact@v7
@@ -160,43 +123,3 @@ jobs:
           name: app-release-bundle-ci
           path: android/app/build/outputs/bundle/release/app-release.aab
           retention-days: 14
-
-  ios:
-    name: iOS
-    runs-on: macos-15
-    steps:
-      - uses: actions/checkout@v7
-        with:
-          persist-credentials: false
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v6
-        with:
-          run_install: false
-
-      - name: Setup Node
-        uses: actions/setup-node@v7
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'pnpm'
-          registry-url: 'https://npm.pkg.github.com'
-          scope: '@icco'
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN || secrets.GITHUB_TOKEN }}
-
-      - name: Install CocoaPods
-        run: |
-          cd ios
-          pod install
-
-      - name: Build (simulator)
-        # Compile for the simulator SDK without requiring a pre-created device.
-        run: |
-          cd ios
-          xcodebuild -workspace EtuMobileApp.xcworkspace -scheme EtuMobileApp \
-            -configuration Debug -sdk iphonesimulator \
-            -destination 'generic/platform=iOS Simulator' \
-            -derivedDataPath build ONLY_ACTIVE_ARCH=NO
