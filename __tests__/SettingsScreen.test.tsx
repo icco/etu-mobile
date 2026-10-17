@@ -132,7 +132,7 @@ describe('SettingsScreen legal links', () => {
     ['Terms of service →', 'https://etu.timeclimbers.com/terms'],
     ['Refund policy →', 'https://etu.timeclimbers.com/refunds'],
   ])('opens %s', async (label, url) => {
-    const openURL = jest.spyOn(Linking, 'openURL').mockResolvedValue(true);
+    const openURL = jest.spyOn(Linking, 'openURL').mockResolvedValue(undefined);
     const { getByText } = await render(<SettingsScreen />);
     await fireEvent.press(getByText(label));
     expect(openURL).toHaveBeenCalledWith(url);
