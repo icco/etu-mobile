@@ -46,7 +46,7 @@ const queryClient = new QueryClient({
 });
 
 function App() {
-  const { dark, colors } = useAppTheme();
+  const { dark } = useAppTheme();
   useEffect(() => {
     initCrashReporting();
   }, []);
@@ -55,10 +55,7 @@ function App() {
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
         <SafeAreaProvider>
-          <StatusBar
-            barStyle={dark ? 'light-content' : 'dark-content'}
-            backgroundColor={colors.background}
-          />
+          <StatusBar barStyle={dark ? 'light-content' : 'dark-content'} />
           <AuthProvider>
             <RootNavigator />
           </AuthProvider>
