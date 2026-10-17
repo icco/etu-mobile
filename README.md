@@ -23,7 +23,8 @@ Dependency overrides, the hoisted React Native dependency layout, and approved d
 
 **Security Features**:
 - Secure token storage using React Native Keychain
-- Automatic logout on authentication errors (401/403)
+- Automatic logout on authentication errors (401/403); a "subscription required" denial keeps the session and shows the message
+- Sign out revokes the app-issued session key on the backend; registration signs in automatically
 - Smart retry logic with exponential backoff
 - Comprehensive error logging and monitoring
 - Request timeout protection (30s default)
@@ -69,11 +70,8 @@ cp .env.example .env
 | Variable | Required | Description | Example |
 |----------|----------|-------------|---------|
 | `GRPC_BACKEND_URL` | No | Native gRPC endpoint; defaults to production | `https://grpc.etu.timeclimbers.com` |
-| `SENTRY_DSN` | No | When set, `logError` / `logException` and `ErrorBoundary` report to [Sentry](https://sentry.io) | DSN from your Sentry project |
 
 **Important**: Networking uses native gRPC over HTTP/2 (grpc-java/OkHttp on Android and gRPC ObjC on iOS), while TypeScript retains typed Connect clients and protobuf serialization. Rebuild the native app after updating, and run `pod install` for iOS. Email/password login requires the backend `AuthService.Login` RPC from etu-backend PR #147. It issues a revocable user API key; no web gateway or server secret in the app is needed.
-
-After adding `@sentry/react-native`, run `cd ios && pod install` before building iOS.
 
 ## Running the App
 
@@ -293,7 +291,7 @@ Use this checklist before **Production** (internal / closed testing first is rec
 1. Create the app with package name **`com.timeclimbers.etu`** (must match `applicationId` in Gradle).
 2. **App signing**: use Play App Signing; upload key matches your CI/local release keystore.
 3. **Store listing**: title, short description, full description, icon, feature graphic, phone screenshots (tablet if required by policy).
-4. **Privacy policy**: public HTTPS URL describing data collection and use (backend URL, account, notes, optional crash reports if `SENTRY_DSN` is set).
+4. **Privacy policy**: public HTTPS URL describing data collection and use (backend URL, account, notes).
 5. **Content rating** questionnaire (IARC).
 6. **Target API**: already **API 36** in this project.
 7. **Release**: upload AAB from CI (`bundleRelease`) or locally; run **Pre-launch report** on an internal track build.
@@ -307,7 +305,6 @@ Declare in Play Console what the app actually uses:
 - **Photos / images**: attach images to notes (`READ_MEDIA_IMAGES`, camera, storage on older APIs).
 - **Audio files**: attach or pick audio (`READ_MEDIA_AUDIO`).
 - **Microphone**: in-app recording uses **`RECORD_AUDIO`**; runtime permission is requested on Android before recording.
-- **Crash diagnostics** (optional): if you ship with `SENTRY_DSN`, disclose error/crash reporting and the third party (Sentry).
 
 ### Versioning
 
@@ -358,7 +355,7 @@ The app communicates with [etu-backend](https://github.com/icco/etu-backend) usi
 
 1. **Email/Password Login**: Authenticate → Create API key → Store in keychain
 2. **API Key Login**: Verify key → Store in keychain
-3. **Session Management**: Auto-logout on 401/403 errors
+3. **Session Management**: Auto-logout on 401/403 errors (except "subscription required"); sign out revokes the session key
 
 ## Troubleshooting
 

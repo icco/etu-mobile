@@ -17,7 +17,7 @@ import { useAuth } from '../context/AuthContext';
 import { getNote, deleteNote } from '../api/notes';
 import MarkdownView from '../components/MarkdownView';
 import { protoTimestampToDate } from '../utils/date';
-import { isAuthError, getErrorMessage } from '../utils/errors';
+import { requiresSignOut, getErrorMessage } from '../utils/errors';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAppTheme, useThemedStyles, type Colors } from '../theme';
 
@@ -47,7 +47,7 @@ export default function NoteDetailScreen() {
 
   // Handle auth errors
   React.useEffect(() => {
-    if (error && isAuthError(error)) {
+    if (error && requiresSignOut(error)) {
       void handleAuthError();
     }
   }, [error, handleAuthError]);

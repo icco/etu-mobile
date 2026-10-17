@@ -146,7 +146,7 @@ jobs:
           path: android/app/build/outputs/bundle/release/app-release.aab
           retention-days: 21
 
-      # Validates release Gradle path (Hermes, Sentry, etc.) when no upload keystore is configured.
+      # Validates release Gradle path (Hermes, etc.) when no upload keystore is configured.
       - name: Build release bundle (CI smoke, debug signing fallback)
         if: steps.check_android_secrets.outputs.has_keystore != 'true'
         run: |

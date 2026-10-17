@@ -12,12 +12,15 @@ import {
   loginWithApiKey,
   loginWithEmailPassword,
   register as registerApi,
+  revokeSession,
 } from '../api/auth';
 import { logInfo, logError } from '../utils/logger';
+import { getErrorMessage } from '../utils/errors';
 
 interface AuthState {
   user: User | null;
   token: string | null;
+  keyId?: string;
   isLoading: boolean;
   isAuthenticated: boolean;
 }
@@ -49,6 +52,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setState({
           user: stored.user,
           token: stored.token,
+          keyId: stored.keyId,
           isLoading: false,
           isAuthenticated: true,
         });
@@ -71,38 +75,65 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     });
   }, []);
 
-  const login = useCallback(async (email: string, password: string) => {
-    const user = await loginWithEmailPassword(email.trim(), password);
+  const signIn = useCallback(async (email: string, password: string) => {
+    const user = await loginWithEmailPassword(email, password);
     const stored = await getStoredAuth();
     setState({
       user,
       token: stored?.token ?? null,
+      keyId: stored?.keyId,
       isLoading: false,
       isAuthenticated: !!stored?.token,
     });
   }, []);
 
-  const register = useCallback(async (email: string, password: string) => {
-    const user = await registerApi(email.trim(), password);
-    const stored = await getStoredAuth();
-    setState({
-      user,
-      token: stored?.token ?? null,
-      isLoading: false,
-      isAuthenticated: !!stored?.token,
-    });
+  const login = useCallback(
+    (email: string, password: string) => signIn(email.trim(), password),
+    [signIn],
+  );
+
+  const register = useCallback(
+    async (email: string, password: string) => {
+      await registerApi(email.trim(), password);
+      try {
+        await signIn(email.trim(), password);
+      } catch (error) {
+        throw new Error(
+          `Account created, but signing in failed: ${getErrorMessage(error)}`,
+          { cause: error },
+        );
+      }
+    },
+    [signIn],
+  );
+
+  const clearSession = useCallback(async () => {
+    try {
+      await clearStoredAuth();
+    } finally {
+      setState({
+        user: null,
+        token: null,
+        isLoading: false,
+        isAuthenticated: false,
+      });
+    }
   }, []);
 
   const logout = useCallback(async () => {
-    await clearStoredAuth();
-    setState({
-      user: null,
-      token: null,
-      isLoading: false,
-      isAuthenticated: false,
-    });
+    const { user, token, keyId } = state;
+    if (user && token) {
+      try {
+        await revokeSession({ user, token, keyId });
+      } catch (error) {
+        logError('Failed to revoke session on logout', {
+          error: getErrorMessage(error),
+        });
+      }
+    }
+    await clearSession();
     logInfo('User logged out');
-  }, []);
+  }, [state, clearSession]);
 
   const refreshUser = useCallback(async () => {
     const stored = await getStoredAuth();
@@ -113,8 +144,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const handleAuthError = useCallback(async () => {
     logError('Authentication error - logging out user');
-    await logout();
-  }, [logout]);
+    await clearSession();
+  }, [clearSession]);
 
   const value: AuthContextValue = {
     ...state,

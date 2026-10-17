@@ -1,9 +1,6 @@
 /**
  * Centralized logging utility for the app.
- * Set `SENTRY_DSN` in `.env` to send errors to Sentry (see `crashReporting.ts`).
  */
-
-import { captureException, captureMessage } from './crashReporting';
 
 export type LogLevel = 'debug' | 'info' | 'warning' | 'error';
 
@@ -56,7 +53,6 @@ export function logError(message: string, context?: Record<string, unknown>) {
   const entry: LogEntry = { level: 'error', message, context, timestamp: new Date() };
   addToBuffer(entry);
   console.error(formatMessage('error', message, context));
-  captureMessage(message, context);
 }
 
 export function logException(error: Error, context?: Record<string, unknown>) {
@@ -68,7 +64,6 @@ export function logException(error: Error, context?: Record<string, unknown>) {
   };
   addToBuffer(entry);
   console.error(formatMessage('error', error.message, { ...context, stack: error.stack }));
-  captureException(error, context);
 }
 
 export function getRecentLogs(): LogEntry[] {

@@ -9,6 +9,8 @@ import {
   getErrorMessage,
   shouldRetry,
   getRetryDelay,
+  isSubscriptionRequiredError,
+  requiresSignOut,
 } from '../src/utils/errors';
 
 describe('Error Utilities', () => {
@@ -141,6 +143,24 @@ describe('Error Utilities', () => {
       expect(getRetryDelay(0, 500)).toBe(500);
       expect(getRetryDelay(1, 500)).toBe(1000);
       expect(getRetryDelay(2, 500)).toBe(2000);
+    });
+  });
+
+  describe('subscription required', () => {
+    const paywall = new ConnectError('subscription required', Code.PermissionDenied);
+
+    it('detects the paywall error', () => {
+      expect(isSubscriptionRequiredError(paywall)).toBe(true);
+      expect(isSubscriptionRequiredError(new ConnectError('account disabled', Code.PermissionDenied))).toBe(false);
+    });
+
+    it('keeps the user signed in', () => {
+      expect(requiresSignOut(paywall)).toBe(false);
+      expect(requiresSignOut(new ConnectError('invalid API key', Code.Unauthenticated))).toBe(true);
+    });
+
+    it('surfaces a subscription message', () => {
+      expect(getErrorMessage(paywall)).toMatch(/^Subscription required/);
     });
   });
 });

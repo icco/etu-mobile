@@ -17,7 +17,7 @@ import { listNotes, listTags } from '../api/notes';
 import NoteCard from '../components/NoteCard';
 import type { Note } from '../api/client';
 import { protoTimestampToDate, formatDateGroup } from '../utils/date';
-import { isAuthError, getErrorMessage } from '../utils/errors';
+import { requiresSignOut, getErrorMessage } from '../utils/errors';
 import { useAppTheme, useThemedStyles, type Colors } from '../theme';
 import Icon from '../components/Icon';
 import NewNoteButton from '../components/NewNoteButton';
@@ -62,7 +62,7 @@ export default function SearchScreen() {
 
   // Handle auth errors for tags query
   React.useEffect(() => {
-    if (tagsError && isAuthError(tagsError)) {
+    if (tagsError && requiresSignOut(tagsError)) {
       void handleAuthError();
     }
   }, [tagsError, handleAuthError]);
@@ -91,7 +91,7 @@ export default function SearchScreen() {
 
   // Handle auth errors for notes query
   React.useEffect(() => {
-    if (error && isAuthError(error)) {
+    if (error && requiresSignOut(error)) {
       void handleAuthError();
     }
   }, [error, handleAuthError]);

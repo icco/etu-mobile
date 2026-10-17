@@ -15,7 +15,7 @@ import { listNotes } from '../api/notes';
 import NoteCard from '../components/NoteCard';
 import type { Note } from '../api/client';
 import { protoTimestampToDate, formatDateGroup } from '../utils/date';
-import { isAuthError, getErrorMessage } from '../utils/errors';
+import { requiresSignOut, getErrorMessage } from '../utils/errors';
 import { useAppTheme, useThemedStyles, type Colors } from '../theme';
 import NewNoteButton from '../components/NewNoteButton';
 
@@ -76,7 +76,7 @@ export default function TimelineScreen() {
   });
 
   React.useEffect(() => {
-    if (error && isAuthError(error)) {
+    if (error && requiresSignOut(error)) {
       void handleAuthError();
     }
   }, [error, handleAuthError]);
