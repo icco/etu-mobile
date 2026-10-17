@@ -6,6 +6,7 @@ import {
   ApiKeysService,
   UserSettingsService,
   StatsService,
+  AccountService,
 } from '@icco/etu-proto';
 import { getTransport } from './transport';
 
@@ -37,6 +38,10 @@ function getUserSettingsClient() {
 
 function getStatsClient() {
   return createClient(StatsService, getTransport());
+}
+
+function getAccountClient() {
+  return createClient(AccountService, getTransport());
 }
 
 export const notesClient = {
@@ -72,6 +77,12 @@ export const userSettingsClient = {
 export const statsClient = {
   get client() {
     return getStatsClient();
+  },
+};
+
+export const accountClient = {
+  get client() {
+    return getAccountClient();
   },
 };
 

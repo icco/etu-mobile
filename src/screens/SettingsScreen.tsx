@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -10,10 +10,25 @@ import {
   ActivityIndicator,
   Linking,
   BackHandler,
+  Switch,
 } from 'react-native';
+import RNFS from 'react-native-fs';
+import { ConnectError, Code } from '@connectrpc/connect';
+import {
+  saveDocuments,
+  isErrorWithCode,
+  errorCodes,
+} from '@react-native-documents/picker';
 import { useAuth } from '../context/AuthContext';
 import { getUserSettings, updateUserSettings } from '../api/settings';
 import { getStats } from '../api/stats';
+import {
+  deleteAccount,
+  exportDataToFile,
+  exportFileName,
+  type ExportProgress,
+} from '../api/account';
+import { logWarning } from '../utils/logger';
 import type { Stats } from '../api/stats';
 import { getErrorMessage } from '../utils/errors';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -27,13 +42,30 @@ const LEGAL_LINKS = [
   { label: 'Refund policy', path: 'refunds' },
 ];
 
+const DELETE_CONFIRMATION =
+  'I understand this permanently deletes my account and data';
+
+function deleteErrorMessage(error: unknown): string {
+  if (error instanceof ConnectError) {
+    if (error.code === Code.PermissionDenied) {
+      return error.rawMessage.includes('locked')
+        ? 'Too many failed attempts. Try again later.'
+        : 'Current password is incorrect';
+    }
+    if (error.code === Code.ResourceExhausted) {
+      return 'Too many attempts. Try again later.';
+    }
+  }
+  return `Unable to delete account: ${getErrorMessage(error)}. If you can no longer sign in, contact nat@natwelch.com to finish deleting it.`;
+}
+
 export default function SettingsScreen() {
   const { colors, dark } = useAppTheme();
   const styles = useThemedStyles(createStyles);
   const { user, token, logout, refreshUser } = useAuth();
   const queryClient = useQueryClient();
   const [activeSection, setActiveSection] = useState<
-    'main' | 'apikeys' | 'stats'
+    'main' | 'apikeys' | 'stats' | 'delete'
   >('main');
   useFocusEffect(
     React.useCallback(() => {
@@ -57,6 +89,17 @@ export default function SettingsScreen() {
   // changes. Avoids react-hooks/set-state-in-effect; see
   // https://react.dev/reference/react/useState#storing-information-from-previous-renders
   const [hydratedName, setHydratedName] = useState<string | null>(null);
+  const [deletePassword, setDeletePassword] = useState('');
+  const [deleteConfirmed, setDeleteConfirmed] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [exportProgress, setExportProgress] = useState<ExportProgress | null>(
+    null,
+  );
+  const [exportStatus, setExportStatus] = useState<string | null>(null);
+  const [exportError, setExportError] = useState<string | null>(null);
+  const exportAbortRef = useRef<AbortController | null>(null);
+  useEffect(() => () => exportAbortRef.current?.abort(), []);
 
   const { data: profile, isLoading } = useQuery({
     queryKey: ['userSettings', user?.id],
@@ -114,6 +157,71 @@ export default function SettingsScreen() {
     }
   };
 
+  const handleExport = async () => {
+    if (!user || !token || exportAbortRef.current) return;
+    const controller = new AbortController();
+    exportAbortRef.current = controller;
+    setExportError(null);
+    setExportStatus(null);
+    setExportProgress({ items: 0, notes: 0 });
+    let path: string | undefined;
+    try {
+      const result = await exportDataToFile(
+        user.id,
+        token,
+        setExportProgress,
+        controller.signal,
+      );
+      path = result.path;
+      const [saved] = await saveDocuments({
+        sourceUris: [`file://${path}`],
+        mimeType: 'application/json',
+        fileName: exportFileName(),
+        copy: true,
+      });
+      if (saved.error) throw new Error(saved.error);
+      setExportStatus(
+        `Saved ${result.progress.notes.toLocaleString()} notes to ${saved.name ?? 'your device'}`,
+      );
+    } catch (e) {
+      if (isErrorWithCode(e) && e.code === errorCodes.OPERATION_CANCELED) {
+        setExportStatus('Export not saved');
+      } else if (!controller.signal.aborted) {
+        setExportError(getErrorMessage(e));
+      }
+    } finally {
+      if (path) {
+        await RNFS.unlink(path).catch((cleanupError: unknown) => {
+          logWarning('Failed to remove export file', {
+            error: String(cleanupError),
+          });
+        });
+      }
+      exportAbortRef.current = null;
+      if (!controller.signal.aborted) setExportProgress(null);
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    if (!user || !token || !deletePassword || !deleteConfirmed) return;
+    setDeleting(true);
+    setDeleteError(null);
+    try {
+      await deleteAccount(user.id, token, deletePassword);
+    } catch (e) {
+      setDeleteError(deleteErrorMessage(e));
+      setDeleting(false);
+      return;
+    }
+    setDeletePassword('');
+    queryClient.clear();
+    await logout();
+    Alert.alert(
+      'Account deleted',
+      'Your account and data have been permanently deleted.',
+    );
+  };
+
   if (!user || !token) return null;
 
   const renderStatsBlock = (
@@ -168,6 +276,76 @@ export default function SettingsScreen() {
         <ScrollView contentContainerStyle={styles.scroll}>
           {renderStatsBlock('Your Statistics', userStatsQuery, false)}
           {renderStatsBlock('Community Statistics', globalStatsQuery, true)}
+        </ScrollView>
+      </View>
+    );
+  }
+
+  if (activeSection === 'delete') {
+    const canDelete = !!deletePassword && deleteConfirmed && !deleting;
+    return (
+      <View style={styles.container}>
+        <TouchableOpacity
+          style={styles.backBtn}
+          onPress={() => setActiveSection('main')}
+          disabled={deleting}
+        >
+          <Text style={styles.backBtnText}>← Settings</Text>
+        </TouchableOpacity>
+        <ScrollView
+          contentContainerStyle={styles.scroll}
+          keyboardShouldPersistTaps="handled"
+        >
+          <Text style={styles.sectionTitle}>Delete account</Text>
+          <Text style={styles.hint}>
+            This immediately and permanently deletes your notes, media, API
+            keys, and account, and cancels your subscription. This cannot be
+            undone. Export your data first if you want a copy.
+          </Text>
+          <Text style={styles.label}>Current password</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="Current password"
+            placeholderTextColor={colors.textSecondary}
+            accessibilityLabel="Current password"
+            value={deletePassword}
+            onChangeText={setDeletePassword}
+            secureTextEntry
+            autoComplete="current-password"
+            textContentType="password"
+            editable={!deleting}
+          />
+          <View style={styles.confirmRow}>
+            <Switch
+              value={deleteConfirmed}
+              onValueChange={setDeleteConfirmed}
+              disabled={deleting}
+              accessibilityLabel={DELETE_CONFIRMATION}
+              trackColor={{ true: colors.error }}
+            />
+            <Text style={styles.confirmText}>{DELETE_CONFIRMATION}</Text>
+          </View>
+          {deleteError ? (
+            <Text accessibilityRole="alert" style={styles.errorText}>
+              {deleteError}
+            </Text>
+          ) : null}
+          <TouchableOpacity
+            accessibilityRole="button"
+            style={[styles.deleteBtn, !canDelete && styles.disabled]}
+            onPress={() => {
+              void handleDeleteAccount();
+            }}
+            disabled={!canDelete}
+          >
+            {deleting ? (
+              <ActivityIndicator color={colors.onError} size="small" />
+            ) : (
+              <Text style={styles.deleteBtnText}>
+                Permanently delete account
+              </Text>
+            )}
+          </TouchableOpacity>
         </ScrollView>
       </View>
     );
@@ -297,6 +475,47 @@ export default function SettingsScreen() {
       </TouchableOpacity>
 
       <Text style={[styles.sectionTitle, styles.sectionTitleSpaced]}>
+        Your data
+      </Text>
+      <Text style={styles.hint}>
+        Export your profile, settings, tags, and every note as JSON. Image and
+        audio links in the export expire after one hour.
+      </Text>
+      <TouchableOpacity
+        accessibilityRole="button"
+        style={[styles.linkBtn, !!exportProgress && styles.disabled]}
+        disabled={!!exportProgress}
+        onPress={() => {
+          void handleExport();
+        }}
+      >
+        <Text style={styles.linkBtnText}>Export data →</Text>
+      </TouchableOpacity>
+      {exportProgress ? (
+        <View style={styles.exportStatus}>
+          <ActivityIndicator size="small" color={colors.primary} />
+          <Text style={styles.hint}>
+            Exporting... {exportProgress.notes.toLocaleString()} notes
+          </Text>
+        </View>
+      ) : null}
+      {exportStatus ? <Text style={styles.hint}>{exportStatus}</Text> : null}
+      {exportError ? (
+        <>
+          <Text accessibilityRole="alert" style={styles.errorText}>
+            Export failed
+          </Text>
+          <Text style={styles.errorDetail}>{exportError}</Text>
+        </>
+      ) : null}
+      <TouchableOpacity
+        style={styles.linkBtn}
+        onPress={() => setActiveSection('delete')}
+      >
+        <Text style={styles.dangerLinkText}>Delete account →</Text>
+      </TouchableOpacity>
+
+      <Text style={[styles.sectionTitle, styles.sectionTitleSpaced]}>
         Legal
       </Text>
       {LEGAL_LINKS.map(({ label, path }) => (
@@ -408,4 +627,27 @@ const createStyles = (colors: Colors) =>
       alignItems: 'center',
     },
     logoutBtnText: { color: colors.error, fontSize: 16, fontWeight: '600' },
+    dangerLinkText: { color: colors.error, fontSize: 16 },
+    exportStatus: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+      marginBottom: 8,
+    },
+    confirmRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 12,
+      marginVertical: 12,
+    },
+    confirmText: { color: colors.text, fontSize: 16, flex: 1 },
+    deleteBtn: {
+      backgroundColor: colors.error,
+      padding: 14,
+      borderRadius: 28,
+      minHeight: 48,
+      alignItems: 'center',
+      marginTop: 16,
+    },
+    deleteBtnText: { color: colors.onError, fontSize: 16, fontWeight: '600' },
   });

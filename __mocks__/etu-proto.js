@@ -11,4 +11,5 @@ module.exports = {
   ApiKeysService: emptyService,
   UserSettingsService: emptyService,
   StatsService: emptyService,
+  AccountService: emptyService,
 };
