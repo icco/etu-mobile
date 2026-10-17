@@ -166,7 +166,8 @@ RCT_EXPORT_METHOD(next:(NSString *)callId resolve:(RCTPromiseResolveBlock)resolv
 
 RCT_EXPORT_METHOD(cancel:(NSString *)callId) {
   [self.calls[callId] cancel];
-  [self.streams[callId].call cancel];
+  EtuGrpcStream *stream = self.streams[callId];
+  [stream.call cancel];
 }
 - (void)invalidate {
   for (GRPCCall2 *call in self.calls.allValues) [call cancel];
