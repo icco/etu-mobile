@@ -177,6 +177,20 @@ describe('SettingsScreen delete account', () => {
     expect(alert).toHaveBeenCalledWith('Account deleted', expect.any(String));
   });
 
+  it('still shows the deleted confirmation when local logout cleanup fails', async () => {
+    const alert = jest.spyOn(Alert, 'alert').mockImplementation(() => {});
+    jest.mocked(deleteAccount).mockResolvedValue();
+    mockLogout.mockRejectedValueOnce(new Error('keychain failed'));
+    const { getByRole, getByLabelText } = await openDelete();
+    await fireEvent.changeText(getByLabelText('Current password'), 'hunter22');
+    await fireEvent(getByLabelText(CONFIRMATION), 'valueChange', true);
+    await fireEvent.press(getByRole('button', { name: 'Permanently delete account' }));
+
+    await waitFor(() => expect(alert).toHaveBeenCalledWith('Account deleted', expect.any(String)));
+    expect(deleteAccount).toHaveBeenCalledTimes(1);
+    expect(mockClear).toHaveBeenCalled();
+  });
+
   it.each([
     [new ConnectError('incorrect password', Code.PermissionDenied), 'Current password is incorrect'],
     [new ConnectError('account is locked', Code.PermissionDenied), 'Too many failed attempts. Try again later.'],

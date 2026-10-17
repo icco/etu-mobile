@@ -94,14 +94,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const logout = useCallback(async () => {
-    await clearStoredAuth();
-    setState({
-      user: null,
-      token: null,
-      isLoading: false,
-      isAuthenticated: false,
-    });
-    logInfo('User logged out');
+    try {
+      await clearStoredAuth();
+      logInfo('User logged out');
+    } finally {
+      setState({
+        user: null,
+        token: null,
+        isLoading: false,
+        isAuthenticated: false,
+      });
+    }
   }, []);
 
   const refreshUser = useCallback(async () => {

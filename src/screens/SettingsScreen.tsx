@@ -216,7 +216,15 @@ export default function SettingsScreen() {
     }
     setDeletePassword('');
     queryClient.clear();
-    await logout();
+    try {
+      await logout();
+    } catch (e) {
+      logWarning('Failed to clear stored auth after account deletion', {
+        error: getErrorMessage(e),
+      });
+    } finally {
+      setDeleting(false);
+    }
     Alert.alert(
       'Account deleted',
       'Your account and data have been permanently deleted.',
