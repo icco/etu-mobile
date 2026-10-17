@@ -219,7 +219,7 @@ base64 -w 0 release.keystore          # Linux
 
 The **Deploy** workflow (`.github/workflows/deploy.yml`) runs on push to `main` when deploy secrets are present:
 
-- **Play Store (internal track)**: Set `PLAY_STORE_SERVICE_ACCOUNT_JSON` (JSON key for a service account with Play Console API access) plus the Android signing secrets above. Builds AAB and uploads to the internal track.
+- **Play Store (internal track)**: Set `PLAY_STORE_SERVICE_ACCOUNT_JSON` (JSON key for a service account with Play Console API access) plus the Android signing secrets above. Builds AAB and uploads to the internal track. CI sets `versionCode` to the Deploy run number (`VERSION_CODE`); local builds fall back to the value in `android/app/build.gradle`. Play rejects API uploads until the first AAB for the app is uploaded manually in Play Console.
 - **TestFlight**: Set `APPLE_APP_STORE_CONNECT_API_KEY` (App Store Connect API key .p8 content), `APPLE_ISSUER_ID`, `APPLE_API_KEY_ID`, plus `APPLE_CERTIFICATE_P12_BASE64`, `APPLE_CERTIFICATE_PASSWORD`, `KEYCHAIN_PASSWORD`, and `APPLE_TEAM_ID`. Builds IPA and uploads to TestFlight.
 
 Create an App Store Connect API key in App Store Connect → Users and Access → Keys. For the provisioning profile name in ExportOptions, ensure it matches your Xcode project (e.g. `EtuMobileApp`).
@@ -229,7 +229,7 @@ Create an App Store Connect API key in App Store Connect → Users and Access �
 ### Version Management
 
 **Android** (`android/app/build.gradle`):
-- `versionCode`: Integer version (must increment for each release)
+- `versionCode`: Integer version; CI overrides it with `VERSION_CODE` (Deploy run number)
 - `versionName`: User-visible version string (e.g., "1.0", "1.1")
 - `applicationId`: `com.timeclimbers.etu`
 
@@ -255,7 +255,7 @@ versionName "1.1"
 The app supports standard React Native build variants:
 
 - **Debug**: Development builds with debugging enabled
-- **Release**: Optimized production builds with ProGuard (Android) and code minification
+- **Release**: Optimized production builds with R8 (Android, `proguard-rules.pro`) and code minification
 
 ## Deep Linking
 
@@ -294,7 +294,9 @@ Use this checklist before **Production** (internal / closed testing first is rec
 4. **Privacy policy**: public HTTPS URL describing data collection and use (backend URL, account, notes).
 5. **Content rating** questionnaire (IARC).
 6. **Target API**: already **API 36** in this project.
-7. **Release**: upload AAB from CI (`bundleRelease`) or locally; run **Pre-launch report** on an internal track build.
+7. **First upload**: upload the first AAB manually in Play Console; the API cannot create the first release.
+8. **Data safety**: fill in the Data safety form using the section below.
+9. **Release**: upload AAB from CI (`bundleRelease`) or locally; run **Pre-launch report** on an internal track build.
 
 ### Data safety (aligned with this codebase)
 
@@ -302,13 +304,13 @@ Declare in Play Console what the app actually uses:
 
 - **Network**: notes and auth go directly to your native gRPC endpoint (`GRPC_BACKEND_URL`).
 - **Account**: email/password or API key; tokens stored with the OS secure store (Keychain / Keystore-backed).
-- **Photos / images**: attach images to notes (`READ_MEDIA_IMAGES`, camera, storage on older APIs).
-- **Audio files**: attach or pick audio (`READ_MEDIA_AUDIO`).
+- **Photos / images**: attach images to notes via the system photo picker (no media or storage permissions).
+- **Audio files**: attach audio via the system document picker (no media or storage permissions).
 - **Microphone**: in-app recording uses **`RECORD_AUDIO`**; runtime permission is requested on Android before recording.
 
 ### Versioning
 
-Bump `versionCode` for **every** Play upload and `versionName` for user-visible releases (`android/app/build.gradle`).
+The Deploy workflow sets `versionCode` from its run number, so each CI upload increments it. Bump `versionName` for user-visible releases (`android/app/build.gradle`).
 
 ## Architecture
 
