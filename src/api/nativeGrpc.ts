@@ -86,7 +86,13 @@ export function createNativeGrpcTransport(endpoint: string, bridge = NativeModul
         try {
           if (signal?.aborted) onAbort();
           for (;;) {
-            const response = await next(id);
+            let response: string | null;
+            try {
+              response = await next(id);
+            } catch (error) {
+              finished = true;
+              throw toConnectError(error, 'gRPC stream failed');
+            }
             if (response === null) {
               finished = true;
               return;
@@ -94,7 +100,6 @@ export function createNativeGrpcTransport(endpoint: string, bridge = NativeModul
             yield fromBinary(method.output, base64Decode(response));
           }
         } catch (error) {
-          finished = true;
           throw toConnectError(error, 'gRPC stream failed');
         } finally {
           signal?.removeEventListener('abort', onAbort);

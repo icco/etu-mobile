@@ -173,6 +173,7 @@ export default function SettingsScreen() {
         controller.signal,
       );
       path = result.path;
+      if (controller.signal.aborted) return;
       const [saved] = await saveDocuments({
         sourceUris: [`file://${path}`],
         mimeType: 'application/json',

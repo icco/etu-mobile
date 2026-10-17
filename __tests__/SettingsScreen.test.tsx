@@ -261,4 +261,15 @@ describe('SettingsScreen export data', () => {
     expect(await findByText('Export not saved')).toBeTruthy();
     expect(RNFS.unlink).toHaveBeenCalledWith('/cache/etu-export-2026-10-17.json');
   });
+
+  it('skips the save dialog and cleans up the file if unmounted when export finishes', async () => {
+    let finish!: (value: { path: string; progress: ExportProgress }) => void;
+    jest.mocked(exportDataToFile).mockImplementation(() => new Promise(resolve => { finish = resolve; }));
+    const { getByRole, unmount } = await render(<SettingsScreen />);
+    await fireEvent.press(getByRole('button', { name: 'Export data →' }));
+    await unmount();
+    finish({ path: '/cache/etu-export-2026-10-17.json', progress: { items: 1, notes: 1 } });
+    await waitFor(() => expect(RNFS.unlink).toHaveBeenCalledWith('/cache/etu-export-2026-10-17.json'));
+    expect(saveDocuments).not.toHaveBeenCalled();
+  });
 });

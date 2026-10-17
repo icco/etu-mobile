@@ -23,6 +23,7 @@ class EtuGrpcModule(context: ReactApplicationContext) : ReactContextBaseJavaModu
     val queue = ArrayDeque<ByteArray>()
     var pending: Promise? = null
     var status: Status? = null
+    var cancelled = false
   }
 
   private val marshaller = object : MethodDescriptor.Marshaller<ByteArray> {
@@ -112,16 +113,15 @@ class EtuGrpcModule(context: ReactApplicationContext) : ReactContextBaseJavaModu
           }
         }
         override fun onClose(status: Status, trailers: Metadata) {
-          val waiting = synchronized(state) {
+          val (waiting, remove) = synchronized(state) {
             state.status = status
             val pending = state.pending
             state.pending = null
-            pending
+            if (state.cancelled) state.queue.clear()
+            Pair(pending, pending != null || state.cancelled)
           }
-          if (waiting != null) {
-            streams.remove(id)
-            settle(waiting, status)
-          }
+          if (remove) streams.remove(id)
+          if (waiting != null) settle(waiting, status)
         }
       }, metadata)
       call.request(1)
@@ -138,14 +138,18 @@ class EtuGrpcModule(context: ReactApplicationContext) : ReactContextBaseJavaModu
   fun next(id: String, promise: Promise) {
     val state = streams[id]
     if (state == null) {
-      promise.reject("5", "Unknown gRPC stream")
+      promise.reject("1", "Request cancelled")
       return
     }
     val (message, closed) = synchronized(state) {
-      val message = state.queue.removeFirstOrNull()
-      val closed = if (message == null) state.status else null
-      if (message == null && closed == null) state.pending = promise
-      Pair(message, closed)
+      if (state.cancelled) {
+        Pair(null, state.status ?: Status.CANCELLED.withDescription("Request cancelled"))
+      } else {
+        val message = state.queue.removeFirstOrNull()
+        val closed = if (message == null) state.status else null
+        if (message == null && closed == null) state.pending = promise
+        Pair(message, closed)
+      }
     }
     if (message != null) {
       promise.resolve(encode(message))
@@ -159,7 +163,17 @@ class EtuGrpcModule(context: ReactApplicationContext) : ReactContextBaseJavaModu
   @ReactMethod
   fun cancel(id: String) {
     calls[id]?.cancel("Request cancelled", null)
-    streams[id]?.call?.cancel("Request cancelled", null)
+    val state = streams[id] ?: return
+    val (waiting, alreadyClosed) = synchronized(state) {
+      state.cancelled = true
+      state.queue.clear()
+      val pending = state.pending
+      state.pending = null
+      Pair(pending, state.status != null)
+    }
+    if (alreadyClosed || waiting != null) streams.remove(id)
+    waiting?.reject("1", "Request cancelled")
+    state.call.cancel("Request cancelled", null)
   }
 
   override fun invalidate() {

@@ -105,6 +105,16 @@ describe('server streaming', () => {
     expect(bridge.next).not.toHaveBeenCalled();
   });
 
+  it('cancels the native call when decoding fails', async () => {
+    bridge.serverStream.mockResolvedValue();
+    bridge.next.mockResolvedValueOnce('!!!not-base64!!!');
+    const iterate = async () => {
+      for await (const item of client().exportData({ userId: 'user-1' })) { void item; }
+    };
+    await expect(iterate()).rejects.toMatchObject({ code: Code.Unknown });
+    expect(bridge.cancel).toHaveBeenCalledWith(bridge.serverStream.mock.calls[0][0]);
+  });
+
   it('cancels the native call when the consumer stops early', async () => {
     bridge.serverStream.mockResolvedValue();
     bridge.next.mockResolvedValue(encodeNote('n1'));

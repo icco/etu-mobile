@@ -26,6 +26,7 @@
 @property(nonatomic, copy) RCTPromiseResolveBlock pendingResolve;
 @property(nonatomic, copy) RCTPromiseRejectBlock pendingReject;
 @property(nonatomic) BOOL closed;
+@property(nonatomic) BOOL cancelled;
 @property(nonatomic, strong) NSError *error;
 @property(nonatomic, copy) void (^cleanup)(void);
 @end
@@ -39,9 +40,11 @@
   self.cleanup();
   self.call = nil;
   if (self.error) reject([NSString stringWithFormat:@"%ld", (long)self.error.code], self.error.localizedDescription, self.error);
+  else if (self.cancelled) reject(@"1", @"Request cancelled", nil);
   else resolve([NSNull null]);
 }
 - (void)didReceiveData:(id)data {
+  if (self.cancelled) return;
   RCTPromiseResolveBlock resolve = self.pendingResolve;
   if (!resolve) { [self.queue addObject:data]; return; }
   self.pendingResolve = nil;
@@ -54,13 +57,22 @@
   self.error = error;
   RCTPromiseResolveBlock resolve = self.pendingResolve;
   RCTPromiseRejectBlock reject = self.pendingReject;
-  if (!resolve) return;
+  if (!resolve) {
+    if (self.cancelled) {
+      [self.queue removeAllObjects];
+      self.cleanup();
+      self.call = nil;
+    }
+    return;
+  }
   self.pendingResolve = nil;
   self.pendingReject = nil;
   [self settleResolve:resolve reject:reject];
 }
 - (void)nextWithResolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject {
-  if (self.queue.count) {
+  if (self.cancelled) {
+    [self settleResolve:resolve reject:reject];
+  } else if (self.queue.count) {
     NSData *data = self.queue.firstObject;
     [self.queue removeObjectAtIndex:0];
     resolve([data base64EncodedStringWithOptions:0]);
@@ -71,6 +83,19 @@
     self.pendingResolve = resolve;
     self.pendingReject = reject;
   }
+}
+- (void)cancelStream {
+  self.cancelled = YES;
+  [self.queue removeAllObjects];
+  RCTPromiseRejectBlock reject = self.pendingReject;
+  self.pendingResolve = nil;
+  self.pendingReject = nil;
+  [self.call cancel];
+  if (self.closed || reject) {
+    self.cleanup();
+    self.call = nil;
+  }
+  if (reject) reject(@"1", @"Request cancelled", nil);
 }
 @end
 
@@ -160,14 +185,13 @@ RCT_EXPORT_METHOD(serverStream:(NSString *)callId endpoint:(NSString *)endpoint 
 
 RCT_EXPORT_METHOD(next:(NSString *)callId resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject) {
   EtuGrpcStream *stream = self.streams[callId];
-  if (!stream) { reject(@"5", @"Unknown gRPC stream", nil); return; }
+  if (!stream) { reject(@"1", @"Request cancelled", nil); return; }
   [stream nextWithResolve:resolve reject:reject];
 }
 
 RCT_EXPORT_METHOD(cancel:(NSString *)callId) {
   [self.calls[callId] cancel];
-  EtuGrpcStream *stream = self.streams[callId];
-  [stream.call cancel];
+  [self.streams[callId] cancelStream];
 }
 - (void)invalidate {
   for (GRPCCall2 *call in self.calls.allValues) [call cancel];
