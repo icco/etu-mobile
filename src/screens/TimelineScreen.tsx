@@ -156,7 +156,7 @@ export default function TimelineScreen() {
             <View style={styles.footer}>
               <ActivityIndicator size="small" color={colors.primary} />
             </View>
-          ) : null
+          ) : undefined
         }
         renderItem={({ item }) => {
           if (item.type === 'header') {

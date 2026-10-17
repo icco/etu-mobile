@@ -45,15 +45,13 @@ const queryClient = new QueryClient({
 });
 
 function App() {
-  const { dark, colors } = useAppTheme();
+  const { dark } = useAppTheme();
+
   return (
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
         <SafeAreaProvider>
-          <StatusBar
-            barStyle={dark ? 'light-content' : 'dark-content'}
-            backgroundColor={colors.background}
-          />
+          <StatusBar barStyle={dark ? 'light-content' : 'dark-content'} />
           <AuthProvider>
             <RootNavigator />
           </AuthProvider>
