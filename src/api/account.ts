@@ -27,22 +27,31 @@ export async function exportData(
   signal?: AbortSignal
 ): Promise<ExportProgress> {
   const progress: ExportProgress = { items: 0, notes: 0 };
-  let buffer = '[';
-  for await (const res of accountClient.client.exportData(
-    { userId },
-    { headers: createHeaders(token), signal }
-  )) {
-    buffer += (progress.items === 0 ? '\n' : ',\n') + JSON.stringify(toJson(ExportDataResponseSchema, res));
-    progress.items++;
-    if (res.item.case === 'note') progress.notes++;
-    if (progress.items % WRITE_BATCH === 0) {
-      await write(buffer);
-      buffer = '';
+  const controller = new AbortController();
+  const abort = () => controller.abort();
+  signal?.addEventListener('abort', abort);
+  if (signal?.aborted) abort();
+  try {
+    let buffer = '[';
+    for await (const res of accountClient.client.exportData(
+      { userId },
+      { headers: createHeaders(token), signal: controller.signal }
+    )) {
+      buffer += (progress.items === 0 ? '\n' : ',\n') + JSON.stringify(toJson(ExportDataResponseSchema, res));
+      progress.items++;
+      if (res.item.case === 'note') progress.notes++;
+      if (progress.items % WRITE_BATCH === 0) {
+        await write(buffer);
+        buffer = '';
+      }
+      onProgress?.({ ...progress });
     }
-    onProgress?.({ ...progress });
+    await write(buffer + '\n]\n');
+    return progress;
+  } finally {
+    signal?.removeEventListener('abort', abort);
+    controller.abort();
   }
-  await write(buffer + '\n]\n');
-  return progress;
 }
 
 export function exportFileName(date = new Date()): string {

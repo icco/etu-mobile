@@ -14,6 +14,7 @@ jest.mock('react-native-image-picker', () => ({
 
 jest.mock('@react-native-documents/picker', () => ({
   pick: jest.fn(() => Promise.resolve([])),
+  saveDocuments: jest.fn((opts) => Promise.resolve(opts.sourceUris.map((uri) => ({ uri, name: opts.fileName ?? null, error: null })))),
   keepLocalCopy: jest.fn((opts) => Promise.resolve((opts.files || []).map((f) => ({ status: 'success', localUri: f.uri, sourceUri: f.uri })))),
   types: { audio: 'audio' },
   errorCodes: { OPERATION_CANCELED: 'OPERATION_CANCELED' },
@@ -21,6 +22,9 @@ jest.mock('@react-native-documents/picker', () => ({
 }));
 
 jest.mock('react-native-fs', () => ({
+  CachesDirectoryPath: '/cache',
+  writeFile: jest.fn(() => Promise.resolve()),
+  appendFile: jest.fn(() => Promise.resolve()),
   readFile: jest.fn(() => Promise.resolve('')),
   unlink: jest.fn(() => Promise.resolve()),
   stat: jest.fn(() => Promise.resolve({ size: 0 })),
