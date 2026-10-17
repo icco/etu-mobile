@@ -5,6 +5,8 @@
 import React from 'react';
 import { renderHook, act, waitFor } from '@testing-library/react-native';
 import { AuthProvider, useAuth } from '../src/context/AuthContext';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { enqueueNote, getPendingNotes } from '../src/api/offlineQueue';
 import * as authApi from '../src/api/auth';
 import type { User } from '@icco/etu-proto';
 
@@ -227,6 +229,26 @@ describe('AuthContext', () => {
     expect(result.current.user).toBeNull();
     expect(result.current.token).toBeNull();
     expect(result.current.isAuthenticated).toBe(false);
+  });
+
+  it('clears queued notes and the persisted cache on logout', async () => {
+    mockedAuthApi.getStoredAuth.mockResolvedValue({
+      user: createMockUser('123', 'test@example.com'),
+      token: 'test-token',
+    });
+    await enqueueNote({ userId: '123', content: 'pending', tags: [] });
+    await AsyncStorage.setItem('etu.queryCache.v1', '{}');
+
+    const { result } = await renderHook(() => useAuth(), { wrapper });
+    await waitFor(() => {
+      expect(result.current.isAuthenticated).toBe(true);
+    });
+    await act(async () => {
+      await result.current.logout();
+    });
+
+    expect(await getPendingNotes()).toEqual([]);
+    expect(await AsyncStorage.getItem('etu.queryCache.v1')).toBeNull();
   });
 
   it('handles auth errors', async () => {

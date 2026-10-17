@@ -14,6 +14,8 @@ import {
   register as registerApi,
   revokeSession,
 } from '../api/auth';
+import { clearQueue } from '../api/offlineQueue';
+import { clearCachedData } from '../api/queryClient';
 import { logInfo, logError } from '../utils/logger';
 import { getErrorMessage } from '../utils/errors';
 
@@ -110,6 +112,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const clearSession = useCallback(async () => {
     try {
       await clearStoredAuth();
+      await clearCachedData();
     } finally {
       setState({
         user: null,
@@ -132,6 +135,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     }
     await clearSession();
+    await clearQueue();
     logInfo('User logged out');
   }, [state, clearSession]);
 

@@ -183,6 +183,9 @@ importers:
       '@icco/etu-proto':
         specifier: ^2026.9.19223803
         version: 2026.9.19223803(@connectrpc/connect@2.2.0(@bufbuild/protobuf@2.15.0))
+      '@react-native-async-storage/async-storage':
+        specifier: ^3.1.1
+        version: 3.1.1(react-native@0.87.1(@babel/core@7.29.7(supports-color@8.1.1))(@react-native-community/cli@20.2.0(supports-color@8.1.1)(typescript@6.0.3))(@react-native/metro-config@0.87.1(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.3.0)(react@19.2.3)(supports-color@8.1.1))(react@19.2.3)
       '@react-native-documents/picker':
         specifier: ^12.0.2
         version: 12.0.2(react-native@0.87.1(@babel/core@7.29.7(supports-color@8.1.1))(@react-native-community/cli@20.2.0(supports-color@8.1.1)(typescript@6.0.3))(@react-native/metro-config@0.87.1(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.3.0)(react@19.2.3)(supports-color@8.1.1))(react@19.2.3)
@@ -198,9 +201,15 @@ importers:
       '@react-navigation/native-stack':
         specifier: ^7.19.2
         version: 7.19.2(5e89056eb761a6e9f8c061d465636c62)
+      '@tanstack/query-async-storage-persister':
+        specifier: ^5.104.3
+        version: 5.104.3
       '@tanstack/react-query':
         specifier: ^5.103.1
         version: 5.103.1(react@19.2.3)
+      '@tanstack/react-query-persist-client':
+        specifier: ^5.104.3
+        version: 5.104.3(@tanstack/react-query@5.103.1(react@19.2.3))(react@19.2.3)
       fast-xml-parser:
         specifier: ^5.11.2
         version: 5.11.2
@@ -1411,6 +1420,12 @@ packages:
     resolution: {integrity: sha512-SEeaJLb3qBNF/OaXnaR1NmmBbFYk1zC0ZH/52fATcRPLFg/p791YrcyFFy44Bo9sLaGuSuLp5Q6axbb/O+v/RA==}
     engines: {node: ^14.18.0 || >=16.0.0}
 
+  '@react-native-async-storage/async-storage@3.1.1':
+    resolution: {integrity: sha512-z+PnLz1n6ECKhgoHZHkfc+dijXZEyZnNFSajbtE0NEbsJhmX8x9GlOeiMQIKX2E4DUqPSgfIh4FYBv1M49KgPQ==}
+    peerDependencies:
+      react: '*'
+      react-native: '*'
+
   '@react-native-community/cli-clean@20.2.0':
     resolution: {integrity: sha512-krqbhFiwHN8l5wZ2XTcrNq9N+DqDWHxW8RK0bIcrK0O+fMvjYi9e/1Pnx2W0CTotOVcZpHzUbgZ4TQVF231Skw==}
 
@@ -1608,8 +1623,23 @@ packages:
   '@sinonjs/fake-timers@15.4.0':
     resolution: {integrity: sha512-DsG+8/LscQIQg68J6Ef3dv10u6nVyetYn923s3/sus5eaGfTo1of5WMZSLf0UJc9KDuKPilPH0UDJCjvNbDNCA==}
 
+  '@tanstack/query-async-storage-persister@5.104.3':
+    resolution: {integrity: sha512-xunlTTS1NFNE5Uk0pEZMhriYMqdaiZVhqTSQmTfKzLHg+oDBM6tUhSQsdCwAC77mvGC5J59tGkwhFz8CHtvdsg==}
+
   '@tanstack/query-core@5.103.1':
     resolution: {integrity: sha512-rms8HqTGp6zA00dM+cUQ2eBcgzNJefuu5CAMB37i/6MiGT1zulPOytCFu2a0qjLqVR2n1jENPj9woqFQNuCzWA==}
+
+  '@tanstack/query-core@5.104.3':
+    resolution: {integrity: sha512-DZY9TuJAOgU3UyHUhXb4CcTYEHNZszlwkPg4VViIwTxOKzLprPUU+rbaPZQd3srqkGOtpaDdKpW972UV/LKlcg==}
+
+  '@tanstack/query-persist-client-core@5.104.3':
+    resolution: {integrity: sha512-6nhc/QbMpkKeuAM81SFSdcsJ9B8dm3fGHPODbau2cRSDyqcXiSl7sXQM7POVktch/YdgIGYPIQyZOQQaRarHMA==}
+
+  '@tanstack/react-query-persist-client@5.104.3':
+    resolution: {integrity: sha512-Dooa5cQ2Ter+9yHD3oD6vUzY+X4VEG9l9XkilX5OWFXMAtCEC+rSXwlfwYqNEMzAVigH7AcdubeRj2Vm+rCf8g==}
+    peerDependencies:
+      '@tanstack/react-query': ^5.104.3
+      react: ^18 || ^19
 
   '@tanstack/react-query@5.103.1':
     resolution: {integrity: sha512-rmAPPApNEK17VXRJhtE1rja53n23VV5w30C0saCgJhhX+EpdUnVqMGV/s5nnzV43X75KTHKzuoiuxSzGTBIkag==}
@@ -2801,6 +2831,9 @@ packages:
   iconv-lite@0.7.3:
     resolution: {integrity: sha512-IKXpvIzjnC9XTAUbVBcMfGS0EPaIXtW6v+zr+RRp+hqULEpo0owZax6wyRwPOJbWbzjYspQwusTsfVr0ifh4uQ==}
     engines: {node: '>=0.10.0'}
+
+  idb@8.0.3:
+    resolution: {integrity: sha512-LtwtVyVYO5BqRvcsKuB2iUMnHwPVByPCXFXOpuU96IZPPoPN6xjOGxZQ74pgSVVLQWtUOYgyeL4GE98BY5D3wg==}
 
   ieee754@1.2.1:
     resolution: {integrity: sha512-dcyqhDvX1C46lXZcVqCpK+FtMRQVdIMN6/Df5js2zouUsqG7I6sFxitIC+7KYK29KdXOLHdu9zL4sFnoVQnqaA==}
@@ -5635,6 +5668,12 @@ snapshots:
 
   '@pkgr/core@0.3.6': {}
 
+  '@react-native-async-storage/async-storage@3.1.1(react-native@0.87.1(@babel/core@7.29.7(supports-color@8.1.1))(@react-native-community/cli@20.2.0(supports-color@8.1.1)(typescript@6.0.3))(@react-native/metro-config@0.87.1(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.3.0)(react@19.2.3)(supports-color@8.1.1))(react@19.2.3)':
+    dependencies:
+      idb: 8.0.3
+      react: 19.2.3
+      react-native: 0.87.1(@babel/core@7.29.7(supports-color@8.1.1))(@react-native-community/cli@20.2.0(supports-color@8.1.1)(typescript@6.0.3))(@react-native/metro-config@0.87.1(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.3.0)(react@19.2.3)(supports-color@8.1.1)
+
   '@react-native-community/cli-clean@20.2.0':
     dependencies:
       '@react-native-community/cli-tools': 20.2.0
@@ -6007,7 +6046,24 @@ snapshots:
     dependencies:
       '@sinonjs/commons': 3.0.1
 
+  '@tanstack/query-async-storage-persister@5.104.3':
+    dependencies:
+      '@tanstack/query-core': 5.104.3
+      '@tanstack/query-persist-client-core': 5.104.3
+
   '@tanstack/query-core@5.103.1': {}
+
+  '@tanstack/query-core@5.104.3': {}
+
+  '@tanstack/query-persist-client-core@5.104.3':
+    dependencies:
+      '@tanstack/query-core': 5.104.3
+
+  '@tanstack/react-query-persist-client@5.104.3(@tanstack/react-query@5.103.1(react@19.2.3))(react@19.2.3)':
+    dependencies:
+      '@tanstack/query-persist-client-core': 5.104.3
+      '@tanstack/react-query': 5.103.1(react@19.2.3)
+      react: 19.2.3
 
   '@tanstack/react-query@5.103.1(react@19.2.3)':
     dependencies:
@@ -7307,6 +7363,8 @@ snapshots:
   iconv-lite@0.7.3:
     dependencies:
       safer-buffer: 2.1.2
+
+  idb@8.0.3: {}
 
   ieee754@1.2.1: {}
 

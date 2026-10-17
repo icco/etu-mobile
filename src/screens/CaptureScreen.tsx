@@ -15,6 +15,8 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAppTheme, useThemedStyles, type Colors } from '../theme';
 import Icon from '../components/Icon';
+import { useAuth } from '../context/AuthContext';
+import { usePendingNoteCount } from '../api/offlineQueue';
 import { useHeaderHeight } from '@react-navigation/elements';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'NoteEdit'>;
@@ -26,6 +28,8 @@ export default function CaptureScreen() {
   const headerHeight = useHeaderHeight();
   const navigation = useNavigation<NavigationProp>();
   const [quickText, setQuickText] = useState('');
+  const { user } = useAuth();
+  const pendingCount = usePendingNoteCount(user?.id);
 
   const handleCapture = () => {
     const trimmed = quickText.trim();
@@ -77,6 +81,13 @@ export default function CaptureScreen() {
         <Text style={styles.hint}>
           Add tags, photos, and audio in the editor.
         </Text>
+        {pendingCount > 0 ? (
+          <Text style={styles.pending} accessibilityRole="alert">
+            {pendingCount === 1
+              ? '1 note saved offline, waiting to sync'
+              : `${pendingCount} notes saved offline, waiting to sync`}
+          </Text>
+        ) : null}
       </ScrollView>
     </KeyboardAvoidingView>
   );
@@ -133,6 +144,16 @@ const createStyles = (colors: Colors) =>
       color: colors.textSecondary,
       fontSize: 13,
       lineHeight: 20,
+      textAlign: 'center',
+      marginTop: 16,
+    },
+    pending: {
+      color: colors.onPrimaryContainer,
+      backgroundColor: colors.primaryContainer,
+      borderRadius: 12,
+      padding: 12,
+      fontSize: 14,
+      fontWeight: '600',
       textAlign: 'center',
       marginTop: 16,
     },

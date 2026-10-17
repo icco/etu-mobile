@@ -12,6 +12,7 @@ import { useNavigation } from '@react-navigation/native';
 import { useInfiniteQuery, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '../context/AuthContext';
 import { listNotes } from '../api/notes';
+import { usePendingNoteCount } from '../api/offlineQueue';
 import NoteCard from '../components/NoteCard';
 import type { Note } from '../api/client';
 import { protoTimestampToDate, formatDateGroup } from '../utils/date';
@@ -48,6 +49,7 @@ export default function TimelineScreen() {
   const navigation = useNavigation();
   const queryClient = useQueryClient();
   const { user, token, handleAuthError } = useAuth();
+  const pendingCount = usePendingNoteCount(user?.id);
 
   const {
     data,
@@ -140,6 +142,17 @@ export default function TimelineScreen() {
         data={sections}
         keyExtractor={item => item.key}
         contentContainerStyle={styles.list}
+        ListHeaderComponent={
+          pendingCount > 0 ? (
+            <View style={styles.pendingBanner} accessibilityRole="alert">
+              <Text style={styles.pendingText}>
+                {pendingCount === 1
+                  ? '1 note saved offline, waiting to sync'
+                  : `${pendingCount} notes saved offline, waiting to sync`}
+              </Text>
+            </View>
+          ) : undefined
+        }
         refreshControl={
           <RefreshControl
             refreshing={isPullRefreshing}
@@ -208,6 +221,18 @@ const createStyles = (colors: Colors) =>
       marginBottom: 6,
       marginHorizontal: 24,
       letterSpacing: 0.5,
+    },
+    pendingBanner: {
+      marginHorizontal: 16,
+      marginTop: 8,
+      padding: 12,
+      borderRadius: 12,
+      backgroundColor: colors.primaryContainer,
+    },
+    pendingText: {
+      color: colors.onPrimaryContainer,
+      fontSize: 14,
+      fontWeight: '600',
     },
     empty: { padding: 48, alignItems: 'center' },
     emptyText: { color: colors.text, fontSize: 22, fontWeight: '600' },
