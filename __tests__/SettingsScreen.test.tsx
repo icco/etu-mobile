@@ -3,26 +3,39 @@
  */
 
 import React from 'react';
-import { render, fireEvent } from '@testing-library/react-native';
-import { Linking } from 'react-native';
+import { render, fireEvent, waitFor } from '@testing-library/react-native';
+import { Alert, Linking } from 'react-native';
+import RNFS from 'react-native-fs';
+import { ConnectError, Code } from '@connectrpc/connect';
+import { saveDocuments, isErrorWithCode } from '@react-native-documents/picker';
 import { useQuery } from '@tanstack/react-query';
 import SettingsScreen from '../src/screens/SettingsScreen';
+import { deleteAccount, exportDataToFile, type ExportProgress } from '../src/api/account';
 
 jest.mock('../src/api/settings');
 jest.mock('../src/api/stats');
+jest.mock('../src/utils/logger');
+jest.mock('../src/api/account', () => ({
+  deleteAccount: jest.fn(),
+  exportDataToFile: jest.fn(),
+  exportFileName: () => 'etu-export-2026-10-17.json',
+}));
+
+const mockLogout = jest.fn(() => Promise.resolve());
+const mockClear = jest.fn();
 
 jest.mock('../src/context/AuthContext', () => ({
   useAuth: () => ({
     user: { id: 'user-1', email: 'test@example.com' },
     token: 'test-token',
-    logout: jest.fn(),
+    logout: mockLogout,
     refreshUser: jest.fn(),
   }),
 }));
 
 jest.mock('@tanstack/react-query', () => ({
   useQuery: jest.fn(),
-  useQueryClient: () => ({ invalidateQueries: jest.fn() }),
+  useQueryClient: () => ({ invalidateQueries: jest.fn(), clear: mockClear }),
 }));
 
 const mockedUseQuery = useQuery as jest.Mock;
@@ -123,5 +136,129 @@ describe('SettingsScreen legal links', () => {
     const { getByText } = await render(<SettingsScreen />);
     await fireEvent.press(getByText(label));
     expect(openURL).toHaveBeenCalledWith(url);
+  });
+});
+
+const CONFIRMATION = 'I understand this permanently deletes my account and data';
+
+describe('SettingsScreen delete account', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockedUseQuery.mockReturnValue({ data: undefined, isLoading: false, error: null });
+  });
+
+  async function openDelete() {
+    const screen = await render(<SettingsScreen />);
+    await fireEvent.press(screen.getByText('Delete account →'));
+    return screen;
+  }
+
+  it('requires the password and the irreversible confirmation', async () => {
+    const { getByRole, getByLabelText } = await openDelete();
+    const button = getByRole('button', { name: 'Permanently delete account' });
+    expect(button).toBeDisabled();
+    await fireEvent.changeText(getByLabelText('Current password'), 'hunter22');
+    expect(button).toBeDisabled();
+    await fireEvent(getByLabelText(CONFIRMATION), 'valueChange', true);
+    expect(button).toBeEnabled();
+  });
+
+  it('deletes the account, clears cached data and signs out', async () => {
+    const alert = jest.spyOn(Alert, 'alert').mockImplementation(() => {});
+    jest.mocked(deleteAccount).mockResolvedValue();
+    const { getByRole, getByLabelText } = await openDelete();
+    await fireEvent.changeText(getByLabelText('Current password'), 'hunter22');
+    await fireEvent(getByLabelText(CONFIRMATION), 'valueChange', true);
+    await fireEvent.press(getByRole('button', { name: 'Permanently delete account' }));
+
+    await waitFor(() => expect(mockLogout).toHaveBeenCalled());
+    expect(deleteAccount).toHaveBeenCalledWith('user-1', 'test-token', 'hunter22');
+    expect(mockClear).toHaveBeenCalled();
+    expect(alert).toHaveBeenCalledWith('Account deleted', expect.any(String));
+  });
+
+  it.each([
+    [new ConnectError('incorrect password', Code.PermissionDenied), 'Current password is incorrect'],
+    [new ConnectError('account is locked', Code.PermissionDenied), 'Too many failed attempts. Try again later.'],
+    [new ConnectError('slow down', Code.ResourceExhausted), 'Too many attempts. Try again later.'],
+  ])('shows an error and stays signed in when deletion fails (%s)', async (error, message) => {
+    jest.mocked(deleteAccount).mockRejectedValue(error);
+    const { getByRole, getByLabelText, findByText } = await openDelete();
+    await fireEvent.changeText(getByLabelText('Current password'), 'wrong-password');
+    await fireEvent(getByLabelText(CONFIRMATION), 'valueChange', true);
+    await fireEvent.press(getByRole('button', { name: 'Permanently delete account' }));
+
+    expect(await findByText(message)).toBeTruthy();
+    expect(mockLogout).not.toHaveBeenCalled();
+    expect(mockClear).not.toHaveBeenCalled();
+  });
+
+  it('points to support when deletion fails unexpectedly', async () => {
+    jest.mocked(deleteAccount).mockRejectedValue(new ConnectError('cancel subscription', Code.Unavailable));
+    const { getByRole, getByLabelText, findByText } = await openDelete();
+    await fireEvent.changeText(getByLabelText('Current password'), 'hunter22');
+    await fireEvent(getByLabelText(CONFIRMATION), 'valueChange', true);
+    await fireEvent.press(getByRole('button', { name: 'Permanently delete account' }));
+
+    expect(await findByText(/contact nat@natwelch.com/)).toBeTruthy();
+    expect(mockLogout).not.toHaveBeenCalled();
+  });
+});
+
+describe('SettingsScreen export data', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockedUseQuery.mockReturnValue({ data: undefined, isLoading: false, error: null });
+  });
+
+  it('streams the export to a file and offers to save it', async () => {
+    jest.mocked(exportDataToFile).mockResolvedValue({ path: '/cache/etu-export-2026-10-17.json', progress: { items: 4, notes: 2 } });
+    const { getByRole, findByText } = await render(<SettingsScreen />);
+    await fireEvent.press(getByRole('button', { name: 'Export data →' }));
+
+    expect(await findByText('Saved 2 notes to etu-export-2026-10-17.json')).toBeTruthy();
+    expect(exportDataToFile).toHaveBeenCalledWith('user-1', 'test-token', expect.any(Function), expect.any(AbortSignal));
+    expect(saveDocuments).toHaveBeenCalledWith({
+      sourceUris: ['file:///cache/etu-export-2026-10-17.json'],
+      mimeType: 'application/json',
+      fileName: 'etu-export-2026-10-17.json',
+      copy: true,
+    });
+    expect(RNFS.unlink).toHaveBeenCalledWith('/cache/etu-export-2026-10-17.json');
+  });
+
+  it('shows progress while exporting', async () => {
+    let report!: (progress: ExportProgress) => void;
+    jest.mocked(exportDataToFile).mockImplementation((_userId, _token, onProgress) => {
+      report = onProgress!;
+      return new Promise(() => {});
+    });
+    const { getByRole, findByText } = await render(<SettingsScreen />);
+    await fireEvent.press(getByRole('button', { name: 'Export data →' }));
+    expect(await findByText('Exporting... 0 notes')).toBeTruthy();
+    report({ items: 4, notes: 3 });
+    expect(await findByText('Exporting... 3 notes')).toBeTruthy();
+    expect(getByRole('button', { name: 'Export data →' })).toBeDisabled();
+  });
+
+  it('shows export errors', async () => {
+    jest.mocked(exportDataToFile).mockRejectedValue(new Error('stream broke'));
+    const { getByRole, findByText, getByText } = await render(<SettingsScreen />);
+    await fireEvent.press(getByRole('button', { name: 'Export data →' }));
+
+    expect(await findByText('Export failed')).toBeTruthy();
+    expect(getByText('stream broke')).toBeTruthy();
+    expect(saveDocuments).not.toHaveBeenCalled();
+  });
+
+  it('reports when the user dismisses the save dialog', async () => {
+    jest.mocked(exportDataToFile).mockResolvedValue({ path: '/cache/etu-export-2026-10-17.json', progress: { items: 1, notes: 0 } });
+    jest.mocked(saveDocuments).mockRejectedValueOnce({ code: 'OPERATION_CANCELED' });
+    jest.mocked(isErrorWithCode).mockReturnValueOnce(true);
+    const { getByRole, findByText } = await render(<SettingsScreen />);
+    await fireEvent.press(getByRole('button', { name: 'Export data →' }));
+
+    expect(await findByText('Export not saved')).toBeTruthy();
+    expect(RNFS.unlink).toHaveBeenCalledWith('/cache/etu-export-2026-10-17.json');
   });
 });

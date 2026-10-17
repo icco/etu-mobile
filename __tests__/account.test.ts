@@ -20,6 +20,7 @@ const items = [
 ];
 
 async function* stream(list: unknown[], error?: Error) {
+  await Promise.resolve();
   for (const item of list) yield item;
   if (error) throw error;
 }
@@ -52,11 +53,11 @@ describe('exportData', () => {
     jest.mocked(accountClient.client.exportData).mockReturnValue(stream(items) as never);
     const chunks: string[] = [];
     const onProgress = jest.fn();
-    const result = await exportData('user-1', 'etu_key', async (chunk) => { chunks.push(chunk); }, onProgress);
+    const result = await exportData('user-1', 'etu_key', (chunk) => { chunks.push(chunk); return Promise.resolve(); }, onProgress);
 
     expect(accountClient.client.exportData).toHaveBeenCalledWith(
       { userId: 'user-1' },
-      { headers: { Authorization: 'etu_key' }, signal: expect.any(AbortSignal) },
+      { headers: { Authorization: 'etu_key' }, signal: expect.any(AbortSignal) as AbortSignal },
     );
     const json = chunks.join('');
     expect(json.startsWith('[\n')).toBe(true);
@@ -76,7 +77,7 @@ describe('exportData', () => {
   it('writes an empty array when the stream has no items', async () => {
     jest.mocked(accountClient.client.exportData).mockReturnValue(stream([]) as never);
     const chunks: string[] = [];
-    await exportData('user-1', 'etu_key', async (chunk) => { chunks.push(chunk); });
+    await exportData('user-1', 'etu_key', (chunk) => { chunks.push(chunk); return Promise.resolve(); });
     expect(JSON.parse(chunks.join(''))).toEqual([]);
   });
 
@@ -84,7 +85,7 @@ describe('exportData', () => {
     const notes = Array.from({ length: 250 }, (_, i) =>
       create(ExportDataResponseSchema, { item: { case: 'note', value: { id: `n${i}` } } }));
     jest.mocked(accountClient.client.exportData).mockReturnValue(stream(notes) as never);
-    const write = jest.fn((_chunk: string) => Promise.resolve());
+    const write = jest.fn<Promise<void>, [string]>(() => Promise.resolve());
     const result = await exportData('user-1', 'etu_key', write);
     expect(write).toHaveBeenCalledTimes(3);
     expect(JSON.parse(write.mock.calls.map(([chunk]) => chunk).join(''))).toHaveLength(250);
@@ -96,6 +97,7 @@ describe('exportData', () => {
     let abortedDuringStream = false;
     jest.mocked(accountClient.client.exportData).mockImplementation(((_req: unknown, options?: { signal?: AbortSignal }) =>
       (async function* () {
+        await Promise.resolve();
         caller.abort();
         abortedDuringStream = options?.signal?.aborted ?? false;
         yield* [];

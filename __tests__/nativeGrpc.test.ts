@@ -90,7 +90,7 @@ describe('server streaming', () => {
     bridge.serverStream.mockResolvedValue();
     bridge.next.mockResolvedValueOnce(encodeNote('n1')).mockRejectedValueOnce({ code: '7', message: 'permission denied' });
     const iterate = async () => {
-      for await (const _ of client().exportData({ userId: 'user-1' })) { /* drain */ }
+      for await (const item of client().exportData({ userId: 'user-1' })) { void item; }
     };
     await expect(iterate()).rejects.toMatchObject({ code: Code.PermissionDenied });
     expect(bridge.cancel).not.toHaveBeenCalled();
@@ -99,7 +99,7 @@ describe('server streaming', () => {
   it('maps failures to start the stream', async () => {
     bridge.serverStream.mockRejectedValue({ code: '14', message: 'unavailable' });
     const iterate = async () => {
-      for await (const _ of client().exportData({ userId: 'user-1' })) { /* drain */ }
+      for await (const item of client().exportData({ userId: 'user-1' })) { void item; }
     };
     await expect(iterate()).rejects.toMatchObject({ code: Code.Unavailable });
     expect(bridge.next).not.toHaveBeenCalled();
@@ -109,9 +109,9 @@ describe('server streaming', () => {
     bridge.serverStream.mockResolvedValue();
     bridge.next.mockResolvedValue(encodeNote('n1'));
     const response = await createNativeGrpcTransport('https://grpc.example.com', bridge).stream(
-      AccountService.method.exportData, undefined, undefined, {}, (async function* () { yield { userId: 'user-1' }; })(),
+      AccountService.method.exportData, undefined, undefined, {}, (async function* () { await Promise.resolve(); yield { userId: 'user-1' }; })(),
     );
-    for await (const _ of response.message) break;
+    for await (const item of response.message) { void item; break; }
     expect(bridge.cancel).toHaveBeenCalledWith(bridge.serverStream.mock.calls[0][0]);
   });
 
@@ -121,10 +121,10 @@ describe('server streaming', () => {
     bridge.next.mockImplementation(() => new Promise((_resolve, reject) => { rejectNext = reject; }));
     const controller = new AbortController();
     const iterate = (async () => {
-      for await (const _ of client().exportData({ userId: 'user-1' }, { signal: controller.signal })) { /* drain */ }
+      for await (const item of client().exportData({ userId: 'user-1' }, { signal: controller.signal })) { void item; }
     })();
-    await new Promise(process.nextTick);
-    await new Promise(process.nextTick);
+    await new Promise(resolve => process.nextTick(resolve));
+    await new Promise(resolve => process.nextTick(resolve));
     controller.abort();
     expect(bridge.cancel).toHaveBeenCalledWith(bridge.serverStream.mock.calls[0][0]);
     rejectNext({ code: '1', message: 'Cancelled' });
@@ -134,14 +134,14 @@ describe('server streaming', () => {
   it('reports a missing native streaming implementation', async () => {
     const legacy = { unary: bridge.unary, cancel: bridge.cancel };
     await expect(createNativeGrpcTransport('https://grpc.example.com', legacy).stream(
-      AccountService.method.exportData, undefined, undefined, {}, (async function* () { yield {}; })(),
+      AccountService.method.exportData, undefined, undefined, {}, (async function* () { await Promise.resolve(); yield {}; })(),
     )).rejects.toMatchObject({ code: Code.Unavailable });
   });
 
   it('rejects client and bidi streaming methods', async () => {
     const method = { ...NotesService.method.listNotes, methodKind: 'bidi_streaming' } as unknown as typeof AccountService.method.exportData;
     await expect(createNativeGrpcTransport('https://grpc.example.com', bridge).stream(
-      method, undefined, undefined, {}, (async function* () { yield {}; })(),
+      method, undefined, undefined, {}, (async function* () { await Promise.resolve(); yield {}; })(),
     )).rejects.toMatchObject({ code: Code.Unimplemented });
   });
 });
