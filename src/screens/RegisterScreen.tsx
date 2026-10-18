@@ -11,6 +11,7 @@ import {
   ScrollView,
 } from 'react-native';
 import { useAuth } from '../context/AuthContext';
+import { getErrorMessage } from '../utils/errors';
 import { useAppTheme, useThemedStyles, type Colors } from '../theme';
 
 export default function RegisterScreen() {
@@ -38,16 +39,8 @@ export default function RegisterScreen() {
     setLoading(true);
     try {
       await register(email, password);
-      Alert.alert(
-        'Account created',
-        'Create an API key in Etu web Settings and sign in with it here, or use Email sign-in if your backend supports it.',
-      );
     } catch (e) {
-      Alert.alert(
-        'Register',
-        e instanceof Error ? e.message : 'Registration failed',
-      );
-    } finally {
+      Alert.alert('Register', getErrorMessage(e));
       setLoading(false);
     }
   };

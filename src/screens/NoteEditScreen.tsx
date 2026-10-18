@@ -14,7 +14,9 @@ import {
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '../context/AuthContext';
-import { getNote, createNote, updateNote, listTags } from '../api/notes';
+import { getNote, updateNote, listTags } from '../api/notes';
+import { createNoteOrQueue } from '../api/offlineQueue';
+import { getErrorMessage } from '../utils/errors';
 import TagInput from '../components/TagInput';
 import ImagePicker, { SelectedImage } from '../components/ImagePicker';
 import AudioPicker, { SelectedAudio } from '../components/AudioPicker';
@@ -117,7 +119,7 @@ export default function NoteEditScreen() {
         );
         void queryClient.invalidateQueries({ queryKey: ['note', noteId] });
       } else {
-        await createNote(
+        const result = await createNoteOrQueue(
           user.id,
           token,
           content.trim(),
@@ -125,11 +127,17 @@ export default function NoteEditScreen() {
           imageUploads.length > 0 ? imageUploads : undefined,
           audioUploads.length > 0 ? audioUploads : undefined,
         );
+        if (result.status === 'queued') {
+          Alert.alert(
+            'Saved offline',
+            'Your note is saved on this device and will sync when you are back online.',
+          );
+        }
       }
       void queryClient.invalidateQueries({ queryKey: ['notes', user.id] });
       navigation.goBack();
     } catch (e) {
-      Alert.alert('Error', e instanceof Error ? e.message : 'Failed to save');
+      Alert.alert('Error', getErrorMessage(e));
     } finally {
       setSaving(false);
     }

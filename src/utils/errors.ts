@@ -23,6 +23,18 @@ export function isAuthError(error: unknown): boolean {
   return false;
 }
 
+export function isSubscriptionRequiredError(error: unknown): boolean {
+  return (
+    error instanceof ConnectError &&
+    error.code === Code.PermissionDenied &&
+    error.rawMessage.toLowerCase().includes('subscription required')
+  );
+}
+
+export function requiresSignOut(error: unknown): boolean {
+  return isAuthError(error) && !isSubscriptionRequiredError(error);
+}
+
 /**
  * Checks if an error is a network connectivity error.
  */
@@ -47,6 +59,9 @@ export function isNetworkError(error: unknown): boolean {
  * Extracts a user-friendly error message from an error object.
  */
 export function getErrorMessage(error: unknown): string {
+  if (isSubscriptionRequiredError(error)) {
+    return 'Subscription required. An active Etu subscription is needed for this.';
+  }
   if (error instanceof ConnectError) {
     return error.message || 'An unexpected error occurred';
   }

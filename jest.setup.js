@@ -40,14 +40,7 @@ jest.mock('react-native-config', () => ({
   __esModule: true,
   default: {
     GRPC_BACKEND_URL: 'http://localhost:50051',
-    SENTRY_DSN: '',
   },
-}));
-
-jest.mock('@sentry/react-native', () => ({
-  init: jest.fn(),
-  captureException: jest.fn(),
-  captureMessage: jest.fn(),
 }));
 
 jest.mock('react-native-keychain', () => ({
@@ -98,4 +91,30 @@ jest.mock('@tanstack/react-query', () => ({
     resetQueries: jest.fn(() => Promise.resolve()),
   })),
   QueryClientProvider: ({ children }: { children: React.ReactNode }) => children,
+}));
+
+jest.mock('@react-native-async-storage/async-storage', () => {
+  const store = new Map();
+  return {
+    __esModule: true,
+    default: {
+      getItem: jest.fn(key => Promise.resolve(store.has(key) ? store.get(key) : null)),
+      setItem: jest.fn((key, value) => {
+        store.set(key, value);
+        return Promise.resolve();
+      }),
+      removeItem: jest.fn(key => {
+        store.delete(key);
+        return Promise.resolve();
+      }),
+      clear: jest.fn(() => {
+        store.clear();
+        return Promise.resolve();
+      }),
+    },
+  };
+});
+
+jest.mock('@tanstack/react-query-persist-client', () => ({
+  PersistQueryClientProvider: ({ children }: { children: React.ReactNode }) => children,
 }));
