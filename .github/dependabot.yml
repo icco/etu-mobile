@@ -18,6 +18,12 @@ updates:
         update-types:
           - version-update:semver-major
       - dependency-name: react
+      - dependency-name: '@babel/core'
+        update-types:
+          - version-update:semver-major
+      - dependency-name: '@babel/preset-env'
+        update-types:
+          - version-update:semver-major
   - package-ecosystem: github-actions
     directory: /
     schedule:
