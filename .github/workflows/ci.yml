@@ -111,15 +111,3 @@ jobs:
           name: app-release-aab
           path: android/app/build/outputs/bundle/release/app-release.aab
           retention-days: 21
-      - name: Build release bundle (CI smoke, debug signing fallback)
-        if: steps.check_android_secrets.outputs.has_keystore != 'true'
-        run: |
-          cd android
-          ./gradlew bundleRelease --no-daemon
-      - name: Upload release AAB (CI smoke)
-        if: steps.check_android_secrets.outputs.has_keystore != 'true'
-        uses: actions/upload-artifact@v7
-        with:
-          name: app-release-bundle-ci
-          path: android/app/build/outputs/bundle/release/app-release.aab
-          retention-days: 14
