@@ -6,7 +6,8 @@
  */
 
 import React from 'react';
-import { render } from '@testing-library/react-native';
+import { fireEvent, render } from '@testing-library/react-native';
+import { Linking } from 'react-native';
 import MarkdownView from '../src/components/MarkdownView';
 
 describe('MarkdownView', () => {
@@ -35,6 +36,18 @@ describe('MarkdownView', () => {
     expect(getByText('second item')).toBeTruthy();
     expect(getByText('a quote')).toBeTruthy();
     expect(getByText('a link')).toBeTruthy();
+  });
+
+  it('autolinks bare URLs', async () => {
+    const { getByText } = await render(
+      <MarkdownView content="see https://example.com/page for details" />,
+    );
+    const openURL = jest
+      .spyOn(Linking, 'openURL')
+      .mockResolvedValue(undefined);
+    await fireEvent.press(getByText('https://example.com/page'));
+    expect(openURL).toHaveBeenCalledWith('https://example.com/page');
+    openURL.mockRestore();
   });
 
   it('renders a placeholder for empty content', async () => {
