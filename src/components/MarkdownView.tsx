@@ -1,7 +1,9 @@
 import React from 'react';
-import Markdown from 'react-native-markdown-display';
+import Markdown, { MarkdownIt } from 'react-native-markdown-display';
 import { StyleSheet } from 'react-native';
 import { useThemedStyles, type Colors } from '../theme';
+
+const markdownit = MarkdownIt({ linkify: true, typographer: true });
 
 const createStyles = (colors: Colors) =>
   StyleSheet.create({
@@ -68,5 +70,9 @@ const createStyles = (colors: Colors) =>
 
 export default function MarkdownView({ content }: { content: string }) {
   const styles = useThemedStyles(createStyles);
-  return <Markdown style={styles}>{content || '_No content_'}</Markdown>;
+  return (
+    <Markdown style={styles} markdownit={markdownit}>
+      {content || '_No content_'}
+    </Markdown>
+  );
 }
