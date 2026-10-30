@@ -30,5 +30,4 @@ Etu mobile — React Native journaling app talking Connect RPC to etu-backend vi
 - Android release builds: see README "Android Release Signing". `android/app/build.gradle`
   reads `ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEY_ALIAS`, `ANDROID_KEY_PASSWORD` from the env.
   Never touch `android/app/release.keystore` or `keystore.credentials.txt` (gitignored secrets).
-- Releases: bump `versionName` in `android/app/build.gradle` (CI sets `versionCode` from `VERSION_CODE`), `package.json`
-  version, and cut a CHANGELOG.md section.
+- Releases: `.github/workflows/release.yml` runs semantic-release daily, which sets versions, updates CHANGELOG.md and publishes a signed APK.
