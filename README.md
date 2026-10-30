@@ -215,6 +215,10 @@ base64 -i release.keystore | pbcopy  # macOS
 base64 -w 0 release.keystore          # Linux
 ```
 
+### Release
+
+The **Release** workflow (`.github/workflows/release.yml`) runs daily and on demand. It uses semantic-release to publish a GitHub release with a signed APK whenever `main` has new commits.
+
 ### Deploy (Optional)
 
 The **Deploy** workflow (`.github/workflows/deploy.yml`) runs on push to `main` when deploy secrets are present:
