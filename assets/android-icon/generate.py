@@ -14,12 +14,14 @@ RES = ROOT / 'android/app/src/main/res'
 EXPO = 'expo' in json.loads((ROOT / 'app.json').read_text())
 NS = '{http://www.w3.org/2000/svg}'
 ANDROID = 'http://schemas.android.com/apk/res/android'
+AAPT = 'http://schemas.android.com/aapt'
+ET.register_namespace('', NS[1:-1])
 FOREGROUND = ET.parse(HERE / 'foreground.svg').getroot()
 BACKGROUND = FOREGROUND.attrib['data-background']
 
 
 def paths(root):
-    return '\n'.join(ET.tostring(p, encoding='unicode').strip() for p in root if p.tag == NS + 'path')
+    return '\n'.join(ET.tostring(p, encoding='unicode').strip() for p in root if p.tag in (NS + 'path', NS + 'defs'))
 
 
 def svg(body, viewbox='0 0 108 108'):
@@ -38,19 +40,35 @@ def render(body, destination, size):
                         '-strip', f'PNG32:{destination}'], check=True)
 
 
+def gradient(linear):
+    node = ET.Element('gradient', {'android:type': 'linear', 'android:startX': linear.attrib['x1'],
+                                   'android:startY': linear.attrib['y1'], 'android:endX': linear.attrib['x2'],
+                                   'android:endY': linear.attrib['y2']})
+    for stop in linear.findall(NS + 'stop'):
+        alpha = round(float(stop.attrib.get('stop-opacity', 1)) * 255)
+        ET.SubElement(node, 'item', {'android:offset': stop.attrib['offset'],
+                                     'android:color': f"#{alpha:02X}{stop.attrib['stop-color'][1:]}"})
+    return node
+
+
 def vector(source, destination):
     root = ET.parse(source).getroot()
-    output = ET.Element('vector', {'xmlns:android': ANDROID, 'android:width': '108dp',
+    gradients = {g.attrib['id']: g for g in root.iter(NS + 'linearGradient')}
+    output = ET.Element('vector', {'xmlns:android': ANDROID, 'xmlns:aapt': AAPT, 'android:width': '108dp',
                                   'android:height': '108dp', 'android:viewportWidth': '108',
                                   'android:viewportHeight': '108'})
     names = {'d': 'pathData', 'fill': 'fillColor', 'fill-rule': 'fillType',
-             'stroke': 'strokeColor', 'stroke-width': 'strokeWidth', 'stroke-linecap': 'strokeLineCap'}
+             'stroke': 'strokeColor', 'stroke-width': 'strokeWidth', 'stroke-linecap': 'strokeLineCap',
+             'stroke-linejoin': 'strokeLineJoin'}
     for path in root.findall(NS + 'path'):
-        attrs = {}
+        element = ET.SubElement(output, 'path')
         for key, value in path.attrib.items():
+            if value.startswith('url(#'):
+                attr = ET.SubElement(element, 'aapt:attr', {'name': 'android:' + names[key]})
+                attr.append(gradient(gradients[value[5:-1]]))
+                continue
             value = {'none': '#00000000', 'evenodd': 'evenOdd'}.get(value, value)
-            attrs['android:' + names[key]] = value
-        ET.SubElement(output, 'path', attrs)
+            element.set('android:' + names[key], value)
     ET.indent(output)
     destination.parent.mkdir(parents=True, exist_ok=True)
     destination.write_text(ET.tostring(output, encoding='unicode') + '\n')
@@ -63,7 +81,11 @@ def main():
     # Android displays the central 72dp of a 108dp adaptive layer.
     full = svg(background + mark, '18 18 72 72')
     (HERE / 'icon.svg').write_text(full + '\n')
+    (HERE / 'logo.svg').write_text(svg(mark, '26 24 60.5 60.5') + '\n')
     render(full, HERE / 'play-store.png', 512)
+    # Play requires 1024x500 with no alpha, so paint the background before dropping the channel.
+    render(f'<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="500" viewBox="0 0 1024 500"><path fill="{BACKGROUND}" d="M0 0H1024V500H0Z"/><svg x="262" y="0" width="500" height="500" viewBox="9 9 90 90">{mark}</svg></svg>', HERE / 'feature-graphic.png', 1024)
+    subprocess.run(['magick', str(HERE / 'feature-graphic.png'), '-resize', '1024x500!', '-alpha', 'off', f"PNG24:{HERE / 'feature-graphic.png'}"], check=True)
     render(svg(mark), HERE / 'foreground.png', 1024)
     render(svg(mono), HERE / 'monochrome.png', 1024)
 
@@ -98,8 +120,8 @@ def main():
                                       '<rect x="18" y="18" width="72" height="72" rx="18"/>',
                                       '<rect x="18" y="18" width="72" height="72" rx="4"/>']):
             index = row * 3 + column
-            fill = BACKGROUND if row == 0 else '#D3E7EF'
-            art = mark if row == 0 else mono.replace('#FFFFFF', '#243F50')
+            fill = BACKGROUND if row == 0 else '#E8DEF8'
+            art = mark if row == 0 else mono.replace('#FFFFFF', '#4F378B')
             tiles.append(f'<svg x="{column * 120}" y="{row * 120}" width="120" height="120" viewBox="0 0 108 108">'
                          f'<defs><clipPath id="m{index}">{mask}</clipPath></defs>'
                          f'<g clip-path="url(#m{index})"><path fill="{fill}" d="M0 0H108V108H0Z"/>{art}</g></svg>')
