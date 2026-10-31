@@ -1,3 +1,10 @@
+# [1.1.0](https://github.com/icco/etu-mobile/compare/v1.0.0...v1.1.0) (2026-10-31)
+
+
+### Features
+
+* new app icon ([#260](https://github.com/icco/etu-mobile/issues/260)) ([8949f10](https://github.com/icco/etu-mobile/commit/8949f10b4d1621fec0a3079c5e64ca5fb4935159))
+
 # 1.0.0 (2026-10-31)
 
 
