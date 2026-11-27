@@ -89,3 +89,8 @@ ios/ExportOptions.plist
 
 # React Native / Metro
 .bundle/
+
+# Expo
+.expo
+dist/
+web-build/

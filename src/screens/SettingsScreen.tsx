@@ -10,6 +10,7 @@ import {
   ActivityIndicator,
   Linking,
   BackHandler,
+  Platform,
 } from 'react-native';
 import { useAuth } from '../context/AuthContext';
 import { getUserSettings, updateUserSettings } from '../api/settings';
@@ -18,6 +19,7 @@ import type { Stats } from '../api/stats';
 import { getErrorMessage } from '../utils/errors';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import ApiKeysScreen from './ApiKeysScreen';
+import Reminders from '../components/Reminders';
 import { useFocusEffect } from '@react-navigation/native';
 import { useAppTheme, useThemedStyles, type Colors } from '../theme';
 
@@ -257,6 +259,19 @@ export default function SettingsScreen() {
         <Text style={styles.value}>Follow device</Text>
         <Text style={styles.hint}>{dark ? 'Dark' : 'Light'} theme</Text>
       </View>
+
+      {Platform.OS === 'android' ? (
+        <>
+          <Text style={[styles.sectionTitle, styles.sectionTitleSpaced]}>
+            Reminders
+          </Text>
+          <Text style={styles.hint}>
+            Get a notification at the same time every day, such as a nudge to
+            write.
+          </Text>
+          <Reminders />
+        </>
+      ) : null}
 
       <Text style={[styles.sectionTitle, styles.sectionTitleSpaced]}>
         Statistics
