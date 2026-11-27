@@ -14,14 +14,14 @@ const { getStateFromPath } = jest.requireActual<typeof Navigation>(
   '@react-navigation/native',
 );
 
-it('opens Capture from the New note action', async () => {
+it('opens the composer from the New note action', async () => {
   const { getByRole } = await render(<NewNoteButton />);
   await fireEvent.press(getByRole('button', { name: 'New note' }));
-  expect(mockNavigate).toHaveBeenCalledWith('Capture');
+  expect(mockNavigate).toHaveBeenCalledWith('NoteEdit', {});
 });
 
 it.each([
-  ['capture', 'Capture'],
+  ['capture', 'NoteEdit'],
   ['edit', 'NoteEdit'],
   ['note/note-123', 'NoteDetail'],
   ['login', 'Login'],
@@ -29,6 +29,7 @@ it.each([
 ])('preserves the %s stack deep link', (path, screen) => {
   const state = getStateFromPath(path, linking.config);
   expect(state?.routes.at(-1)?.name).toBe(screen);
+  if (screen === 'NoteEdit') expect(state?.routes[0].name).toBe('MainTabs');
   if (screen === 'NoteDetail')
     expect(state?.routes.at(-1)?.params).toEqual({ noteId: 'note-123' });
 });

@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import {
   View,
   TextInput,
@@ -14,6 +14,7 @@ import { useAppTheme, useThemedStyles, type Colors } from '../theme';
 interface TagInputProps {
   selectedTags: string[];
   onTagsChange: (tags: string[]) => void;
+  onPendingChange?: (text: string) => void;
   suggestions: Tag[];
   placeholder?: string;
 }
@@ -21,6 +22,7 @@ interface TagInputProps {
 export default function TagInput({
   selectedTags,
   onTagsChange,
+  onPendingChange,
   suggestions,
   placeholder = 'Add tags…',
 }: TagInputProps) {
@@ -28,6 +30,10 @@ export default function TagInput({
   const styles = useThemedStyles(createStyles);
   const [input, setInput] = useState('');
   const [showSuggestions, setShowSuggestions] = useState(false);
+
+  useEffect(() => {
+    onPendingChange?.(input);
+  }, [input, onPendingChange]);
 
   const filtered = useMemo(() => {
     if (!input.trim()) return suggestions.slice(0, 15);
