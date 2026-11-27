@@ -50,6 +50,7 @@ export default function NoteEditScreen() {
 
   const [content, setContent] = useState(initialContent ?? '');
   const [tags, setTags] = useState<string[]>([]);
+  const [pendingTag, setPendingTag] = useState('');
   const [images, setImages] = useState<SelectedImage[]>([]);
   const [audios, setAudios] = useState<SelectedAudio[]>([]);
   const [panel, setPanel] = useState<Panel | null>(null);
@@ -94,7 +95,9 @@ export default function NoteEditScreen() {
     content.trim() !== (sourceNote?.content ?? initialContent ?? '').trim() ||
     tags.join('\n') !== baseTags.join('\n') ||
     images.length > 0 ||
-    audios.length > 0;
+    audios.length > 0 ||
+    recording ||
+    !!pendingTag.trim();
   const canSave = !saving && !recording && !!content.trim();
 
   usePreventRemove(saving || (dirty && !saved), ({ data }) => {
@@ -116,6 +119,9 @@ export default function NoteEditScreen() {
   const handleSave = async () => {
     if (!user || !token || !content.trim()) return;
     setSaving(true);
+    const pending = pendingTag.trim().toLowerCase();
+    const saveTags =
+      pending && !tags.includes(pending) ? [...tags, pending] : tags;
     try {
       const imageUploads = images.map(img => ({
         data: img.data,
@@ -132,7 +138,7 @@ export default function NoteEditScreen() {
           token,
           noteId,
           content.trim(),
-          tags,
+          saveTags,
           true,
           imageUploads.length > 0 ? imageUploads : undefined,
           audioUploads.length > 0 ? audioUploads : undefined,
@@ -143,7 +149,7 @@ export default function NoteEditScreen() {
           user.id,
           token,
           content.trim(),
-          tags,
+          saveTags,
           imageUploads.length > 0 ? imageUploads : undefined,
           audioUploads.length > 0 ? audioUploads : undefined,
         );
@@ -240,11 +246,15 @@ export default function NoteEditScreen() {
           textAlignVertical="top"
         />
         <View
-          style={[styles.section, !show('tags', tags.length) && styles.hidden]}
+          style={[
+            styles.section,
+            !pendingTag.trim() && !show('tags', tags.length) && styles.hidden,
+          ]}
         >
           <TagInput
             selectedTags={tags}
             onTagsChange={setTags}
+            onPendingChange={setPendingTag}
             suggestions={tagList}
           />
         </View>

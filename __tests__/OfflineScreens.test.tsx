@@ -99,6 +99,27 @@ describe('NoteEditScreen', () => {
     expect(header.getByRole('button', { name: 'Save note' })).toBeDisabled();
   });
 
+  it('saves tag text that was typed but not submitted', async () => {
+    mockedCreateNote.mockResolvedValue({ id: 'n1' } as never);
+    const screen = await render(<NoteEditScreen />);
+    await fireEvent.changeText(screen.getByLabelText('Note content'), 'hello');
+    await fireEvent.press(screen.getByRole('button', { name: 'Tags' }));
+    await fireEvent.changeText(screen.getByLabelText('Add tags'), 'Work ');
+    const { headerRight } = mockSetOptions.mock.lastCall![0];
+    const header = await render(headerRight());
+    await fireEvent.press(header.getByRole('button', { name: 'Save note' }));
+    await waitFor(() =>
+      expect(mockedCreateNote).toHaveBeenCalledWith(
+        'alice',
+        'token',
+        'hello',
+        ['work'],
+        undefined,
+        undefined,
+      ),
+    );
+  });
+
   it('tells the user when a note was saved offline', async () => {
     const alert = jest.spyOn(Alert, 'alert').mockImplementation(() => {});
     mockedCreateNote.mockRejectedValue(new ConnectError('down', Code.Unavailable));
