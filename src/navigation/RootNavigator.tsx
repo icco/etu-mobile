@@ -1,5 +1,8 @@
 import React from 'react';
-import { NavigationContainer } from '@react-navigation/native';
+import {
+  NavigationContainer,
+  type LinkingOptions,
+} from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { useAuth } from '../context/AuthContext';
@@ -18,9 +21,10 @@ import Icon, { type IconName } from '../components/Icon';
 import type { MainTabParamList, RootStackParamList } from './types';
 
 /** Single root stack so deep links resolve whether user is on a tab or a pushed screen. */
-export const linking = {
+export const linking: LinkingOptions<RootStackParamList> = {
   prefixes: ['etu://open'],
   config: {
+    initialRouteName: 'MainTabs',
     screens: {
       Login: 'login',
       Register: 'register',

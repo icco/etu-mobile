@@ -96,7 +96,8 @@ export default function NoteEditScreen() {
     audios.length > 0;
   const canSave = !saving && !!content.trim();
 
-  usePreventRemove(dirty && !saved, ({ data }) => {
+  usePreventRemove(saving || (dirty && !saved), ({ data }) => {
+    if (saving) return;
     Alert.alert('Discard note?', 'Your changes will be lost.', [
       { text: 'Keep editing', style: 'cancel' },
       {
@@ -237,21 +238,21 @@ export default function NoteEditScreen() {
           scrollEnabled={false}
           textAlignVertical="top"
         />
-        {show('tags', tags.length) ? (
-          <View style={styles.section}>
-            <TagInput
-              selectedTags={tags}
-              onTagsChange={setTags}
-              suggestions={tagList}
-            />
-          </View>
-        ) : null}
-        {show('images', images.length) ? (
+        <View
+          style={[styles.section, !show('tags', tags.length) && styles.hidden]}
+        >
+          <TagInput
+            selectedTags={tags}
+            onTagsChange={setTags}
+            suggestions={tagList}
+          />
+        </View>
+        <View style={!show('images', images.length) && styles.hidden}>
           <ImagePicker images={images} onImagesChange={setImages} />
-        ) : null}
-        {show('audio', audios.length) ? (
+        </View>
+        <View style={!show('audio', audios.length) && styles.hidden}>
           <AudioPicker audios={audios} onAudiosChange={setAudios} />
-        ) : null}
+        </View>
       </ScrollView>
       <View
         style={[styles.toolbar, { paddingBottom: insets.bottom + 8 }]}
@@ -271,7 +272,9 @@ export default function NoteEditScreen() {
             >
               <Icon
                 name={tool.icon}
-                color={active ? colors.onPrimaryContainer : colors.textSecondary}
+                color={
+                  active ? colors.onPrimaryContainer : colors.textSecondary
+                }
               />
               {tool.count > 0 ? (
                 <Text style={styles.toolCount}>{tool.count}</Text>
@@ -305,6 +308,7 @@ const createStyles = (colors: Colors) =>
       marginBottom: 16,
     },
     section: { marginBottom: 16 },
+    hidden: { display: 'none' },
     headerIcon: {
       width: 40,
       height: 40,

@@ -29,6 +29,7 @@ it.each([
 ])('preserves the %s stack deep link', (path, screen) => {
   const state = getStateFromPath(path, linking.config);
   expect(state?.routes.at(-1)?.name).toBe(screen);
+  if (screen === 'NoteEdit') expect(state?.routes[0].name).toBe('MainTabs');
   if (screen === 'NoteDetail')
     expect(state?.routes.at(-1)?.params).toEqual({ noteId: 'note-123' });
 });
