@@ -11,7 +11,11 @@ import {
 import { DateTimePickerAndroid } from '@react-native-community/datetimepicker';
 import { byTime, formatTime, timeOfDay } from '../reminders/model';
 import type { Reminder } from '../reminders/model';
-import { ensurePermission, syncReminders } from '../reminders/notify';
+import {
+  ensurePermission,
+  hasPermission,
+  syncReminders,
+} from '../reminders/notify';
 import { loadReminders, saveReminders } from '../reminders/store';
 import { getErrorMessage } from '../utils/errors';
 import { useAppTheme, useThemedStyles, type Colors } from '../theme';
@@ -43,7 +47,12 @@ export default function Reminders() {
 
   useEffect(() => {
     loadReminders()
-      .then(setReminders)
+      .then(async loaded => {
+        setReminders(loaded);
+        if (loaded.some(r => r.enabled)) {
+          setBlocked(!(await hasPermission()));
+        }
+      })
       .catch((e: unknown) => setError(getErrorMessage(e)));
   }, []);
 

@@ -10,6 +10,7 @@ import {
   ActivityIndicator,
   Linking,
   BackHandler,
+  Platform,
 } from 'react-native';
 import { useAuth } from '../context/AuthContext';
 import { getUserSettings, updateUserSettings } from '../api/settings';
@@ -259,13 +260,18 @@ export default function SettingsScreen() {
         <Text style={styles.hint}>{dark ? 'Dark' : 'Light'} theme</Text>
       </View>
 
-      <Text style={[styles.sectionTitle, styles.sectionTitleSpaced]}>
-        Reminders
-      </Text>
-      <Text style={styles.hint}>
-        Get a notification at the same time every day, such as a nudge to write.
-      </Text>
-      <Reminders />
+      {Platform.OS === 'android' ? (
+        <>
+          <Text style={[styles.sectionTitle, styles.sectionTitleSpaced]}>
+            Reminders
+          </Text>
+          <Text style={styles.hint}>
+            Get a notification at the same time every day, such as a nudge to
+            write.
+          </Text>
+          <Reminders />
+        </>
+      ) : null}
 
       <Text style={[styles.sectionTitle, styles.sectionTitleSpaced]}>
         Statistics

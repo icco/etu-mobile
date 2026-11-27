@@ -87,3 +87,13 @@ it('points to system settings when notifications are denied', async () => {
   await fireEvent.press(getByText('Add reminder'));
   expect(await findByText(/Notifications are off for Etu/)).toBeTruthy();
 });
+
+it('shows the warning again when reopened with notifications denied', async () => {
+  await saveReminders([write]);
+  n.getPermissionsAsync.mockResolvedValueOnce({
+    granted: false,
+    canAskAgain: false,
+  } as Notifications.NotificationPermissionsStatus);
+  const { findByText } = await render(<Reminders />);
+  expect(await findByText(/Notifications are off for Etu/)).toBeTruthy();
+});

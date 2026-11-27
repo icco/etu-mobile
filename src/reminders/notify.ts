@@ -27,6 +27,10 @@ async function ensureChannel(): Promise<void> {
   });
 }
 
+export async function hasPermission(): Promise<boolean> {
+  return (await Notifications.getPermissionsAsync()).granted;
+}
+
 export async function ensurePermission(): Promise<boolean> {
   await ensureChannel();
   const current = await Notifications.getPermissionsAsync();

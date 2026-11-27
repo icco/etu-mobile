@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import {
   NavigationContainer,
+  StackActions,
   createNavigationContainerRef,
 } from '@react-navigation/native';
 import * as Notifications from 'expo-notifications';
@@ -137,7 +138,7 @@ export default function RootNavigator() {
       return;
     }
     Notifications.clearLastNotificationResponse();
-    navigationRef.navigate('NoteEdit', {});
+    navigationRef.dispatch(StackActions.push('NoteEdit', {}));
   }, [ready, isAuthenticated, tapped]);
 
   if (isLoading) {

@@ -51,7 +51,8 @@ jest.mock('react-native-keychain', () => ({
 
 jest.mock('@react-navigation/native', () => ({
   NavigationContainer: ({ children }: { children: React.ReactNode }) => children,
-  createNavigationContainerRef: () => ({ navigate: jest.fn(), isReady: () => true }),
+  createNavigationContainerRef: () => ({ dispatch: jest.fn(), isReady: () => true }),
+  StackActions: { push: (name, params) => ({ type: 'PUSH', payload: { name, params } }) },
   useNavigation: () => ({
     navigate: jest.fn(),
     goBack: jest.fn(),
