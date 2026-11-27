@@ -164,7 +164,6 @@ settings:
 
 overrides:
   jest-environment-node: ^30.4.1
-  jest-mock: ^30.4.1
   markdown-it: ^15.0.0
   minimatch@>=7.0.0 <11.0.1: ^11.0.1
 
