@@ -14,9 +14,11 @@ Notes support **markdown content, tags, image uploads, and audio uploads**. Imag
 - 🎲 **Random Resurface**: Rediscover random notes from your past
 - 🔐 **Secure Authentication**: Token-based auth with API key support
 - 🔄 **Real-time Sync**: Synced with etu-backend via gRPC
-- 🌙 **Dark Mode**: Beautiful dark theme optimized for mobile
+- 🌙 **Light and Dark Themes**: Follows the system color scheme
 - ⏰ **Daily Reminders**: Set your own reminders in Settings, such as 9:00 "Write a post", and get a notification at that time every day (Android)
 - 🔗 **Deep Linking**: Support for `etu://` URL scheme
+- ⏰ **Reminders**: Local daily reminder notifications
+- 📴 **Offline Capture**: Notes created offline are queued and synced when the connection returns
 
 ## Security
 
@@ -72,7 +74,7 @@ cp .env.example .env
 |----------|----------|-------------|---------|
 | `GRPC_BACKEND_URL` | No | Native gRPC endpoint; defaults to production | `https://grpc.etu.timeclimbers.com` |
 
-**Important**: Networking uses native gRPC over HTTP/2 (grpc-java/OkHttp on Android and gRPC ObjC on iOS), while TypeScript retains typed Connect clients and protobuf serialization. Rebuild the native app after updating, and run `pod install` for iOS. Email/password login requires the backend `AuthService.Login` RPC from etu-backend PR #147. It issues a revocable user API key; no web gateway or server secret in the app is needed.
+**Important**: Networking uses native gRPC over HTTP/2 (grpc-java/OkHttp on Android and gRPC ObjC on iOS), while TypeScript retains typed Connect clients and protobuf serialization. Rebuild the native app after updating, and run `pod install` for iOS. Email/password login uses the backend `AuthService.Login` RPC, which issues a revocable user API key; no web gateway or server secret in the app is needed.
 
 ## Running the App
 
@@ -149,9 +151,10 @@ pnpm test:watch           # Watch mode for development
 If you cannot run Android Studio, Xcode, or emulators locally, use **GitHub Actions on your PR**:
 
 1. Open the PR → **Checks** tab → wait for **CI** to finish.
-2. **Lint** job: ESLint, `tsc`, and **Jest** (`pnpm test`). Run **`pnpm test:coverage`** locally when you want the coverage table; the 50% thresholds in `jest.config.js` apply to that command and are not enforced on every PR until the suite grows.
-3. **Android** job: downloads **`app-debug`** (installable debug APK). If repo signing secrets are absent, **`app-release-bundle-ci`** is a release-mode AAB built with the Gradle debug-signing fallback (validates Hermes, native modules, and release Gradle — not for Play upload). With `ANDROID_KEYSTORE_*` secrets, **`app-release-aab`** is the signed bundle.
-4. **iOS** job: compiles the Debug simulator build (catches Pod/native breakages).
+2. **Lint** job: ESLint, `tsc`, and **Jest** (`pnpm test`). Run **`pnpm test:coverage`** locally when you want the coverage table; the 50% thresholds in `jest.config.js` apply to that command, not to CI.
+3. **Android** job: downloads **`app-debug`** (installable debug APK). With `ANDROID_KEYSTORE_*` secrets, **`app-release-aab`** is the signed bundle.
+
+CI has no iOS job.
 
 You can also run CI manually: **Actions** → **CI** → **Run workflow**. Concurrency cancels older runs on the same PR when you push new commits.
 
@@ -160,8 +163,7 @@ You can also run CI manually: **Actions** → **CI** → **Run workflow**. Concu
 Workflows run on **pushes** to `main`, `implement`, or `develop`, on **all pull requests**, and on **workflow_dispatch** (manual):
 
 - **Lint**: ESLint, TypeScript, Jest (`pnpm test`).
-- **Android**: `assembleDebug` + artifact `app-debug`; signed `app-release-aab` when keystore secrets exist; otherwise `bundleRelease` smoke + artifact **`app-release-bundle-ci`**.
-- **iOS**: `pod install` + simulator `xcodebuild` (no `.app` artifact uploaded today).
+- **Android**: `assembleDebug` + artifact `app-debug`; signed `app-release-aab` when keystore secrets exist.
 
 `pnpm install` uses `NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN || secrets.GITHUB_TOKEN }}` — same-repo workflows usually work with the default `GITHUB_TOKEN`; set **`NPM_TOKEN`** (PAT with `read:packages`) if installs fail (e.g. some fork PRs).
 
@@ -191,10 +193,7 @@ run from `android/`:
 The standalone APK is `android/app/build/outputs/apk/release/app-release.apk`.
 It includes the JavaScript bundle and does not require Metro.
 
-`pnpm install` applies a small Gradle plugin patch upgrading Foojay's resolver
-from 0.5.0 to 1.0.0, avoiding its reference to `JvmVendorSpec.IBM_SEMERU`,
-removed in Gradle 9. Gradle has 4 GiB heap and 1 GiB metaspace for release
-compilation and lint.
+Gradle has 4 GiB heap and 1 GiB metaspace for release compilation and lint.
 
 Set these to build and upload a signed release AAB:
 
@@ -218,42 +217,27 @@ base64 -w 0 release.keystore          # Linux
 
 ### Release
 
-The **Release** workflow (`.github/workflows/release.yml`) runs daily and on demand. It uses semantic-release to publish a GitHub release with a signed APK whenever `main` has new commits.
+The **Release** workflow (`.github/workflows/release.yml`) runs daily and on demand. It uses semantic-release (`.releaserc.yml`) to publish a GitHub release with a signed APK whenever `main` has new commits, setting `VERSION_NAME` and `VERSION_CODE` from the release version.
 
 ### Deploy (Optional)
 
-The **Deploy** workflow (`.github/workflows/deploy.yml`) runs on push to `main` when deploy secrets are present:
-
-- **Play Store (internal track)**: Set `PLAY_STORE_SERVICE_ACCOUNT_JSON` (JSON key for a service account with Play Console API access) plus the Android signing secrets above. Builds AAB and uploads to the internal track. CI sets `versionCode` to the Deploy run number (`VERSION_CODE`); local builds fall back to the value in `android/app/build.gradle`. Play rejects API uploads until the first AAB for the app is uploaded manually in Play Console.
-- **TestFlight**: Set `APPLE_APP_STORE_CONNECT_API_KEY` (App Store Connect API key .p8 content), `APPLE_ISSUER_ID`, `APPLE_API_KEY_ID`, plus `APPLE_CERTIFICATE_P12_BASE64`, `APPLE_CERTIFICATE_PASSWORD`, `KEYCHAIN_PASSWORD`, and `APPLE_TEAM_ID`. Builds IPA and uploads to TestFlight.
-
-Create an App Store Connect API key in App Store Connect → Users and Access → Keys. For the provisioning profile name in ExportOptions, ensure it matches your Xcode project (e.g. `EtuMobileApp`).
+The **Deploy** workflow (`.github/workflows/deploy.yml`) runs on push to `main` when `PLAY_STORE_SERVICE_ACCOUNT_JSON` is set (JSON key for a service account with Play Console API access); it also needs the Android signing secrets above. It builds an AAB and uploads to the internal track. CI sets `versionCode` to the Deploy run number (`VERSION_CODE`); local builds fall back to the value in `android/app/build.gradle`. Play rejects API uploads until the first AAB for the app is uploaded manually in Play Console. There is no iOS deploy.
 
 ## Build Configuration
 
 ### Version Management
 
 **Android** (`android/app/build.gradle`):
-- `versionCode`: Integer version; CI overrides it with `VERSION_CODE` (Deploy run number)
-- `versionName`: User-visible version string (e.g., "1.0", "1.1")
+- `versionCode`: from `VERSION_CODE` (Deploy run number, or derived from the release version by semantic-release), falling back to the value in Gradle
+- `versionName`: from `VERSION_NAME` (set by semantic-release), falling back to the value in Gradle
 - `applicationId`: `com.timeclimbers.etu`
 
 **iOS** (configured in Xcode project):
-- Bundle Identifier: `com.etumobileapp`
+- Bundle Identifier: `org.reactjs.native.example.EtuMobileApp` (template default)
 - Version: Set via Xcode (Marketing Version)
 - Build Number: Set via Xcode (Current Project Version)
 
-To update versions:
-
-```bash
-# Android - edit android/app/build.gradle
-versionCode 2
-versionName "1.1"
-
-# iOS - use Xcode or edit project.pbxproj
-# Open ios/EtuMobileApp.xcworkspace in Xcode
-# Select project → Target → General → Version/Build
-```
+Android versions come from releases; do not edit them by hand. For iOS, open `ios/EtuMobileApp.xcworkspace` (created by `pod install`) in Xcode and set Version/Build under the target's General tab.
 
 ### Build Variants
 
@@ -312,10 +296,11 @@ Declare in Play Console what the app actually uses:
 - **Photos / images**: attach images to notes via the system photo picker (no media or storage permissions).
 - **Audio files**: attach audio via the system document picker (no media or storage permissions).
 - **Microphone**: in-app recording uses **`RECORD_AUDIO`**; runtime permission is requested on Android before recording.
+- **Notifications**: reminders are scheduled locally on the device; nothing is sent to a server.
 
 ### Versioning
 
-The Deploy workflow sets `versionCode` from its run number, so each CI upload increments it. Bump `versionName` for user-visible releases (`android/app/build.gradle`).
+The Deploy workflow sets `versionCode` from its run number, so each CI upload increments it. semantic-release sets `versionName` for GitHub releases.
 
 ## Architecture
 
@@ -326,7 +311,9 @@ etu-mobile/
 │   ├── components/    # Reusable UI components
 │   ├── context/       # React Context (Auth, etc.)
 │   ├── navigation/    # React Navigation setup
+│   ├── reminders/     # Daily reminder scheduling
 │   ├── screens/       # Screen components
+│   ├── theme/         # Colors and spacing
 │   └── utils/         # Utilities (logging, errors, date)
 ├── android/           # Android native code
 ├── ios/               # iOS native code
@@ -336,10 +323,11 @@ etu-mobile/
 
 ### Key Technologies
 
-- **React Native 0.84**: Mobile framework
+- **React Native 0.88**: Mobile framework
+- **Expo modules**: `expo-notifications` for reminders
 - **React Navigation 7**: Navigation library
 - **TanStack Query 5**: Server state management
-- **Connect RPC**: gRPC-Web client for API communication
+- **Connect RPC**: typed clients over a native gRPC transport (`src/api/transport.ts`)
 - **React Native Keychain**: Secure token storage
 - **React Native Image Picker**: Image selection and upload
 - **React Native Document Picker**: Audio file selection
@@ -450,8 +438,8 @@ Subscription management is currently handled through the web interface. The mobi
 ## Known Limitations
 
 - **Markdown images**: Can be used via external URLs (`![alt](url)`) or uploaded files
-- **Offline support**: Not yet implemented (requires sync mechanism)
-- **Push notifications**: Not yet implemented. Daily reminders are local notifications scheduled on the device with [expo-notifications](https://docs.expo.dev/versions/latest/sdk/notifications/), Android only.
+- **Offline support**: Only new notes are queued offline; browsing needs a connection
+- **Push notifications**: Only local reminders; no server push. Daily reminders are local notifications scheduled on the device with [expo-notifications](https://docs.expo.dev/versions/latest/sdk/notifications/), Android only.
 
 ## More Information
 
