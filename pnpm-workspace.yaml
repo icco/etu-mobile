@@ -8,6 +8,3 @@ overrides:
 allowBuilds:
   '@parcel/watcher': true
   unrs-resolver: true
-
-minimumReleaseAgeExclude:
-  - expo-notifications@58.1.10

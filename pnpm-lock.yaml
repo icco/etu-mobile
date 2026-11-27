@@ -217,8 +217,8 @@ importers:
         specifier: ~58.0.26
         version: 58.0.26(@babel/core@7.29.13(supports-color@8.1.1))(@expo/dom-webview@58.0.2)(react-native@0.88.1(@babel/core@7.29.13(supports-color@8.1.1))(@react-native-community/cli@21.0.0(supports-color@8.1.1)(typescript@6.0.3))(@react-native/metro-config@0.88.1(@babel/core@7.29.13(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.3.0)(react@19.3.0)(supports-color@8.1.1))(react@19.3.0)(supports-color@8.1.1)(typescript@6.0.3)
       expo-notifications:
-        specifier: ~58.1.10
-        version: 58.1.10(expo@58.0.26)(react-native@0.88.1(@babel/core@7.29.13(supports-color@8.1.1))(@react-native-community/cli@21.0.0(supports-color@8.1.1)(typescript@6.0.3))(@react-native/metro-config@0.88.1(@babel/core@7.29.13(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.3.0)(react@19.3.0)(supports-color@8.1.1))(react@19.3.0)(supports-color@8.1.1)(typescript@6.0.3)
+        specifier: ~58.1.9
+        version: 58.1.9(expo@58.0.26)(react-native@0.88.1(@babel/core@7.29.13(supports-color@8.1.1))(@react-native-community/cli@21.0.0(supports-color@8.1.1)(typescript@6.0.3))(@react-native/metro-config@0.88.1(@babel/core@7.29.13(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.3.0)(react@19.3.0)(supports-color@8.1.1))(react@19.3.0)(supports-color@8.1.1)(typescript@6.0.3)
       fast-xml-parser:
         specifier: ^5.12.1
         version: 5.12.1
@@ -3179,8 +3179,8 @@ packages:
   expo-modules-macros@0.33.0:
     resolution: {integrity: sha512-ddrT2jbYPYmiHmzcYOixRemFUUK9qQEb5pOBWgoFoW0gj3sGld1CZX0GwblUXeZMyEX65S9vc1bEhIAGVDRA9w==}
 
-  expo-notifications@58.1.10:
-    resolution: {integrity: sha512-yhuNo16PrN4XYp5xgHWvClbh+Gri5vHvWE2KC05VW8BOKEaOCOcooK/5I7IouNszZ/0d5pylrj/dzHcDrSb9xA==}
+  expo-notifications@58.1.9:
+    resolution: {integrity: sha512-Zhixn1+3hdd+XqwAwnNqggePs+/fcwERoBxrxTaJjfEMA0N9Q4RPm2iIsBuzKxrccRBJz0BMF2QULQXoA5yGtw==}
     peerDependencies:
       expo: '*'
       react: '*'
@@ -8798,7 +8798,7 @@ snapshots:
       '@expo/modules-macros-win32-arm64': 0.33.0
       '@expo/modules-macros-win32-x64': 0.33.0
 
-  expo-notifications@58.1.10(expo@58.0.26)(react-native@0.88.1(@babel/core@7.29.13(supports-color@8.1.1))(@react-native-community/cli@21.0.0(supports-color@8.1.1)(typescript@6.0.3))(@react-native/metro-config@0.88.1(@babel/core@7.29.13(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.3.0)(react@19.3.0)(supports-color@8.1.1))(react@19.3.0)(supports-color@8.1.1)(typescript@6.0.3):
+  expo-notifications@58.1.9(expo@58.0.26)(react-native@0.88.1(@babel/core@7.29.13(supports-color@8.1.1))(@react-native-community/cli@21.0.0(supports-color@8.1.1)(typescript@6.0.3))(@react-native/metro-config@0.88.1(@babel/core@7.29.13(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.3.0)(react@19.3.0)(supports-color@8.1.1))(react@19.3.0)(supports-color@8.1.1)(typescript@6.0.3):
     dependencies:
       '@expo/image-utils': 0.12.7(supports-color@8.1.1)(typescript@6.0.3)
       abort-controller: 3.0.0
