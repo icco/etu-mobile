@@ -53,6 +53,7 @@ export default function NoteEditScreen() {
   const [images, setImages] = useState<SelectedImage[]>([]);
   const [audios, setAudios] = useState<SelectedAudio[]>([]);
   const [panel, setPanel] = useState<Panel | null>(null);
+  const [recording, setRecording] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   // "Adjust state during render" so local state re-syncs only when the source changes:
@@ -94,7 +95,7 @@ export default function NoteEditScreen() {
     tags.join('\n') !== baseTags.join('\n') ||
     images.length > 0 ||
     audios.length > 0;
-  const canSave = !saving && !!content.trim();
+  const canSave = !saving && !recording && !!content.trim();
 
   usePreventRemove(saving || (dirty && !saved), ({ data }) => {
     if (saving) return;
@@ -250,8 +251,14 @@ export default function NoteEditScreen() {
         <View style={!show('images', images.length) && styles.hidden}>
           <ImagePicker images={images} onImagesChange={setImages} />
         </View>
-        <View style={!show('audio', audios.length) && styles.hidden}>
-          <AudioPicker audios={audios} onAudiosChange={setAudios} />
+        <View
+          style={!recording && !show('audio', audios.length) && styles.hidden}
+        >
+          <AudioPicker
+            audios={audios}
+            onAudiosChange={setAudios}
+            onRecordingChange={setRecording}
+          />
         </View>
       </ScrollView>
       <View

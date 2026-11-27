@@ -30,6 +30,7 @@ export interface SelectedAudio {
 interface AudioPickerProps {
   audios: SelectedAudio[];
   onAudiosChange: (audios: SelectedAudio[]) => void;
+  onRecordingChange?: (recording: boolean) => void;
   maxAudios?: number;
   maxSizeMB?: number;
 }
@@ -53,6 +54,7 @@ const MAX_SIZE_MB = 25;
 export default function AudioPicker({
   audios,
   onAudiosChange,
+  onRecordingChange,
   maxAudios = MAX_AUDIOS,
   maxSizeMB = MAX_SIZE_MB,
 }: AudioPickerProps) {
@@ -60,6 +62,10 @@ export default function AudioPicker({
   const maxSizeBytes = maxSizeMB * 1024 * 1024;
   const [isRecording, setIsRecording] = useState(false);
   const [recordingTime, setRecordingTime] = useState(0);
+
+  useEffect(() => {
+    onRecordingChange?.(isRecording);
+  }, [isRecording, onRecordingChange]);
 
   // Cleanup on unmount
   useEffect(() => {
