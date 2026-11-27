@@ -7,7 +7,6 @@ export type RootStackParamList = {
   Login: undefined;
   Register: undefined;
   MainTabs: undefined;
-  Capture: undefined;
   NoteDetail: { noteId: string };
   NoteEdit: { noteId?: string; note?: Note; initialContent?: string };
 };

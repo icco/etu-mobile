@@ -4,10 +4,9 @@
 
 import React from 'react';
 import { Alert } from 'react-native';
-import { act, fireEvent, render, waitFor } from '@testing-library/react-native';
+import { fireEvent, render, waitFor } from '@testing-library/react-native';
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import { ConnectError, Code } from '@connectrpc/connect';
-import CaptureScreen from '../src/screens/CaptureScreen';
 import TimelineScreen from '../src/screens/TimelineScreen';
 import NoteEditScreen from '../src/screens/NoteEditScreen';
 import { clearQueue, enqueueNote } from '../src/api/offlineQueue';
@@ -27,6 +26,16 @@ jest.mock('../src/context/AuthContext', () => ({
     token: 'token',
     handleAuthError: jest.fn(),
   }),
+}));
+const mockSetOptions = jest.fn<void, [{ headerRight: () => React.ReactElement }]>();
+jest.mock('@react-navigation/native', () => ({
+  useNavigation: () => ({
+    goBack: jest.fn(),
+    dispatch: jest.fn(),
+    setOptions: mockSetOptions,
+  }),
+  useRoute: () => ({ params: {} }),
+  usePreventRemove: jest.fn(),
 }));
 jest.mock('react-native-safe-area-context', () => ({
   useSafeAreaInsets: () => ({ top: 0, bottom: 0, left: 0, right: 0 }),
@@ -60,26 +69,6 @@ beforeEach(async () => {
 const queueOne = () =>
   enqueueNote({ userId: 'alice', content: 'offline', tags: [] });
 
-describe('CaptureScreen', () => {
-  it('shows nothing when there are no pending notes', async () => {
-    const { queryByText } = await render(<CaptureScreen />);
-    expect(queryByText(/waiting to sync/)).toBeNull();
-  });
-
-  it('shows the pending count once a note is saved offline', async () => {
-    const { findByText, queryByText } = await render(<CaptureScreen />);
-    expect(queryByText(/waiting to sync/)).toBeNull();
-    await act(async () => {
-      await queueOne();
-    });
-    expect(await findByText('1 note saved offline, waiting to sync')).toBeTruthy();
-    await act(async () => {
-      await queueOne();
-    });
-    expect(await findByText('2 notes saved offline, waiting to sync')).toBeTruthy();
-  });
-});
-
 describe('TimelineScreen', () => {
   it('shows a pending banner for queued notes', async () => {
     await queueOne();
@@ -97,9 +86,18 @@ describe('NoteEditScreen', () => {
   const save = async () => {
     const screen = await render(<NoteEditScreen />);
     await fireEvent.changeText(screen.getByLabelText('Note content'), 'hello');
-    await fireEvent.press(screen.getByText('Create note'));
+    const { headerRight } = mockSetOptions.mock.lastCall![0];
+    const header = await render(headerRight());
+    await fireEvent.press(header.getByRole('button', { name: 'Save note' }));
     return screen;
   };
+
+  it('disables Save until the note has content', async () => {
+    await render(<NoteEditScreen />);
+    const { headerRight } = mockSetOptions.mock.lastCall![0];
+    const header = await render(headerRight());
+    expect(header.getByRole('button', { name: 'Save note' })).toBeDisabled();
+  });
 
   it('tells the user when a note was saved offline', async () => {
     const alert = jest.spyOn(Alert, 'alert').mockImplementation(() => {});

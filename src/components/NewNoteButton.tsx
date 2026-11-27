@@ -26,7 +26,7 @@ export default function NewNoteButton() {
     <Pressable
       accessibilityRole="button"
       accessibilityLabel="New note"
-      onPress={() => navigation.navigate('Capture')}
+      onPress={() => navigation.navigate('NoteEdit', {})}
       android_ripple={{ color: colors.ripple }}
       style={({ pressed }) => [
         styles.button,

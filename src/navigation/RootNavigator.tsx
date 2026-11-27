@@ -6,7 +6,6 @@ import { useAuth } from '../context/AuthContext';
 import LoginScreen from '../screens/LoginScreen';
 import RegisterScreen from '../screens/RegisterScreen';
 import TimelineScreen from '../screens/TimelineScreen';
-import CaptureScreen from '../screens/CaptureScreen';
 import RandomScreen from '../screens/RandomScreen';
 import SettingsScreen from '../screens/SettingsScreen';
 import NoteDetailScreen from '../screens/NoteDetailScreen';
@@ -35,8 +34,7 @@ export const linking = {
         },
       },
       NoteDetail: 'note/:noteId',
-      NoteEdit: 'edit',
-      Capture: 'capture',
+      NoteEdit: { path: 'edit', alias: ['capture'] },
     },
   },
 };
@@ -145,11 +143,6 @@ export default function RootNavigator() {
               options={{ headerShown: false }}
             />
             <Stack.Screen
-              name="Capture"
-              component={CaptureScreen}
-              options={{ title: 'Capture' }}
-            />
-            <Stack.Screen
               name="NoteDetail"
               component={NoteDetailScreen}
               options={{ title: 'Note' }}
@@ -159,6 +152,9 @@ export default function RootNavigator() {
               component={NoteEditScreen}
               options={({ route }) => ({
                 title: route.params?.noteId ? 'Edit note' : 'New note',
+                animation: route.params?.noteId
+                  ? 'default'
+                  : 'slide_from_bottom',
               })}
             />
           </>
