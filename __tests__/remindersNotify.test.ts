@@ -1,5 +1,9 @@
 import * as Notifications from 'expo-notifications';
-import { ensurePermission, syncReminders } from '../src/reminders/notify';
+import {
+  changeReminders,
+  ensurePermission,
+  syncReminders,
+} from '../src/reminders/notify';
 
 const n = Notifications as jest.Mocked<typeof Notifications>;
 const write = {
@@ -17,7 +21,9 @@ test('syncRemindersReplacesOnlyReminderSchedules', async () => {
     { identifier: 'reminder:old' },
     { identifier: 'other' },
   ] as Notifications.NotificationRequest[]);
-  await syncReminders([write, { ...write, id: 'b', enabled: false }]);
+  await syncReminders(() =>
+    Promise.resolve([write, { ...write, id: 'b', enabled: false }]),
+  );
   expect(n.cancelScheduledNotificationAsync.mock.calls).toEqual([
     ['reminder:old'],
   ]);
@@ -49,4 +55,40 @@ test('ensurePermissionAsksOnceWhenAllowed', async () => {
   } as Notifications.NotificationPermissionsStatus);
   expect(await ensurePermission()).toBe(false);
   expect(n.requestPermissionsAsync).toHaveBeenCalledTimes(1);
+});
+
+test('overlapping changes apply in order from the stored list', async () => {
+  let stored = [{ ...write, enabled: false }];
+  const store = {
+    load: () => Promise.resolve(stored),
+    save: (next: typeof stored) => {
+      stored = next;
+      return Promise.resolve();
+    },
+  };
+  let allow!: (status: Notifications.NotificationPermissionsStatus) => void;
+  n.getPermissionsAsync.mockReturnValueOnce(
+    new Promise(resolve => {
+      allow = resolve;
+    }),
+  );
+  const enable = changeReminders(
+    store,
+    list => list.map(r => ({ ...r, enabled: true })),
+    true,
+  );
+  n.getAllScheduledNotificationsAsync
+    .mockResolvedValueOnce([])
+    .mockResolvedValueOnce([
+      { identifier: 'reminder:a' },
+    ] as Notifications.NotificationRequest[]);
+  const remove = changeReminders(store, () => [], false);
+  allow({ granted: true } as Notifications.NotificationPermissionsStatus);
+  expect((await enable).granted).toBe(true);
+  expect((await remove).reminders).toEqual([]);
+  expect(stored).toEqual([]);
+  expect(n.scheduleNotificationAsync).toHaveBeenCalledTimes(1);
+  expect(
+    n.cancelScheduledNotificationAsync.mock.invocationCallOrder[0],
+  ).toBeGreaterThan(n.scheduleNotificationAsync.mock.invocationCallOrder[0]);
 });

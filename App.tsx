@@ -4,7 +4,7 @@
  */
 
 import React, { useEffect } from 'react';
-import { StatusBar } from 'react-native';
+import { AppState, StatusBar } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client';
 import { AuthProvider } from './src/context/AuthContext';
@@ -26,13 +26,18 @@ function App() {
 
   useEffect(() => {
     showRemindersInForeground();
-    loadReminders()
-      .then(syncReminders)
-      .catch((e: unknown) =>
+    const sync = () => {
+      syncReminders(loadReminders).catch((e: unknown) =>
         logError('Scheduling reminders failed', {
           message: getErrorMessage(e),
         }),
       );
+    };
+    sync();
+    const sub = AppState.addEventListener('change', state => {
+      if (state === 'active') sync();
+    });
+    return () => sub.remove();
   }, []);
 
   return (

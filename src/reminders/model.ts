@@ -43,9 +43,8 @@ export function byTime(a: Reminder, b: Reminder): number {
 }
 
 export function timeOfDay(hour: number, minute: number): Date {
-  const d = new Date();
-  d.setHours(hour, minute, 0, 0);
-  return d;
+  // A fixed winter day: on a daylight-saving day some local times do not exist.
+  return new Date(2000, 0, 1, hour, minute);
 }
 
 export function formatTime(hour: number, minute: number): string {

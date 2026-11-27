@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import {
+  AppState,
   Linking,
   StyleSheet,
   Switch,
@@ -9,13 +10,9 @@ import {
   View,
 } from 'react-native';
 import { DateTimePickerAndroid } from '@react-native-community/datetimepicker';
-import { byTime, formatTime, timeOfDay } from '../reminders/model';
+import { formatTime, timeOfDay } from '../reminders/model';
 import type { Reminder } from '../reminders/model';
-import {
-  ensurePermission,
-  hasPermission,
-  syncReminders,
-} from '../reminders/notify';
+import { changeReminders, hasPermission } from '../reminders/notify';
 import { loadReminders, saveReminders } from '../reminders/store';
 import { getErrorMessage } from '../utils/errors';
 import { useAppTheme, useThemedStyles, type Colors } from '../theme';
@@ -31,6 +28,8 @@ function pickTime(
     onValueChange: (_event, date) => onPick(date.getHours(), date.getMinutes()),
   });
 }
+
+const store = { load: loadReminders, save: saveReminders };
 
 function newId(): string {
   return `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`;
@@ -56,16 +55,26 @@ export default function Reminders() {
       .catch((e: unknown) => setError(getErrorMessage(e)));
   }, []);
 
-  const apply = async (next: Reminder[], needsPermission: boolean) => {
+  useEffect(() => {
+    const sub = AppState.addEventListener('change', state => {
+      if (state === 'active') {
+        hasPermission()
+          .then(granted => setBlocked(was => was && !granted))
+          .catch((e: unknown) => setError(getErrorMessage(e)));
+      }
+    });
+    return () => sub.remove();
+  }, []);
+
+  const apply = async (
+    change: (list: Reminder[]) => Reminder[],
+    needsPermission: boolean,
+  ) => {
     setError(null);
     try {
-      const sorted = [...next].sort(byTime);
-      await saveReminders(sorted);
-      setReminders(sorted);
-      if (needsPermission) {
-        setBlocked(!(await ensurePermission()));
-      }
-      await syncReminders(sorted);
+      const done = await changeReminders(store, change, needsPermission);
+      setReminders(done.reminders);
+      if (done.granted !== undefined) setBlocked(!done.granted);
     } catch (e) {
       setError(getErrorMessage(e));
     }
@@ -73,7 +82,7 @@ export default function Reminders() {
 
   const update = (id: string, patch: Partial<Reminder>) =>
     apply(
-      reminders.map(r => (r.id === id ? { ...r, ...patch } : r)),
+      list => list.map(r => (r.id === id ? { ...r, ...patch } : r)),
       patch.enabled === true,
     );
 
@@ -81,10 +90,8 @@ export default function Reminders() {
     const text = label.trim();
     if (!text) return;
     setLabel('');
-    await apply(
-      [...reminders, { id: newId(), label: text, ...time, enabled: true }],
-      true,
-    );
+    const added = { id: newId(), label: text, ...time, enabled: true };
+    await apply(list => [...list, added], true);
   };
 
   return (
@@ -117,10 +124,7 @@ export default function Reminders() {
             accessibilityLabel={`Delete ${r.label}`}
             style={styles.remove}
             onPress={() => {
-              void apply(
-                reminders.filter(x => x.id !== r.id),
-                false,
-              );
+              void apply(list => list.filter(x => x.id !== r.id), false);
             }}
           >
             <Text style={styles.removeText}>✕</Text>

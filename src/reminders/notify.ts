@@ -1,4 +1,5 @@
 import * as Notifications from 'expo-notifications';
+import { byTime } from './model';
 import type { Reminder } from './model';
 
 const CHANNEL = 'reminders';
@@ -43,7 +44,7 @@ export async function ensurePermission(): Promise<boolean> {
   return (await Notifications.requestPermissionsAsync()).granted;
 }
 
-export async function syncReminders(reminders: Reminder[]): Promise<void> {
+async function schedule(reminders: Reminder[]): Promise<void> {
   const scheduled = await Notifications.getAllScheduledNotificationsAsync();
   for (const s of scheduled) {
     if (isReminderNotification(s.identifier)) {
@@ -67,4 +68,35 @@ export async function syncReminders(reminders: Reminder[]): Promise<void> {
       },
     });
   }
+}
+
+let queue: Promise<unknown> = Promise.resolve();
+
+function serialized<T>(task: () => Promise<T>): Promise<T> {
+  const run = queue.then(task, task);
+  queue = run.catch(() => undefined);
+  return run;
+}
+
+export interface ReminderStore {
+  load: () => Promise<Reminder[]>;
+  save: (reminders: Reminder[]) => Promise<void>;
+}
+
+export function syncReminders(load: ReminderStore['load']): Promise<void> {
+  return serialized(async () => schedule(await load()));
+}
+
+export function changeReminders(
+  store: ReminderStore,
+  change: (reminders: Reminder[]) => Reminder[],
+  needsPermission: boolean,
+): Promise<{ reminders: Reminder[]; granted?: boolean }> {
+  return serialized(async () => {
+    const reminders = change(await store.load()).sort(byTime);
+    await store.save(reminders);
+    const granted = needsPermission ? await ensurePermission() : undefined;
+    await schedule(reminders);
+    return { reminders, granted };
+  });
 }

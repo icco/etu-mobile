@@ -1,4 +1,9 @@
-import { byTime, formatTime, parseReminders } from '../src/reminders/model';
+import {
+  byTime,
+  formatTime,
+  parseReminders,
+  timeOfDay,
+} from '../src/reminders/model';
 
 const write = {
   id: 'a',
@@ -39,4 +44,10 @@ test('byTimeSortsEarliestFirst', () => {
 
 test('formatTimeShowsHourAndMinute', () => {
   expect(formatTime(9, 5)).toMatch(/9:05/);
+});
+
+test('timeOfDayKeepsTimesSkippedByDaylightSaving', () => {
+  const d = timeOfDay(2, 30);
+  expect([d.getHours(), d.getMinutes()]).toEqual([2, 30]);
+  expect(d.getMonth()).toBe(0);
 });
