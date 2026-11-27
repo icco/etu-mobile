@@ -30,6 +30,7 @@ export interface SelectedAudio {
 interface AudioPickerProps {
   audios: SelectedAudio[];
   onAudiosChange: (audios: SelectedAudio[]) => void;
+  onRecordingChange?: (recording: boolean) => void;
   maxAudios?: number;
   maxSizeMB?: number;
 }
@@ -53,13 +54,19 @@ const MAX_SIZE_MB = 25;
 export default function AudioPicker({
   audios,
   onAudiosChange,
+  onRecordingChange,
   maxAudios = MAX_AUDIOS,
   maxSizeMB = MAX_SIZE_MB,
 }: AudioPickerProps) {
   const styles = useThemedStyles(createStyles);
   const maxSizeBytes = maxSizeMB * 1024 * 1024;
   const [isRecording, setIsRecording] = useState(false);
+  const [finalizing, setFinalizing] = useState(false);
   const [recordingTime, setRecordingTime] = useState(0);
+
+  useEffect(() => {
+    onRecordingChange?.(isRecording || finalizing);
+  }, [isRecording, finalizing, onRecordingChange]);
 
   // Cleanup on unmount
   useEffect(() => {
@@ -221,6 +228,7 @@ export default function AudioPicker({
   };
 
   const handleStopRecording = async () => {
+    setFinalizing(true);
     try {
       const result = await Sound.stopRecorder();
       Sound.removeRecordBackListener();
@@ -266,6 +274,8 @@ export default function AudioPicker({
       Alert.alert('Error', 'Failed to save recording');
       setIsRecording(false);
       setRecordingTime(0);
+    } finally {
+      setFinalizing(false);
     }
   };
 

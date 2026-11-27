@@ -3,6 +3,7 @@ import {
   NavigationContainer,
   StackActions,
   createNavigationContainerRef,
+  type LinkingOptions,
 } from '@react-navigation/native';
 import * as Notifications from 'expo-notifications';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
@@ -11,7 +12,6 @@ import { useAuth } from '../context/AuthContext';
 import LoginScreen from '../screens/LoginScreen';
 import RegisterScreen from '../screens/RegisterScreen';
 import TimelineScreen from '../screens/TimelineScreen';
-import CaptureScreen from '../screens/CaptureScreen';
 import RandomScreen from '../screens/RandomScreen';
 import SettingsScreen from '../screens/SettingsScreen';
 import NoteDetailScreen from '../screens/NoteDetailScreen';
@@ -25,9 +25,10 @@ import { isReminderNotification } from '../reminders/notify';
 import type { MainTabParamList, RootStackParamList } from './types';
 
 /** Single root stack so deep links resolve whether user is on a tab or a pushed screen. */
-export const linking = {
+export const linking: LinkingOptions<RootStackParamList> = {
   prefixes: ['etu://open'],
   config: {
+    initialRouteName: 'MainTabs',
     screens: {
       Login: 'login',
       Register: 'register',
@@ -41,8 +42,7 @@ export const linking = {
         },
       },
       NoteDetail: 'note/:noteId',
-      NoteEdit: 'edit',
-      Capture: 'capture',
+      NoteEdit: { path: 'edit', alias: ['capture'] },
     },
   },
 };
@@ -173,11 +173,6 @@ export default function RootNavigator() {
               options={{ headerShown: false }}
             />
             <Stack.Screen
-              name="Capture"
-              component={CaptureScreen}
-              options={{ title: 'Capture' }}
-            />
-            <Stack.Screen
               name="NoteDetail"
               component={NoteDetailScreen}
               options={{ title: 'Note' }}
@@ -187,6 +182,9 @@ export default function RootNavigator() {
               component={NoteEditScreen}
               options={({ route }) => ({
                 title: route.params?.noteId ? 'Edit note' : 'New note',
+                animation: route.params?.noteId
+                  ? 'default'
+                  : 'slide_from_bottom',
               })}
             />
           </>

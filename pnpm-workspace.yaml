@@ -6,3 +6,5 @@ overrides:
 allowBuilds:
   '@parcel/watcher': true
   unrs-resolver: true
+minimumReleaseAgeExclude:
+  - '@icco/*'
