@@ -237,7 +237,7 @@ The **Deploy** workflow (`.github/workflows/deploy.yml`) runs on push to `main` 
 - Version: Set via Xcode (Marketing Version)
 - Build Number: Set via Xcode (Current Project Version)
 
-Android versions come from releases; do not edit them by hand. For iOS, open `ios/EtuMobileApp.xcworkspace` (created by `pod install`) in Xcode and set Version/Build under the target's General tab.
+GitHub-release APKs get both values from semantic-release. Play AABs from Deploy get only `VERSION_CODE`, so set `VERSION_NAME` in the environment or bump the fallback `versionName` in `android/app/build.gradle` for a user-visible Play version. For iOS, open `ios/EtuMobileApp.xcworkspace` (created by `pod install`) in Xcode and set Version/Build under the target's General tab.
 
 ### Build Variants
 
@@ -300,7 +300,7 @@ Declare in Play Console what the app actually uses:
 
 ### Versioning
 
-The Deploy workflow sets `versionCode` from its run number, so each CI upload increments it. semantic-release sets `versionName` for GitHub releases.
+The Deploy workflow sets `versionCode` from its run number, so each CI upload increments it. semantic-release sets `versionName` only for GitHub-release APKs; Play AABs use the Gradle fallback unless `VERSION_NAME` is set.
 
 ## Architecture
 
@@ -438,7 +438,7 @@ Subscription management is currently handled through the web interface. The mobi
 ## Known Limitations
 
 - **Markdown images**: Can be used via external URLs (`![alt](url)`) or uploaded files
-- **Offline support**: Only new notes are queued offline; browsing needs a connection
+- **Offline support**: New notes are queued offline and previously loaded pages are served from the persisted query cache; anything not yet cached needs a connection
 - **Push notifications**: Only local reminders; no server push. Daily reminders are local notifications scheduled on the device with [expo-notifications](https://docs.expo.dev/versions/latest/sdk/notifications/), Android only.
 
 ## More Information
