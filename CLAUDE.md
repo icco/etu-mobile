@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-Etu mobile — React Native journaling app talking Connect RPC to etu-backend via `@icco/etu-proto`.
+Etu mobile — React Native journaling app using typed Connect clients from `@icco/etu-proto` over a native gRPC transport to etu-backend.
 
 ## Commands
 
@@ -13,6 +13,8 @@ Etu mobile — React Native journaling app talking Connect RPC to etu-backend vi
 - `src/api/` — Connect RPC clients. `client.ts` exposes lazy `<service>Client.client` getters;
   call pattern: `<service>Client.client.<method>({...}, { headers: createHeaders(token) })`.
 - `src/screens/` — one file per screen.
+- `src/api/offlineQueue.ts` — new notes created offline persist in AsyncStorage; `components/OfflineSync.tsx` flushes them.
+- `src/reminders/` — local daily reminders via `expo-notifications`.
 - `src/context/AuthContext.tsx` — auth state + secure token storage (react-native-keychain).
 - `src/navigation/` — single root stack (auth + MainTabs + note screens); deep links use `etu://`.
 - Tests live in `__tests__/`; `__mocks__/etu-proto.js` stands in for `@icco/etu-proto`
