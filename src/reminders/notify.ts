@@ -44,22 +44,52 @@ export async function ensurePermission(): Promise<boolean> {
   return (await Notifications.requestPermissionsAsync()).granted;
 }
 
+function isCurrent(
+  scheduled: Notifications.NotificationRequest,
+  reminder: Reminder,
+  zone: string,
+): boolean {
+  const trigger = scheduled.trigger as {
+    type?: string;
+    hour?: number;
+    minute?: number;
+  } | null;
+  return (
+    scheduled.content.title === reminder.label &&
+    scheduled.content.data?.zone === zone &&
+    trigger?.type === 'daily' &&
+    trigger.hour === reminder.hour &&
+    trigger.minute === reminder.minute
+  );
+}
+
+// Unchanged schedules are left alone: cancelling one that Android is
+// delivering late would push it to tomorrow.
 async function schedule(reminders: Reminder[]): Promise<void> {
+  const zone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  const wanted = new Map(
+    reminders.filter(r => r.enabled).map(r => [PREFIX + r.id, r]),
+  );
   const scheduled = await Notifications.getAllScheduledNotificationsAsync();
   for (const s of scheduled) {
-    if (isReminderNotification(s.identifier)) {
+    if (!isReminderNotification(s.identifier)) {
+      continue;
+    }
+    const reminder = wanted.get(s.identifier);
+    if (reminder && isCurrent(s, reminder, zone)) {
+      wanted.delete(s.identifier);
+    } else {
       await Notifications.cancelScheduledNotificationAsync(s.identifier);
     }
   }
-  const enabled = reminders.filter(r => r.enabled);
-  if (!enabled.length) {
+  if (!wanted.size) {
     return;
   }
   await ensureChannel();
-  for (const r of enabled) {
+  for (const [identifier, r] of wanted) {
     await Notifications.scheduleNotificationAsync({
-      identifier: PREFIX + r.id,
-      content: { title: r.label },
+      identifier,
+      content: { title: r.label, data: { zone } },
       trigger: {
         type: Notifications.SchedulableTriggerInputTypes.DAILY,
         hour: r.hour,

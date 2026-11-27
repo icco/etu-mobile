@@ -31,7 +31,10 @@ test('syncRemindersReplacesOnlyReminderSchedules', async () => {
     [
       {
         identifier: 'reminder:a',
-        content: { title: 'Write a post' },
+        content: {
+          title: 'Write a post',
+          data: { zone: expect.any(String) as string },
+        },
         trigger: { type: 'daily', hour: 9, minute: 0, channelId: 'reminders' },
       },
     ],
@@ -91,4 +94,28 @@ test('overlapping changes apply in order from the stored list', async () => {
   expect(
     n.cancelScheduledNotificationAsync.mock.invocationCallOrder[0],
   ).toBeGreaterThan(n.scheduleNotificationAsync.mock.invocationCallOrder[0]);
+});
+
+test('unchanged schedules are kept and stale ones replaced', async () => {
+  const zone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  const pending = (id: string, zoneName: string, hour: number) => ({
+    identifier: `reminder:${id}`,
+    content: { title: 'Write a post', data: { zone: zoneName } },
+    trigger: { type: 'daily', hour, minute: 0 },
+  });
+  n.getAllScheduledNotificationsAsync.mockResolvedValueOnce([
+    pending('a', zone, 9),
+    pending('b', 'Antarctica/Troll', 9),
+    pending('c', zone, 8),
+  ] as unknown as Notifications.NotificationRequest[]);
+  await syncReminders(() =>
+    Promise.resolve([write, { ...write, id: 'b' }, { ...write, id: 'c' }]),
+  );
+  expect(n.cancelScheduledNotificationAsync.mock.calls).toEqual([
+    ['reminder:b'],
+    ['reminder:c'],
+  ]);
+  expect(
+    n.scheduleNotificationAsync.mock.calls.map(c => c[0].identifier),
+  ).toEqual(['reminder:b', 'reminder:c']);
 });

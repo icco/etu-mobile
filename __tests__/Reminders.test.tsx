@@ -21,6 +21,10 @@ jest.setTimeout(30000);
 
 beforeEach(async () => {
   jest.clearAllMocks();
+  n.getPermissionsAsync.mockResolvedValue({
+    granted: true,
+    canAskAgain: true,
+  } as Notifications.NotificationPermissionsStatus);
   await AsyncStorage.clear();
 });
 
@@ -45,7 +49,10 @@ it('adds a reminder and schedules a daily notification', async () => {
   ]);
   expect(n.scheduleNotificationAsync).toHaveBeenCalledWith({
     identifier: `reminder:${saved[0].id}`,
-    content: { title: 'Write a post' },
+    content: {
+      title: 'Write a post',
+      data: { zone: expect.any(String) as string },
+    },
     trigger: { type: 'daily', hour: 7, minute: 45, channelId: 'reminders' },
   });
   expect(getByText('Write a post')).toBeTruthy();
@@ -78,7 +85,7 @@ it('pauses and deletes a reminder', async () => {
 });
 
 it('points to system settings when notifications are denied', async () => {
-  n.getPermissionsAsync.mockResolvedValueOnce({
+  n.getPermissionsAsync.mockResolvedValue({
     granted: false,
     canAskAgain: false,
   } as Notifications.NotificationPermissionsStatus);

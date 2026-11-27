@@ -41,16 +41,14 @@ export default function Reminders() {
   const [reminders, setReminders] = useState<Reminder[]>([]);
   const [label, setLabel] = useState('');
   const [time, setTime] = useState({ hour: 9, minute: 0 });
-  const [blocked, setBlocked] = useState(false);
+  const [granted, setGranted] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     loadReminders()
       .then(async loaded => {
         setReminders(loaded);
-        if (loaded.some(r => r.enabled)) {
-          setBlocked(!(await hasPermission()));
-        }
+        setGranted(await hasPermission());
       })
       .catch((e: unknown) => setError(getErrorMessage(e)));
   }, []);
@@ -59,7 +57,7 @@ export default function Reminders() {
     const sub = AppState.addEventListener('change', state => {
       if (state === 'active') {
         hasPermission()
-          .then(granted => setBlocked(was => was && !granted))
+          .then(setGranted)
           .catch((e: unknown) => setError(getErrorMessage(e)));
       }
     });
@@ -74,9 +72,12 @@ export default function Reminders() {
     try {
       const done = await changeReminders(store, change, needsPermission);
       setReminders(done.reminders);
-      if (done.granted !== undefined) setBlocked(!done.granted);
+      if (done.granted !== undefined) setGranted(done.granted);
     } catch (e) {
       setError(getErrorMessage(e));
+      loadReminders()
+        .then(setReminders)
+        .catch((again: unknown) => setError(getErrorMessage(again)));
     }
   };
 
@@ -168,7 +169,7 @@ export default function Reminders() {
       >
         <Text style={styles.addBtnText}>Add reminder</Text>
       </TouchableOpacity>
-      {blocked ? (
+      {!granted && reminders.some(r => r.enabled) ? (
         <TouchableOpacity
           accessibilityRole="link"
           onPress={() => {
