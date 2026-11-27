@@ -1,8 +1,11 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   NavigationContainer,
+  StackActions,
+  createNavigationContainerRef,
   type LinkingOptions,
 } from '@react-navigation/native';
+import * as Notifications from 'expo-notifications';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { useAuth } from '../context/AuthContext';
@@ -18,6 +21,7 @@ import { View, ActivityIndicator, StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAppTheme } from '../theme';
 import Icon, { type IconName } from '../components/Icon';
+import { isReminderNotification } from '../reminders/notify';
 import type { MainTabParamList, RootStackParamList } from './types';
 
 /** Single root stack so deep links resolve whether user is on a tab or a pushed screen. */
@@ -42,6 +46,8 @@ export const linking: LinkingOptions<RootStackParamList> = {
     },
   },
 };
+
+export const navigationRef = createNavigationContainerRef<RootStackParamList>();
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 const Tab = createBottomTabNavigator<MainTabParamList>();
@@ -119,13 +125,33 @@ function LoadingScreen() {
 export default function RootNavigator() {
   const { isAuthenticated, isLoading } = useAuth();
   const { colors, navigation: theme } = useAppTheme();
+  const [ready, setReady] = useState(false);
+  const tapped = Notifications.useLastNotificationResponse();
+
+  useEffect(() => {
+    if (
+      !ready ||
+      !isAuthenticated ||
+      !tapped ||
+      !isReminderNotification(tapped.notification.request.identifier)
+    ) {
+      return;
+    }
+    Notifications.clearLastNotificationResponse();
+    navigationRef.dispatch(StackActions.push('NoteEdit', {}));
+  }, [ready, isAuthenticated, tapped]);
 
   if (isLoading) {
     return <LoadingScreen />;
   }
 
   return (
-    <NavigationContainer linking={linking} theme={theme}>
+    <NavigationContainer
+      ref={navigationRef}
+      linking={linking}
+      theme={theme}
+      onReady={() => setReady(true)}
+    >
       <Stack.Navigator
         screenOptions={{
           headerStyle: { backgroundColor: colors.background },

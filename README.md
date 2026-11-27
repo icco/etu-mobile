@@ -15,6 +15,7 @@ Notes support **markdown content, tags, image uploads, and audio uploads**. Imag
 - 🔐 **Secure Authentication**: Token-based auth with API key support
 - 🔄 **Real-time Sync**: Synced with etu-backend via gRPC
 - 🌙 **Dark Mode**: Beautiful dark theme optimized for mobile
+- ⏰ **Daily Reminders**: Set your own reminders in Settings, such as 9:00 "Write a post", and get a notification at that time every day (Android)
 - 🔗 **Deep Linking**: Support for `etu://` URL scheme
 
 ## Security
@@ -450,7 +451,7 @@ Subscription management is currently handled through the web interface. The mobi
 
 - **Markdown images**: Can be used via external URLs (`![alt](url)`) or uploaded files
 - **Offline support**: Not yet implemented (requires sync mechanism)
-- **Push notifications**: Not yet implemented
+- **Push notifications**: Not yet implemented. Daily reminders are local notifications scheduled on the device with [expo-notifications](https://docs.expo.dev/versions/latest/sdk/notifications/), Android only.
 
 ## More Information
 
