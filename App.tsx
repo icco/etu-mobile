@@ -3,7 +3,7 @@
  * @format
  */
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { StatusBar } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client';
@@ -12,10 +12,28 @@ import ErrorBoundary from './src/components/ErrorBoundary';
 import RootNavigator from './src/navigation/RootNavigator';
 import OfflineSync from './src/components/OfflineSync';
 import { queryClient, persister, CACHE_MAX_AGE } from './src/api/queryClient';
+import {
+  showRemindersInForeground,
+  syncReminders,
+} from './src/reminders/notify';
+import { loadReminders } from './src/reminders/store';
+import { getErrorMessage } from './src/utils/errors';
+import { logError } from './src/utils/logger';
 import { useAppTheme } from './src/theme';
 
 function App() {
   const { dark } = useAppTheme();
+
+  useEffect(() => {
+    showRemindersInForeground();
+    loadReminders()
+      .then(syncReminders)
+      .catch((e: unknown) =>
+        logError('Scheduling reminders failed', {
+          message: getErrorMessage(e),
+        }),
+      );
+  }, []);
 
   return (
     <ErrorBoundary>

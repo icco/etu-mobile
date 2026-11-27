@@ -32,7 +32,7 @@ describe('native app registration', () => {
       join(__dirname, '../ios/EtuMobileApp/AppDelegate.swift'),
       'utf8',
     );
-    const component = delegate.match(/withModuleName: "([^"]+)"/);
+    const component = delegate.match(/reactNativeFactoryModuleName = "([^"]+)"/);
     expect(component).not.toBeNull();
     expect(name).toBe(component?.[1]);
   });

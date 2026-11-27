@@ -51,6 +51,7 @@ jest.mock('react-native-keychain', () => ({
 
 jest.mock('@react-navigation/native', () => ({
   NavigationContainer: ({ children }: { children: React.ReactNode }) => children,
+  createNavigationContainerRef: () => ({ navigate: jest.fn(), isReady: () => true }),
   useNavigation: () => ({
     navigate: jest.fn(),
     goBack: jest.fn(),
@@ -117,4 +118,22 @@ jest.mock('@react-native-async-storage/async-storage', () => {
 
 jest.mock('@tanstack/react-query-persist-client', () => ({
   PersistQueryClientProvider: ({ children }: { children: React.ReactNode }) => children,
+}));
+
+jest.mock('expo-notifications', () => ({
+  AndroidImportance: { DEFAULT: 3 },
+  SchedulableTriggerInputTypes: { DAILY: 'daily' },
+  setNotificationHandler: jest.fn(),
+  setNotificationChannelAsync: jest.fn(() => Promise.resolve(null)),
+  getPermissionsAsync: jest.fn(() => Promise.resolve({ granted: true, canAskAgain: true })),
+  requestPermissionsAsync: jest.fn(() => Promise.resolve({ granted: true })),
+  getAllScheduledNotificationsAsync: jest.fn(() => Promise.resolve([])),
+  cancelScheduledNotificationAsync: jest.fn(() => Promise.resolve()),
+  scheduleNotificationAsync: jest.fn(() => Promise.resolve('id')),
+  useLastNotificationResponse: jest.fn(() => null),
+  clearLastNotificationResponse: jest.fn(),
+}));
+
+jest.mock('@react-native-community/datetimepicker', () => ({
+  DateTimePickerAndroid: { open: jest.fn() },
 }));
