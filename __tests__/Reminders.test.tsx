@@ -16,6 +16,9 @@ const write = {
   enabled: true,
 };
 
+// The first render loads React Native lazily and takes over 5s on CI runners.
+jest.setTimeout(30000);
+
 beforeEach(async () => {
   jest.clearAllMocks();
   await AsyncStorage.clear();
