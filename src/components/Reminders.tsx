@@ -101,7 +101,7 @@ export default function Reminders() {
         <View key={r.id} style={styles.row}>
           <TouchableOpacity
             accessibilityRole="button"
-            accessibilityLabel={`Change time for ${r.label}`}
+            accessibilityLabel={`Change time for ${r.label}, ${formatTime(r.hour, r.minute)}`}
             style={styles.time}
             onPress={() =>
               pickTime(r.hour, r.minute, (hour, minute) => {
@@ -135,7 +135,7 @@ export default function Reminders() {
       <View style={styles.row}>
         <TouchableOpacity
           accessibilityRole="button"
-          accessibilityLabel="New reminder time"
+          accessibilityLabel={`New reminder time, ${formatTime(time.hour, time.minute)}`}
           style={styles.time}
           onPress={() =>
             pickTime(time.hour, time.minute, (hour, minute) =>

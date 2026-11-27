@@ -30,7 +30,7 @@ beforeEach(async () => {
 
 it('adds a reminder and schedules a daily notification', async () => {
   const { getByLabelText, getByText } = await render(<Reminders />);
-  await fireEvent.press(getByLabelText('New reminder time'));
+  await fireEvent.press(getByLabelText(/^New reminder time, 9:00/));
   const [{ onValueChange }] = (DateTimePickerAndroid.open as jest.Mock).mock
     .calls[0] as [{ onValueChange: (event: object, date: Date) => void }];
   await act(() => onValueChange({}, timeOfDay(7, 45)));
