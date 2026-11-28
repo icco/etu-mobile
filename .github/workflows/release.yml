@@ -55,6 +55,33 @@ jobs:
           ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
           ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
           ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        id: semantic
+      - name: Check Play Store secret
+        id: play
+        env:
+          PLAY_STORE_JSON: ${{ secrets.PLAY_STORE_SERVICE_ACCOUNT_JSON }}
+        run: echo "enabled=$([ -n "$PLAY_STORE_JSON" ] && echo true || echo false)" >> "$GITHUB_OUTPUT"
+      - name: Build release AAB
+        if: steps.semantic.outputs.new_release_published == 'true' && steps.play.outputs.enabled == 'true'
+        env:
+          VERSION_NAME: ${{ steps.semantic.outputs.new_release_version }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          IFS=. read -r major minor patch <<< "$VERSION_NAME"
+          export VERSION_CODE=$(( (major * 1000 + minor) * 1000 + patch ))
+          cd android
+          ./gradlew bundleRelease --no-daemon
+      - name: Upload to Play (internal track)
+        if: steps.semantic.outputs.new_release_published == 'true' && steps.play.outputs.enabled == 'true'
+        uses: r0adkll/upload-google-play@e738b9dd8f2476ea806d921b64aacd24f34515a5
+        with:
+          serviceAccountJsonPlainText: ${{ secrets.PLAY_STORE_SERVICE_ACCOUNT_JSON }}
+          packageName: com.timeclimbers.etu
+          releaseFiles: android/app/build/outputs/bundle/release/app-release.aab
+          track: internal
+          status: completed
       - name: Remove signing material
         if: always()
         run: rm -f "${RUNNER_TEMP}/upload.keystore"
