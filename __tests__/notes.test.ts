@@ -103,7 +103,7 @@ describe('createNote', () => {
         images: [{ data: bytes, mimeType: 'image/png' }],
         audios: [{ data: bytes, mimeType: 'audio/m4a' }],
       },
-      opts
+      { ...opts, timeoutMs: 120000 }
     );
   });
 });
@@ -135,7 +135,7 @@ describe('updateNote', () => {
         addImages: [{ data: bytes, mimeType: 'image/png' }],
         addAudios: [{ data: bytes, mimeType: 'image/png' }],
       },
-      opts
+      { ...opts, timeoutMs: 120000 }
     );
   });
 });

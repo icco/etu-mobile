@@ -159,3 +159,50 @@ describe('requestFlush', () => {
     expect(handler).toHaveBeenCalledTimes(1);
   });
 });
+
+describe('attachments', () => {
+  const photo = { data: 'aGVsbG8=', mimeType: 'image/png' };
+
+  it('keeps attachment bytes out of storage and replays them', async () => {
+    mockedCreateNote.mockRejectedValue(new ConnectError('down', Code.Unavailable));
+    await createNoteOrQueue('alice', 'tok', 'pic', [], [photo]);
+    expect(await AsyncStorage.getItem(OFFLINE_QUEUE_KEY)).not.toContain(photo.data);
+
+    mockedCreateNote.mockReset();
+    mockedCreateNote.mockResolvedValue({ id: 'ok' } as never);
+    await flushPendingNotes('alice', 'tok');
+    expect(mockedCreateNote).toHaveBeenCalledWith('alice', 'tok', 'pic', [], [photo], undefined);
+  });
+
+  it('does not queue an upload that timed out', async () => {
+    const error = new ConnectError('slow', Code.DeadlineExceeded);
+    mockedCreateNote.mockRejectedValue(error);
+    await expect(createNoteOrQueue('alice', 'tok', 'pic', [], [photo])).rejects.toBe(error);
+    expect(await getPendingNotes()).toEqual([]);
+  });
+});
+
+describe('stuck notes', () => {
+  it('keeps a refused note without blocking the notes behind it', async () => {
+    mockedCreateNote.mockRejectedValue(new ConnectError('down', Code.Unavailable));
+    await createNoteOrQueue('alice', 'tok', 'refused');
+    await createNoteOrQueue('alice', 'tok', 'fine');
+
+    mockedCreateNote.mockReset();
+    mockedCreateNote
+      .mockRejectedValueOnce(new ConnectError('subscription required', Code.PermissionDenied))
+      .mockResolvedValue({ id: 'ok' } as never);
+    expect(await flushPendingNotes('alice', 'tok')).toEqual({ sent: 1, remaining: 1 });
+    expect((await getPendingNotes()).map(n => n.content)).toEqual(['refused']);
+
+    mockedCreateNote.mockRejectedValueOnce(new ConnectError('subscription required', Code.PermissionDenied));
+    const result = await createNoteOrQueue('alice', 'tok', 'new');
+    expect(result.status).toBe('sent');
+  });
+
+  it('still sends new notes when stored queue cannot be read', async () => {
+    jest.spyOn(AsyncStorage, 'getItem').mockRejectedValueOnce(new Error('Row too big to fit into CursorWindow'));
+    mockedCreateNote.mockResolvedValue({ id: 'n1' } as never);
+    expect((await createNoteOrQueue('alice', 'tok', 'hello')).status).toBe('sent');
+  });
+});
