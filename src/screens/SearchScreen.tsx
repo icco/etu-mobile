@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   View,
   Text,
@@ -28,6 +28,11 @@ export default function SearchScreen() {
   const navigation = useNavigation();
   const { user, token, handleAuthError } = useAuth();
   const [search, setSearch] = useState('');
+  const [query, setQuery] = useState('');
+  useEffect(() => {
+    const timer = setTimeout(() => setQuery(search.trim()), 300);
+    return () => clearTimeout(timer);
+  }, [search]);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
@@ -49,7 +54,7 @@ export default function SearchScreen() {
     queryKey: [
       'notesSearch',
       user?.id,
-      search,
+      query,
       selectedTags,
       startDate,
       endDate,
@@ -58,7 +63,7 @@ export default function SearchScreen() {
       listNotes({
         userId: user!.id,
         token: token!,
-        search: search.trim() || undefined,
+        search: query || undefined,
         tags: selectedTags.length > 0 ? selectedTags : undefined,
         startDate: startDate || undefined,
         endDate: endDate || undefined,

@@ -1,5 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { QueryCache, QueryClient } from '@tanstack/react-query';
+import { QueryCache, QueryClient, defaultShouldDehydrateQuery } from '@tanstack/react-query';
 import type { PersistedClient } from '@tanstack/react-query-persist-client';
 import { createAsyncStoragePersister } from '@tanstack/query-async-storage-persister';
 import { shouldRetry, getRetryDelay, logApiError } from '../utils/errors';
@@ -60,6 +60,15 @@ export const queryClient = new QueryClient({
     },
   },
 });
+
+export const persistOptions = {
+  persister,
+  maxAge: CACHE_MAX_AGE,
+  dehydrateOptions: {
+    shouldDehydrateQuery: (query: Parameters<typeof defaultShouldDehydrateQuery>[0]) =>
+      defaultShouldDehydrateQuery(query) && query.queryKey[0] !== 'notesSearch',
+  },
+};
 
 export async function clearCachedData() {
   queryClient.clear();
