@@ -74,7 +74,9 @@ jobs:
       - name: Build debug APK
         run: |
           cd android
-          ./gradlew assembleDebug --no-daemon
+          ./gradlew assembleDebug --no-daemon $ARCH_ARGS
+        env:
+          ARCH_ARGS: ${{ github.event_name == 'pull_request' && '-PreactNativeArchitectures=arm64-v8a' || '' }}
       - name: Upload debug APK
         uses: actions/upload-artifact@v7
         with:
@@ -91,6 +93,7 @@ jobs:
           else
             echo "has_keystore=false" >> $GITHUB_OUTPUT
           fi
+        if: github.event_name != 'pull_request'
       - name: Decode keystore and build release AAB
         if: steps.check_android_secrets.outputs.has_keystore == 'true'
         env:
