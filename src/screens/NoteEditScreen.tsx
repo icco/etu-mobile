@@ -100,7 +100,10 @@ export default function NoteEditScreen() {
     recording ||
     !!pendingTag.trim();
   const hasContent =
-    !!content.trim() || images.length > 0 || audios.length > 0;
+    !!content.trim() ||
+    images.length + audios.length > 0 ||
+    !!sourceNote?.images?.length ||
+    !!sourceNote?.audios?.length;
   const canSave = !saving && !recording && hasContent;
 
   usePreventRemove(saving || (dirty && !saved), ({ data }) => {

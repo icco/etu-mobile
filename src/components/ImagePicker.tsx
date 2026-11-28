@@ -7,6 +7,8 @@ import {
   StyleSheet,
   ScrollView,
   Alert,
+  PermissionsAndroid,
+  Platform,
 } from 'react-native';
 import { launchCamera, launchImageLibrary } from 'react-native-image-picker';
 import RNFS from 'react-native-fs';
@@ -59,10 +61,26 @@ export default function ImagePicker({
         quality: 0.8 as const,
         includeBase64: false,
       };
+      if (fromCamera && Platform.OS === 'android') {
+        const granted = await PermissionsAndroid.request(
+          PermissionsAndroid.PERMISSIONS.CAMERA,
+        );
+        if (granted !== PermissionsAndroid.RESULTS.GRANTED) {
+          Alert.alert(
+            'Permission required',
+            'Camera access is needed to take photos.',
+          );
+          return;
+        }
+      }
       const result = fromCamera
         ? await launchCamera(options)
         : await launchImageLibrary(options);
 
+      if (result.errorCode) {
+        Alert.alert('Error', result.errorMessage ?? result.errorCode);
+        return;
+      }
       if (result.didCancel || !result.assets) {
         return;
       }
