@@ -5,6 +5,8 @@ module.exports = {
   setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],
   moduleNameMapper: {
     '^@icco/etu-proto$': '<rootDir>/__mocks__/etu-proto.js',
+    '^lucide-react-native$':
+      '<rootDir>/node_modules/lucide-react-native/dist/cjs/lucide-react-native.js',
   },
   transformIgnorePatterns: [
     'node_modules/(?!(@react-navigation|react-native|@react-native|react-native-markdown-display|@connectrpc|@bufbuild|@icco)/)',
