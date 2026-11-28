@@ -151,7 +151,7 @@ pnpm test:watch           # Watch mode for development
 If you cannot run Android Studio, Xcode, or emulators locally, use **GitHub Actions on your PR**:
 
 1. Open the PR → **Checks** tab → wait for **CI** to finish.
-2. **Lint** job: ESLint, `tsc`, and **Jest** (`pnpm test`). Run **`pnpm test:coverage`** locally when you want the coverage table; the 50% thresholds in `jest.config.js` apply to that command, not to CI.
+2. **Lint** job: ESLint, `tsc`, and **Jest** with coverage (`pnpm test:coverage`), which fails below the 50% thresholds in `jest.config.js`.
 3. **Android** job: downloads **`app-debug`** (installable debug APK). With `ANDROID_KEYSTORE_*` secrets, **`app-release-aab`** is the signed bundle.
 
 CI has no iOS job.
@@ -162,7 +162,7 @@ You can also run CI manually: **Actions** → **CI** → **Run workflow**. Concu
 
 Workflows run on **pushes** to `main`, `implement`, or `develop`, on **all pull requests**, and on **workflow_dispatch** (manual):
 
-- **Lint**: ESLint, TypeScript, Jest (`pnpm test`).
+- **Lint**: ESLint, TypeScript, Jest with coverage (`pnpm test:coverage`).
 - **Android**: `assembleDebug` + artifact `app-debug`; signed `app-release-aab` when keystore secrets exist.
 
 `pnpm install` uses `NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN || secrets.GITHUB_TOKEN }}` — same-repo workflows usually work with the default `GITHUB_TOKEN`; set **`NPM_TOKEN`** (PAT with `read:packages`) if installs fail (e.g. some fork PRs).
