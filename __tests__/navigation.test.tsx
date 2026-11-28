@@ -14,10 +14,15 @@ const { getStateFromPath } = jest.requireActual<typeof Navigation>(
   '@react-navigation/native',
 );
 
-it('opens the composer from the New note action', async () => {
+it.each([
+  ['text', {}],
+  ['voice', { attach: 'audio' }],
+  ['photo', { attach: 'images' }],
+])('opens a %s note from the New note menu', async (kind, params) => {
   const { getByRole } = await render(<NewNoteButton />);
   await fireEvent.press(getByRole('button', { name: 'New note' }));
-  expect(mockNavigate).toHaveBeenCalledWith('NoteEdit', {});
+  await fireEvent.press(getByRole('button', { name: `New ${kind} note` }));
+  expect(mockNavigate).toHaveBeenCalledWith('NoteEdit', params);
 });
 
 it.each([

@@ -45,6 +45,7 @@ export default function NoteEditScreen() {
   const noteId = route.params?.noteId;
   const existingNote = route.params?.note;
   const initialContent = route.params?.initialContent;
+  const attach = route.params?.attach;
   const queryClient = useQueryClient();
   const { user, token } = useAuth();
 
@@ -53,7 +54,7 @@ export default function NoteEditScreen() {
   const [pendingTag, setPendingTag] = useState('');
   const [images, setImages] = useState<SelectedImage[]>([]);
   const [audios, setAudios] = useState<SelectedAudio[]>([]);
-  const [panel, setPanel] = useState<Panel | null>(null);
+  const [panel, setPanel] = useState<Panel | null>(attach ?? null);
   const [recording, setRecording] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -98,7 +99,12 @@ export default function NoteEditScreen() {
     audios.length > 0 ||
     recording ||
     !!pendingTag.trim();
-  const canSave = !saving && !recording && !!content.trim();
+  const hasContent =
+    !!content.trim() ||
+    images.length + audios.length > 0 ||
+    !!sourceNote?.images?.length ||
+    !!sourceNote?.audios?.length;
+  const canSave = !saving && !recording && hasContent;
 
   usePreventRemove(saving || (dirty && !saved), ({ data }) => {
     if (saving) return;
@@ -117,7 +123,7 @@ export default function NoteEditScreen() {
   }, [saved, navigation]);
 
   const handleSave = async () => {
-    if (!user || !token || !content.trim()) return;
+    if (!user || !token || !hasContent) return;
     setSaving(true);
     const pending = pendingTag.trim().toLowerCase();
     const saveTags =
@@ -238,7 +244,7 @@ export default function NoteEditScreen() {
           accessibilityLabel="Note content"
           selectionColor={colors.primary}
           keyboardAppearance={dark ? 'dark' : 'light'}
-          autoFocus={!isEdit}
+          autoFocus={!isEdit && !attach}
           value={content}
           onChangeText={setContent}
           multiline
@@ -259,7 +265,11 @@ export default function NoteEditScreen() {
           />
         </View>
         <View style={!show('images', images.length) && styles.hidden}>
-          <ImagePicker images={images} onImagesChange={setImages} />
+          <ImagePicker
+            images={images}
+            onImagesChange={setImages}
+            autoStart={attach === 'images'}
+          />
         </View>
         <View
           style={!recording && !show('audio', audios.length) && styles.hidden}
@@ -268,6 +278,7 @@ export default function NoteEditScreen() {
             audios={audios}
             onAudiosChange={setAudios}
             onRecordingChange={setRecording}
+            autoStart={attach === 'audio'}
           />
         </View>
       </ScrollView>

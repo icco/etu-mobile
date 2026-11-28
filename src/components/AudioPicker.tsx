@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useEffectEvent } from 'react';
 import {
   View,
   Text,
@@ -33,6 +33,7 @@ interface AudioPickerProps {
   onRecordingChange?: (recording: boolean) => void;
   maxAudios?: number;
   maxSizeMB?: number;
+  autoStart?: boolean;
 }
 
 const ALLOWED_MIME_TYPES = [
@@ -57,6 +58,7 @@ export default function AudioPicker({
   onRecordingChange,
   maxAudios = MAX_AUDIOS,
   maxSizeMB = MAX_SIZE_MB,
+  autoStart,
 }: AudioPickerProps) {
   const styles = useThemedStyles(createStyles);
   const maxSizeBytes = maxSizeMB * 1024 * 1024;
@@ -226,6 +228,13 @@ export default function AudioPicker({
       Alert.alert('Error', 'Failed to start recording');
     }
   };
+
+  const startRecording = useEffectEvent(() => void handleStartRecording());
+  useEffect(() => {
+    // starting the recorder is the external system this effect syncs to
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    if (autoStart) startRecording();
+  }, [autoStart]);
 
   const handleStopRecording = async () => {
     setFinalizing(true);
