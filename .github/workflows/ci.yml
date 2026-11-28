@@ -41,7 +41,7 @@ jobs:
       - name: TypeScript
         run: pnpm typecheck
       - name: Test
-        run: pnpm test
+        run: pnpm test:coverage
   android:
     name: Android
     runs-on: ubuntu-latest
