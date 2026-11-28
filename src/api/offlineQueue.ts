@@ -50,6 +50,8 @@ export interface FlushResult {
 let chain: Promise<unknown> = Promise.resolve();
 let flushing: Promise<FlushResult> | null = null;
 let counts: Record<string, number> = {};
+// null when the stored queue could not be read.
+let total: number | null = 0;
 let flushHandler: (() => void) | null = null;
 const listeners = new Set<() => void>();
 
@@ -65,6 +67,7 @@ function updateCounts(queue: QueuedNote[]) {
     next[item.userId] = (next[item.userId] ?? 0) + 1;
   }
   counts = next;
+  total = queue.length;
   listeners.forEach(l => l());
 }
 
@@ -140,7 +143,15 @@ export function getPendingNotes(): Promise<QueuedNote[]> {
 }
 
 export function refreshPendingCount(): Promise<void> {
-  return withLock(async () => updateCounts(await readQueue()));
+  return withLock(async () => {
+    try {
+      updateCounts(await readQueue());
+    } catch (error) {
+      total = null;
+      listeners.forEach(l => l());
+      throw error;
+    }
+  });
 }
 
 export function enqueueNote(input: NewNote): Promise<QueuedNote> {
@@ -295,4 +306,9 @@ export function usePendingNoteCount(userId: string | undefined): number {
   return useSyncExternalStore(subscribe, () =>
     userId ? (counts[userId] ?? 0) : 0,
   );
+}
+
+// Every user's queued notes, since sign out clears them all.
+export function useQueuedNoteTotal(): number | null {
+  return useSyncExternalStore(subscribe, () => total);
 }

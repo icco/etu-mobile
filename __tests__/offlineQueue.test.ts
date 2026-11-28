@@ -13,7 +13,10 @@ import {
   getPendingNotes,
   requestFlush,
   setFlushHandler,
+  refreshPendingCount,
+  useQueuedNoteTotal,
 } from '../src/api/offlineQueue';
+import { act, renderHook } from '@testing-library/react-native';
 import { persister } from '../src/api/queryClient';
 import { createNote } from '../src/api/notes';
 
@@ -228,5 +231,21 @@ describe('storage failures', () => {
     jest.spyOn(AsyncStorage, 'setItem').mockRejectedValueOnce(new Error('disk full'));
     await expect(createNoteOrQueue('alice', 'tok', 'pic', [], [photo])).rejects.toThrow('disk full');
     expect(RNFS.unlink).toHaveBeenCalledWith(expect.stringMatching(/\/offline-notes\/.+-image-0$/));
+  });
+});
+
+describe('useQueuedNoteTotal', () => {
+  it('counts every user and reports an unreadable queue as null', async () => {
+    mockedCreateNote.mockRejectedValue(new ConnectError('down', Code.Unavailable));
+    await createNoteOrQueue('alice', 'tok', 'one');
+    await createNoteOrQueue('bob', 'tok2', 'two');
+    const { result } = await renderHook(() => useQueuedNoteTotal());
+    expect(result.current).toBe(2);
+
+    jest.spyOn(AsyncStorage, 'getItem').mockRejectedValueOnce(new Error('Row too big'));
+    await act(async () => {
+      await expect(refreshPendingCount()).rejects.toThrow('Row too big');
+    });
+    expect(result.current).toBeNull();
   });
 });

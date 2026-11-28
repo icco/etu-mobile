@@ -17,7 +17,7 @@ import { getUserSettings, updateUserSettings } from '../api/settings';
 import { getStats } from '../api/stats';
 import type { Stats } from '../api/stats';
 import { getErrorMessage } from '../utils/errors';
-import { usePendingNoteCount } from '../api/offlineQueue';
+import { useQueuedNoteTotal } from '../api/offlineQueue';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import ApiKeysScreen from './ApiKeysScreen';
 import Reminders from '../components/Reminders';
@@ -34,7 +34,7 @@ export default function SettingsScreen() {
   const { colors, dark } = useAppTheme();
   const styles = useThemedStyles(createStyles);
   const { user, token, logout } = useAuth();
-  const pendingCount = usePendingNoteCount(user?.id);
+  const queuedTotal = useQueuedNoteTotal();
   const queryClient = useQueryClient();
   const [activeSection, setActiveSection] = useState<
     'main' | 'apikeys' | 'stats'
@@ -331,13 +331,15 @@ export default function SettingsScreen() {
       <TouchableOpacity
         style={styles.logoutBtn}
         onPress={() => {
-          if (pendingCount === 0) {
+          if (queuedTotal === 0) {
             void logout();
             return;
           }
           Alert.alert(
             'Sign out?',
-            `${pendingCount} offline ${pendingCount === 1 ? 'note has' : 'notes have'} not synced and will be deleted.`,
+            queuedTotal === null
+              ? 'Offline notes could not be read and will be deleted.'
+              : `${queuedTotal} offline ${queuedTotal === 1 ? 'note has' : 'notes have'} not synced and will be deleted.`,
             [
               { text: 'Cancel', style: 'cancel' },
               {
