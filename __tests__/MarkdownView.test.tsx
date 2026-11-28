@@ -2,7 +2,7 @@
  * @format
  *
  * Renders real markdown through react-native-markdown-display (markdown-it),
- * guarding the markdown-it major-version override in package.json overrides.
+ * guarding the markdown-it override in pnpm-workspace.yaml.
  */
 
 import React from 'react';
