@@ -16,7 +16,7 @@ export function formatDateGroup(date: Date): string {
   const noteDay = new Date(date.getFullYear(), date.getMonth(), date.getDate());
   if (noteDay.getTime() === today.getTime()) return 'Today';
   if (noteDay.getTime() === yesterday.getTime()) return 'Yesterday';
-  const diffDays = Math.floor((today.getTime() - noteDay.getTime()) / (24 * 60 * 60 * 1000));
+  const diffDays = Math.round((today.getTime() - noteDay.getTime()) / (24 * 60 * 60 * 1000));
   if (diffDays < 7) return `${diffDays} days ago`;
   if (diffDays < 14) return 'Last week';
   return date.toLocaleDateString();

@@ -1,3 +1,5 @@
+process.env.TZ = 'America/New_York';
+
 module.exports = {
   // React Native 0.85 split the jest preset out into its own package.
   // See https://github.com/facebook/react-native/pull/52133
