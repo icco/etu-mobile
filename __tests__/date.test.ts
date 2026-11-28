@@ -62,6 +62,15 @@ describe('Date Utilities', () => {
       expect(formatted).toMatch(/2024/); // Should contain the year
     });
 
+    it('counts days across a daylight-saving change', () => {
+      jest.useFakeTimers({ now: new Date(2024, 2, 12, 12) });
+      try {
+        expect(formatDateGroup(new Date(2024, 2, 10, 12))).toBe('2 days ago');
+      } finally {
+        jest.useRealTimers();
+      }
+    });
+
     it('formats dates in the past week', () => {
       const date = new Date();
       date.setDate(date.getDate() - 5); // 5 days ago

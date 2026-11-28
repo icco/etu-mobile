@@ -9,11 +9,13 @@ import {
 } from './client';
 import type { User } from './client';
 import { logError, logWarning, logInfo, logException } from '../utils/logger';
+import { requiresSignOut } from '../utils/errors';
 
 const AUTH_KEY = 'etu_auth';
 const USER_KEY = 'etu_user';
 const SESSION_USER = 'etu_session';
 type Session = { token: string; user?: JsonValue; email?: string; login?: JsonValue; keyId?: string };
+const INVALID_KEY = 'Invalid API key';
 // Retain an issued key if the first secure-storage write fails; retry that write
 // before another Login RPC. Persisted pending sessions also survive restarts.
 let pendingSession: Session | undefined;
@@ -26,6 +28,10 @@ export interface StoredAuth {
   token: string;
   user: User;
   keyId?: string;
+}
+
+function keyRejected(error: unknown): boolean {
+  return requiresSignOut(error) || (error instanceof Error && error.message === INVALID_KEY);
 }
 
 function sessionKeyId(session: Session): string | undefined {
@@ -46,8 +52,13 @@ export async function getStoredAuth(): Promise<StoredAuth | null> {
       if (session.user) return { token: session.token, user: fromJson(UserSchema, session.user), keyId };
       // Finish a previously interrupted login without issuing another key.
       pendingSession = session;
-      const user = await loginWithApiKey(session.token);
-      return { token: session.token, user, keyId };
+      try {
+        const user = await loginWithApiKey(session.token);
+        return { token: session.token, user, keyId };
+      } catch (error) {
+        if (keyRejected(error)) await clearStoredAuth();
+        throw error;
+      }
     }
     const userJson = await Keychain.getGenericPassword({ service: USER_KEY });
     if (!userJson || !userJson.password) {
@@ -112,7 +123,7 @@ export async function loginWithApiKey(apiKey: string): Promise<User> {
     );
     if (!res.valid || !res.userId) {
       logWarning('API key verification failed');
-      throw new Error('Invalid API key');
+      throw new Error(INVALID_KEY);
     }
     const userRes = await authClient.client.getUser(
       { userId: res.userId },
@@ -170,6 +181,11 @@ export async function register(email: string, password: string): Promise<User> {
   }
 }
 
+async function finishLogin(session: Session): Promise<User> {
+  await storeSession(session);
+  return loginWithApiKey(session.token);
+}
+
 export async function loginWithEmailPassword(
   email: string,
   password: string
@@ -178,12 +194,18 @@ export async function loginWithEmailPassword(
     const saved = await Keychain.getGenericPassword({ service: AUTH_KEY });
     const session = saved && saved.username === SESSION_USER ? JSON.parse(saved.password) as Session : undefined;
     const pending = pendingSession ?? (session && !session.user ? session : undefined);
-    if (pending && pending.email !== email) {
-      throw new Error('Finish signing in with the previous account before switching accounts');
-    }
-    if (pending) {
+    if (pending && pending.email !== email) await clearStoredAuth();
+    let user: User | undefined;
+    if (pending && pending.email === email) {
       pendingSession = pending;
-    } else {
+      try {
+        user = await finishLogin(pending);
+      } catch (error) {
+        if (!keyRejected(error)) throw error;
+        await clearStoredAuth();
+      }
+    }
+    if (!user) {
       const login = await createLoginSession(email, password);
       pendingSession = {
         token: login.rawKey,
@@ -191,9 +213,8 @@ export async function loginWithEmailPassword(
         login: toJson(CreateApiKeyResponseSchema, login),
         keyId: login.apiKey?.id || undefined,
       };
+      user = await finishLogin(pendingSession);
     }
-    await storeSession(pendingSession);
-    const user = await loginWithApiKey(pendingSession.token);
     logInfo('Authentication successful', { userId: user.id });
     return user;
   } catch (error) {
@@ -203,8 +224,4 @@ export async function loginWithEmailPassword(
     });
     throw error;
   }
-}
-
-export function getAuthHeaders(token: string): Record<string, string> {
-  return createHeaders(token);
 }

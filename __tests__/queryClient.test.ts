@@ -2,9 +2,9 @@
  * @format
  */
 
-import { QueryClient, type QueryClientConfig } from '@tanstack/react-query';
+import { QueryClient, dehydrate, type QueryClientConfig } from '@tanstack/react-query';
 import { ConnectError, Code } from '@connectrpc/connect';
-import { persister } from '../src/api/queryClient';
+import { persister, persistOptions } from '../src/api/queryClient';
 import { logError, logWarning } from '../src/utils/logger';
 
 jest.mock('@tanstack/query-async-storage-persister', () => ({
@@ -62,4 +62,14 @@ describe('queryClient defaults', () => {
     onError(new Error('boom'), {}, undefined);
     expect(logError).toHaveBeenCalledWith('API error', expect.objectContaining({ message: 'boom' }));
   });
+});
+
+it('does not persist search results', () => {
+  const { QueryClient: RealQueryClient } = jest.requireActual<typeof import('@tanstack/react-query')>('@tanstack/react-query');
+  const client = new RealQueryClient();
+  client.setQueryData(['notes', 'alice'], { pages: [] });
+  client.setQueryData(['notesSearch', 'alice', 'hel'], { notes: [] });
+  const keys = dehydrate(client, persistOptions.dehydrateOptions).queries.map(q => q.queryKey[0]);
+  expect(keys).toEqual(['notes']);
+  client.clear();
 });

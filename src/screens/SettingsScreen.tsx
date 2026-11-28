@@ -17,6 +17,7 @@ import { getUserSettings, updateUserSettings } from '../api/settings';
 import { getStats } from '../api/stats';
 import type { Stats } from '../api/stats';
 import { getErrorMessage } from '../utils/errors';
+import { useQueuedNoteTotal } from '../api/offlineQueue';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import ApiKeysScreen from './ApiKeysScreen';
 import Reminders from '../components/Reminders';
@@ -32,7 +33,8 @@ const LEGAL_LINKS = [
 export default function SettingsScreen() {
   const { colors, dark } = useAppTheme();
   const styles = useThemedStyles(createStyles);
-  const { user, token, logout, refreshUser } = useAuth();
+  const { user, token, logout } = useAuth();
+  const queuedTotal = useQueuedNoteTotal();
   const queryClient = useQueryClient();
   const [activeSection, setActiveSection] = useState<
     'main' | 'apikeys' | 'stats'
@@ -105,7 +107,6 @@ export default function SettingsScreen() {
       void queryClient.invalidateQueries({
         queryKey: ['userSettings', user.id],
       });
-      void refreshUser();
       setPassword('');
       setConfirmPassword('');
       Alert.alert('Saved', 'Profile updated');
@@ -330,7 +331,26 @@ export default function SettingsScreen() {
       <TouchableOpacity
         style={styles.logoutBtn}
         onPress={() => {
-          void logout();
+          if (queuedTotal === 0) {
+            void logout();
+            return;
+          }
+          Alert.alert(
+            'Sign out?',
+            queuedTotal === null
+              ? 'Offline notes could not be read and will be deleted.'
+              : `${queuedTotal} offline ${queuedTotal === 1 ? 'note has' : 'notes have'} not synced and will be deleted.`,
+            [
+              { text: 'Cancel', style: 'cancel' },
+              {
+                text: 'Sign out',
+                style: 'destructive',
+                onPress: () => {
+                  void logout();
+                },
+              },
+            ],
+          );
         }}
       >
         <Text style={styles.logoutBtnText}>Sign out</Text>

@@ -14,34 +14,12 @@ import { useAuth } from '../context/AuthContext';
 import { listNotes } from '../api/notes';
 import { usePendingNoteCount } from '../api/offlineQueue';
 import NoteCard from '../components/NoteCard';
-import type { Note } from '../api/client';
-import { protoTimestampToDate, formatDateGroup } from '../utils/date';
+import { groupNotesByDate } from '../utils/date';
 import { requiresSignOut, getErrorMessage } from '../utils/errors';
 import { useAppTheme, useThemedStyles, type Colors } from '../theme';
 import NewNoteButton from '../components/NewNoteButton';
 
 const PAGE_SIZE = 50;
-
-type GroupedNotes = { label: string; notes: Note[] }[];
-
-function groupNotesByDate(notes: Note[]): GroupedNotes {
-  const groups: Record<string, Note[]> = {};
-  const sorted = [...notes].sort((a, b) => {
-    const da = protoTimestampToDate(a.createdAt).getTime();
-    const db = protoTimestampToDate(b.createdAt).getTime();
-    return db - da;
-  });
-  for (const note of sorted) {
-    const date = protoTimestampToDate(note.createdAt);
-    const label = formatDateGroup(date);
-    if (!groups[label]) groups[label] = [];
-    groups[label].push(note);
-  }
-  return Object.entries(groups).map(([label, groupNotes]) => ({
-    label,
-    notes: groupNotes,
-  }));
-}
 
 export default function TimelineScreen() {
   const { colors } = useAppTheme();

@@ -11,7 +11,7 @@ import { AuthProvider } from './src/context/AuthContext';
 import ErrorBoundary from './src/components/ErrorBoundary';
 import RootNavigator from './src/navigation/RootNavigator';
 import OfflineSync from './src/components/OfflineSync';
-import { queryClient, persister, CACHE_MAX_AGE } from './src/api/queryClient';
+import { queryClient, persistOptions } from './src/api/queryClient';
 import {
   showRemindersInForeground,
   syncReminders,
@@ -44,7 +44,7 @@ function App() {
     <ErrorBoundary>
       <PersistQueryClientProvider
         client={queryClient}
-        persistOptions={{ persister, maxAge: CACHE_MAX_AGE }}
+        persistOptions={persistOptions}
       >
         <SafeAreaProvider>
           <StatusBar barStyle={dark ? 'light-content' : 'dark-content'} />

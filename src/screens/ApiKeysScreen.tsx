@@ -9,11 +9,13 @@ import {
   Alert,
   ActivityIndicator,
   Modal,
+  Share,
 } from 'react-native';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '../context/AuthContext';
 import { listApiKeys, createApiKey, deleteApiKey } from '../api/settings';
 import type { ApiKey } from '../api/client';
+import { getErrorMessage } from '../utils/errors';
 import { useAppTheme, useThemedStyles, type Colors } from '../theme';
 
 export default function ApiKeysScreen() {
@@ -42,6 +44,15 @@ export default function ApiKeysScreen() {
       Alert.alert(
         'API key created',
         `Copy it now – you won't see it again.\n\n${rawKey}`,
+        [
+          { text: 'Done', style: 'cancel' },
+          {
+            text: 'Share',
+            onPress: () => {
+              void Share.share({ message: rawKey });
+            },
+          },
+        ],
       );
     } catch (e) {
       Alert.alert(
@@ -70,7 +81,9 @@ export default function ApiKeysScreen() {
                   queryKey: ['apiKeys', user.id],
                 }),
               )
-              .catch(() => {});
+              .catch((e: unknown) => {
+                Alert.alert('Error', getErrorMessage(e));
+              });
             void p;
           },
         },

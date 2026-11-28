@@ -1,35 +1,20 @@
+import { base64Decode } from '@bufbuild/protobuf/wire';
 import { notesClient, tagsClient, createHeaders } from './client';
 
-export interface ImageUpload {
-  data: Uint8Array;
-  mimeType: string;
-}
-
-export interface AudioUpload {
-  data: Uint8Array;
-  mimeType: string;
-}
-
-export interface ImageUploadInput {
+export interface UploadInput {
   data: string; // base64
   mimeType: string;
 }
 
-export interface AudioUploadInput {
-  data: string; // base64
-  mimeType: string;
+const UPLOAD_TIMEOUT_MS = 120_000;
+
+function toUploads(list?: UploadInput[]) {
+  return list?.map(u => ({ data: base64Decode(u.data), mimeType: u.mimeType }));
 }
 
-// Helper function to convert base64 to Uint8Array
-function base64ToUint8Array(base64: string): Uint8Array<ArrayBufferLike> {
-  // atob is a global in browser/RN; TypeScript lib may not declare it
-  const binaryString = (globalThis as unknown as { atob(s: string): string }).atob(base64);
-  const len = binaryString.length;
-  const bytes = new Uint8Array(len);
-  for (let i = 0; i < len; i++) {
-    bytes[i] = binaryString.charCodeAt(i);
-  }
-  return bytes;
+function uploadOptions(token: string, ...lists: (UploadInput[] | undefined)[]) {
+  const uploading = lists.some(l => l?.length);
+  return { headers: createHeaders(token), timeoutMs: uploading ? UPLOAD_TIMEOUT_MS : undefined };
 }
 
 export interface ListNotesParams {
@@ -73,28 +58,12 @@ export async function createNote(
   token: string,
   content: string,
   tags: string[] = [],
-  images?: ImageUploadInput[],
-  audios?: AudioUploadInput[]
+  images?: UploadInput[],
+  audios?: UploadInput[]
 ) {
-  const imageUploads: ImageUpload[] | undefined = images?.map(img => ({
-    data: base64ToUint8Array(img.data),
-    mimeType: img.mimeType,
-  }));
-
-  const audioUploads: AudioUpload[] | undefined = audios?.map(audio => ({
-    data: base64ToUint8Array(audio.data),
-    mimeType: audio.mimeType,
-  }));
-
   const res = await notesClient.client.createNote(
-    { 
-      userId, 
-      content, 
-      tags,
-      images: imageUploads,
-      audios: audioUploads,
-    },
-    { headers: createHeaders(token) }
+    { userId, content, tags, images: toUploads(images), audios: toUploads(audios) },
+    uploadOptions(token, images, audios)
   );
   return res.note;
 }
@@ -106,30 +75,20 @@ export async function updateNote(
   content?: string,
   tags?: string[],
   updateTags = false,
-  addImages?: ImageUploadInput[],
-  addAudios?: AudioUploadInput[]
+  addImages?: UploadInput[],
+  addAudios?: UploadInput[]
 ) {
-  const imageUploads: ImageUpload[] | undefined = addImages?.map(img => ({
-    data: base64ToUint8Array(img.data),
-    mimeType: img.mimeType,
-  }));
-
-  const audioUploads: AudioUpload[] | undefined = addAudios?.map(audio => ({
-    data: base64ToUint8Array(audio.data),
-    mimeType: audio.mimeType,
-  }));
-
   const res = await notesClient.client.updateNote(
-    { 
-      userId, 
-      id, 
-      content, 
-      tags: tags ?? [], 
+    {
+      userId,
+      id,
+      content,
+      tags: tags ?? [],
       updateTags,
-      addImages: imageUploads,
-      addAudios: audioUploads,
+      addImages: toUploads(addImages),
+      addAudios: toUploads(addAudios),
     },
-    { headers: createHeaders(token) }
+    uploadOptions(token, addImages, addAudios)
   );
   return res.note;
 }

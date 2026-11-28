@@ -15,10 +15,7 @@ function isLocalHost(hostname: string): boolean {
 const getBaseUrl = (): string => {
   const url = Config?.GRPC_BACKEND_URL;
   if (!url || typeof url !== 'string') {
-    if (__DEV__) {
-      logWarning('GRPC_BACKEND_URL not set, using the production gRPC endpoint');
-      return DEFAULT_GRPC_URL;
-    }
+    if (__DEV__) logWarning('GRPC_BACKEND_URL not set, using the production gRPC endpoint');
     return DEFAULT_GRPC_URL;
   }
   return url;
@@ -79,19 +76,11 @@ export function resolveUrl(raw: string): string {
 const baseUrl = getBaseUrl();
 const url = resolveUrl(baseUrl);
 
-export function createTransport() {
-  return createNativeGrpcTransport(url.replace(/\/$/, ''));
-}
-
 let cachedTransport: ReturnType<typeof createNativeGrpcTransport> | null = null;
 
 export function getTransport() {
   if (!cachedTransport) {
-    cachedTransport = createTransport();
+    cachedTransport = createNativeGrpcTransport(url.replace(/\/$/, ''));
   }
   return cachedTransport;
-}
-
-export function resetTransport() {
-  cachedTransport = null;
 }

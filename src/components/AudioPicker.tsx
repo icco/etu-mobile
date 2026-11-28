@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useEffectEvent } from 'react';
+import React, { useState, useEffect, useEffectEvent, useRef } from 'react';
 import {
   View,
   Text,
@@ -31,8 +31,6 @@ interface AudioPickerProps {
   audios: SelectedAudio[];
   onAudiosChange: (audios: SelectedAudio[]) => void;
   onRecordingChange?: (recording: boolean) => void;
-  maxAudios?: number;
-  maxSizeMB?: number;
   autoStart?: boolean;
 }
 
@@ -56,11 +54,11 @@ export default function AudioPicker({
   audios,
   onAudiosChange,
   onRecordingChange,
-  maxAudios = MAX_AUDIOS,
-  maxSizeMB = MAX_SIZE_MB,
   autoStart,
 }: AudioPickerProps) {
   const styles = useThemedStyles(createStyles);
+  const maxAudios = MAX_AUDIOS;
+  const maxSizeMB = MAX_SIZE_MB;
   const maxSizeBytes = maxSizeMB * 1024 * 1024;
   const [isRecording, setIsRecording] = useState(false);
   const [finalizing, setFinalizing] = useState(false);
@@ -70,15 +68,19 @@ export default function AudioPicker({
     onRecordingChange?.(isRecording || finalizing);
   }, [isRecording, finalizing, onRecordingChange]);
 
-  // Cleanup on unmount
+  const recordingRef = useRef(false);
   useEffect(() => {
-    return () => {
-      if (isRecording) {
+    recordingRef.current = isRecording;
+  }, [isRecording]);
+  useEffect(
+    () => () => {
+      if (recordingRef.current) {
         Sound.stopRecorder().catch(console.error);
         Sound.removeRecordBackListener();
       }
-    };
-  }, [isRecording]);
+    },
+    [],
+  );
 
   const handleSelectAudios = async () => {
     if (audios.length >= maxAudios) {

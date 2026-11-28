@@ -42,7 +42,12 @@ export const linking: LinkingOptions<RootStackParamList> = {
         },
       },
       NoteDetail: 'note/:noteId',
-      NoteEdit: { path: 'edit', alias: ['capture'] },
+      NoteEdit: {
+        path: 'edit',
+        alias: ['capture'],
+        // Only in-app buttons may open the camera or microphone.
+        parse: { attach: () => undefined, note: () => undefined },
+      },
     },
   },
 };

@@ -20,11 +20,24 @@ jest.mock('@react-native-documents/picker', () => ({
   isErrorWithCode: jest.fn(() => false),
 }));
 
-jest.mock('react-native-fs', () => ({
-  readFile: jest.fn(() => Promise.resolve('')),
-  unlink: jest.fn(() => Promise.resolve()),
-  stat: jest.fn(() => Promise.resolve({ size: 0 })),
-}));
+jest.mock('react-native-fs', () => {
+  const files = new Map();
+  return {
+    DocumentDirectoryPath: '/docs',
+    mkdir: jest.fn(() => Promise.resolve()),
+    writeFile: jest.fn((path, data) => {
+      files.set(path, data);
+      return Promise.resolve();
+    }),
+    readFile: jest.fn(path => Promise.resolve(files.get(path) ?? '')),
+    unlink: jest.fn(path => {
+      for (const key of files.keys()) if (key === path || key.startsWith(path + '/')) files.delete(key);
+      return Promise.resolve();
+    }),
+    exists: jest.fn(path => Promise.resolve([...files.keys()].some(key => key === path || key.startsWith(path + '/')))),
+    stat: jest.fn(() => Promise.resolve({ size: 0 })),
+  };
+});
 
 jest.mock('react-native-nitro-sound', () => ({
   __esModule: true,

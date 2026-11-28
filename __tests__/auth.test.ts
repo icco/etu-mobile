@@ -126,3 +126,27 @@ it('propagates revoke failures', async () => {
   jest.mocked(apiKeysClient.client.deleteApiKey).mockRejectedValue(new Error('Unavailable'));
   await expect(revokeSession({ token: 'etu_alice', user, keyId: 'key-1' })).rejects.toThrow('Unavailable');
 });
+
+it('signs in again when a pending session key was revoked', async () => {
+  store.set('etu_auth', JSON.stringify({ token: 'revoked-key', email: 'test@example.com' }));
+  usernames.set('etu_auth', 'etu_session');
+  jest.mocked(apiKeysClient.client.verifyApiKey).mockResolvedValueOnce({ valid: false } as never);
+  expect(await loginWithEmailPassword('test@example.com', 'password')).toEqual(user);
+  expect(createLoginSession).toHaveBeenCalledTimes(1);
+  expect(await getStoredAuth()).toEqual({ token: 'etu_test', user });
+});
+
+it('lets another account sign in over a pending session', async () => {
+  store.set('etu_auth', JSON.stringify({ token: 'pending-key', email: 'bob@example.com' }));
+  usernames.set('etu_auth', 'etu_session');
+  expect(await loginWithEmailPassword('test@example.com', 'password')).toEqual(user);
+  expect(createLoginSession).toHaveBeenCalledWith('test@example.com', 'password');
+});
+
+it('drops a pending session whose key was revoked on restart', async () => {
+  store.set('etu_auth', JSON.stringify({ token: 'revoked-key', email: 'test@example.com' }));
+  usernames.set('etu_auth', 'etu_session');
+  jest.mocked(apiKeysClient.client.verifyApiKey).mockResolvedValueOnce({ valid: false } as never);
+  expect(await getStoredAuth()).toBeNull();
+  expect(Keychain.resetGenericPassword).toHaveBeenCalledWith({ service: 'etu_auth' });
+});

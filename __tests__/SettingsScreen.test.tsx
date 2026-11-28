@@ -4,19 +4,22 @@
 
 import React from 'react';
 import { render, fireEvent } from '@testing-library/react-native';
-import { Linking } from 'react-native';
+import { Alert, Linking } from 'react-native';
 import { useQuery } from '@tanstack/react-query';
 import SettingsScreen from '../src/screens/SettingsScreen';
 
 jest.mock('../src/api/settings');
 jest.mock('../src/api/stats');
+jest.mock('../src/api/offlineQueue', () => ({ useQueuedNoteTotal: () => mockPendingCount }));
+
+const mockLogout = jest.fn();
+let mockPendingCount: number | null = 0;
 
 jest.mock('../src/context/AuthContext', () => ({
   useAuth: () => ({
     user: { id: 'user-1', email: 'test@example.com' },
     token: 'test-token',
-    logout: jest.fn(),
-    refreshUser: jest.fn(),
+    logout: mockLogout,
   }),
 }));
 
@@ -124,4 +127,37 @@ describe('SettingsScreen legal links', () => {
     await fireEvent.press(getByText(label));
     expect(openURL).toHaveBeenCalledWith(url);
   });
+});
+
+describe('SettingsScreen sign out', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockedUseQuery.mockReturnValue({ data: undefined, isLoading: false, error: null });
+  });
+
+  it('signs out at once when nothing is queued', async () => {
+    mockPendingCount = 0;
+    const { getByText } = await render(<SettingsScreen />);
+    await fireEvent.press(getByText('Sign out'));
+    expect(mockLogout).toHaveBeenCalled();
+  });
+
+  it('asks before deleting unsynced notes', async () => {
+    mockPendingCount = 2;
+    const alert = jest.spyOn(Alert, 'alert').mockImplementation(() => {});
+    const { getByText } = await render(<SettingsScreen />);
+    await fireEvent.press(getByText('Sign out'));
+    expect(mockLogout).not.toHaveBeenCalled();
+    expect(alert).toHaveBeenCalledWith('Sign out?', '2 offline notes have not synced and will be deleted.', expect.any(Array));
+  });
+});
+
+it('warns when the offline queue could not be read', async () => {
+  mockedUseQuery.mockReturnValue({ data: undefined, isLoading: false, error: null });
+  mockPendingCount = null;
+  const alert = jest.spyOn(Alert, 'alert').mockImplementation(() => {});
+  const { getByText } = await render(<SettingsScreen />);
+  await fireEvent.press(getByText('Sign out'));
+  expect(mockLogout).not.toHaveBeenCalled();
+  expect(alert).toHaveBeenCalledWith('Sign out?', 'Offline notes could not be read and will be deleted.', expect.any(Array));
 });

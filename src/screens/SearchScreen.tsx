@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   View,
   Text,
@@ -15,33 +15,11 @@ import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '../context/AuthContext';
 import { listNotes, listTags } from '../api/notes';
 import NoteCard from '../components/NoteCard';
-import type { Note } from '../api/client';
-import { protoTimestampToDate, formatDateGroup } from '../utils/date';
+import { groupNotesByDate } from '../utils/date';
 import { requiresSignOut, getErrorMessage } from '../utils/errors';
 import { useAppTheme, useThemedStyles, type Colors } from '../theme';
 import Icon from '../components/Icon';
 import NewNoteButton from '../components/NewNoteButton';
-
-type GroupedNotes = { label: string; notes: Note[] }[];
-
-function groupNotesByDate(notes: Note[]): GroupedNotes {
-  const groups: Record<string, Note[]> = {};
-  const sorted = [...notes].sort((a, b) => {
-    const da = protoTimestampToDate(a.createdAt).getTime();
-    const db = protoTimestampToDate(b.createdAt).getTime();
-    return db - da;
-  });
-  for (const note of sorted) {
-    const date = protoTimestampToDate(note.createdAt);
-    const label = formatDateGroup(date);
-    if (!groups[label]) groups[label] = [];
-    groups[label].push(note);
-  }
-  return Object.entries(groups).map(([label, groupNotes]) => ({
-    label,
-    notes: groupNotes,
-  }));
-}
 
 export default function SearchScreen() {
   const { colors } = useAppTheme();
@@ -50,6 +28,11 @@ export default function SearchScreen() {
   const navigation = useNavigation();
   const { user, token, handleAuthError } = useAuth();
   const [search, setSearch] = useState('');
+  const [query, setQuery] = useState('');
+  useEffect(() => {
+    const timer = setTimeout(() => setQuery(search.trim()), 300);
+    return () => clearTimeout(timer);
+  }, [search]);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
@@ -71,7 +54,7 @@ export default function SearchScreen() {
     queryKey: [
       'notesSearch',
       user?.id,
-      search,
+      query,
       selectedTags,
       startDate,
       endDate,
@@ -80,7 +63,7 @@ export default function SearchScreen() {
       listNotes({
         userId: user!.id,
         token: token!,
-        search: search.trim() || undefined,
+        search: query || undefined,
         tags: selectedTags.length > 0 ? selectedTags : undefined,
         startDate: startDate || undefined,
         endDate: endDate || undefined,

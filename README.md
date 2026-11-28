@@ -219,16 +219,16 @@ base64 -w 0 release.keystore          # Linux
 
 The **Release** workflow (`.github/workflows/release.yml`) runs daily and on demand. It uses semantic-release (`.releaserc.yml`) to publish a GitHub release with a signed APK whenever `main` has new commits, setting `VERSION_NAME` and `VERSION_CODE` from the release version.
 
-### Deploy (Optional)
+### Play upload (Optional)
 
-The **Deploy** workflow (`.github/workflows/deploy.yml`) runs on push to `main` when `PLAY_STORE_SERVICE_ACCOUNT_JSON` is set (JSON key for a service account with Play Console API access); it also needs the Android signing secrets above. It builds an AAB and uploads to the internal track. CI sets `versionCode` to the Deploy run number (`VERSION_CODE`); local builds fall back to the value in `android/app/build.gradle`. Play rejects API uploads until the first AAB for the app is uploaded manually in Play Console. There is no iOS deploy.
+When `PLAY_STORE_SERVICE_ACCOUNT_JSON` is set (JSON key for a service account with Play Console API access), the Release workflow also builds an AAB for each new release and uploads it to the internal track, with the same `VERSION_NAME` and `VERSION_CODE` as the GitHub APK. Play rejects API uploads until the first AAB for the app is uploaded manually in Play Console. There is no iOS deploy.
 
 ## Build Configuration
 
 ### Version Management
 
 **Android** (`android/app/build.gradle`):
-- `versionCode`: from `VERSION_CODE` (Deploy run number, or derived from the release version by semantic-release), falling back to the value in Gradle
+- `versionCode`: from `VERSION_CODE` (derived from the release version as `major * 1000000 + minor * 1000 + patch`), falling back to the value in Gradle
 - `versionName`: from `VERSION_NAME` (set by semantic-release), falling back to the value in Gradle
 - `applicationId`: `com.timeclimbers.etu`
 
@@ -237,7 +237,7 @@ The **Deploy** workflow (`.github/workflows/deploy.yml`) runs on push to `main` 
 - Version: Set via Xcode (Marketing Version)
 - Build Number: Set via Xcode (Current Project Version)
 
-GitHub-release APKs get both values from semantic-release. Play AABs from Deploy get only `VERSION_CODE`, so set `VERSION_NAME` in the environment or bump the fallback `versionName` in `android/app/build.gradle` for a user-visible Play version. For iOS, open `ios/EtuMobileApp.xcworkspace` (created by `pod install`) in Xcode and set Version/Build under the target's General tab.
+GitHub-release APKs and Play AABs get both values from the release version. For iOS, open `ios/EtuMobileApp.xcworkspace` (created by `pod install`) in Xcode and set Version/Build under the target's General tab.
 
 ### Build Variants
 
@@ -300,7 +300,7 @@ Declare in Play Console what the app actually uses:
 
 ### Versioning
 
-The Deploy workflow sets `versionCode` from its run number, so each CI upload increments it. semantic-release sets `versionName` only for GitHub-release APKs; Play AABs use the Gradle fallback unless `VERSION_NAME` is set.
+Each release sets `versionName` and `versionCode` from its version, so GitHub APKs and Play builds of the same release match and can update each other.
 
 ## Architecture
 
