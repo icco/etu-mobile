@@ -61,7 +61,12 @@ export default function NoteDetailScreen() {
         style: 'destructive',
         onPress: () => {
           void (async () => {
-            await deleteNote(user.id, token, noteId);
+            try {
+              await deleteNote(user.id, token, noteId);
+            } catch (e) {
+              Alert.alert('Error', getErrorMessage(e));
+              return;
+            }
             void queryClient.invalidateQueries({
               queryKey: ['notes', user.id],
             });
