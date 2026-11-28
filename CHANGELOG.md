@@ -1,3 +1,15 @@
+# [1.3.0](https://github.com/icco/etu-mobile/compare/v1.2.1...v1.3.0) (2026-11-28)
+
+
+### Bug Fixes
+
+* draw icons with lucide instead of hand-written svg paths ([#280](https://github.com/icco/etu-mobile/issues/280)) ([8ecaccc](https://github.com/icco/etu-mobile/commit/8ecaccc8ff995d750e9bc58f80f3661cfd13664e)), closes [#279](https://github.com/icco/etu-mobile/issues/279)
+
+
+### Features
+
+* offer text, voice, and photo notes from the new note button ([#279](https://github.com/icco/etu-mobile/issues/279)) ([8741269](https://github.com/icco/etu-mobile/commit/874126951de509a6dc737e943f5631eaa80c3ad2))
+
 ## [1.2.1](https://github.com/icco/etu-mobile/compare/v1.2.0...v1.2.1) (2026-11-28)
 
 
