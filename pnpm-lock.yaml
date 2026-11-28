@@ -256,8 +256,8 @@ importers:
         specifier: ^0.37.2
         version: 0.37.2(react-native@0.88.1(@babel/core@7.29.13(supports-color@8.1.1))(@react-native-community/cli@21.0.0(supports-color@8.1.1)(typescript@6.0.3))(@react-native/metro-config@0.88.1(@babel/core@7.29.13(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.3.3)(react@19.3.0)(supports-color@8.1.1))(react@19.3.0)
       react-native-nitro-sound:
-        specifier: 0.2.20
-        version: 0.2.20(react-native-nitro-modules@0.37.2(react-native@0.88.1(@babel/core@7.29.13(supports-color@8.1.1))(@react-native-community/cli@21.0.0(supports-color@8.1.1)(typescript@6.0.3))(@react-native/metro-config@0.88.1(@babel/core@7.29.13(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.3.3)(react@19.3.0)(supports-color@8.1.1))(react@19.3.0))(react-native@0.88.1(@babel/core@7.29.13(supports-color@8.1.1))(@react-native-community/cli@21.0.0(supports-color@8.1.1)(typescript@6.0.3))(@react-native/metro-config@0.88.1(@babel/core@7.29.13(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.3.3)(react@19.3.0)(supports-color@8.1.1))(react@19.3.0)
+        specifier: 0.2.21
+        version: 0.2.21(react-native-nitro-modules@0.37.2(react-native@0.88.1(@babel/core@7.29.13(supports-color@8.1.1))(@react-native-community/cli@21.0.0(supports-color@8.1.1)(typescript@6.0.3))(@react-native/metro-config@0.88.1(@babel/core@7.29.13(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.3.3)(react@19.3.0)(supports-color@8.1.1))(react@19.3.0))(react-native@0.88.1(@babel/core@7.29.13(supports-color@8.1.1))(@react-native-community/cli@21.0.0(supports-color@8.1.1)(typescript@6.0.3))(@react-native/metro-config@0.88.1(@babel/core@7.29.13(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.3.3)(react@19.3.0)(supports-color@8.1.1))(react@19.3.0)
       react-native-safe-area-context:
         specifier: ^5.11.1
         version: 5.11.1(react-native@0.88.1(@babel/core@7.29.13(supports-color@8.1.1))(@react-native-community/cli@21.0.0(supports-color@8.1.1)(typescript@6.0.3))(@react-native/metro-config@0.88.1(@babel/core@7.29.13(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.3.3)(react@19.3.0)(supports-color@8.1.1))(react@19.3.0)
@@ -4406,8 +4406,8 @@ packages:
       react: '*'
       react-native: '*'
 
-  react-native-nitro-sound@0.2.20:
-    resolution: {integrity: sha512-vwLonInVqWOIdTsPirMj1ogColakUHcGH1tRLdjZW942eVgP8n29M1H4h15+h+6jmRXp3Lph1e/ysGzsyaZ0hA==}
+  react-native-nitro-sound@0.2.21:
+    resolution: {integrity: sha512-LLJ0wxnLz+33ZnpwJTg98E9CtycAsaxZEBoinUa+tMzl81N3LXnANfq/nq0DI7BjlHGawznpcdjQaWpqV6iODA==}
     engines: {node: '>=22.21.0'}
     peerDependencies:
       react: '*'
@@ -10293,7 +10293,7 @@ snapshots:
       react: 19.3.0
       react-native: 0.88.1(@babel/core@7.29.13(supports-color@8.1.1))(@react-native-community/cli@21.0.0(supports-color@8.1.1)(typescript@6.0.3))(@react-native/metro-config@0.88.1(@babel/core@7.29.13(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.3.3)(react@19.3.0)(supports-color@8.1.1)
 
-  react-native-nitro-sound@0.2.20(react-native-nitro-modules@0.37.2(react-native@0.88.1(@babel/core@7.29.13(supports-color@8.1.1))(@react-native-community/cli@21.0.0(supports-color@8.1.1)(typescript@6.0.3))(@react-native/metro-config@0.88.1(@babel/core@7.29.13(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.3.3)(react@19.3.0)(supports-color@8.1.1))(react@19.3.0))(react-native@0.88.1(@babel/core@7.29.13(supports-color@8.1.1))(@react-native-community/cli@21.0.0(supports-color@8.1.1)(typescript@6.0.3))(@react-native/metro-config@0.88.1(@babel/core@7.29.13(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.3.3)(react@19.3.0)(supports-color@8.1.1))(react@19.3.0):
+  react-native-nitro-sound@0.2.21(react-native-nitro-modules@0.37.2(react-native@0.88.1(@babel/core@7.29.13(supports-color@8.1.1))(@react-native-community/cli@21.0.0(supports-color@8.1.1)(typescript@6.0.3))(@react-native/metro-config@0.88.1(@babel/core@7.29.13(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.3.3)(react@19.3.0)(supports-color@8.1.1))(react@19.3.0))(react-native@0.88.1(@babel/core@7.29.13(supports-color@8.1.1))(@react-native-community/cli@21.0.0(supports-color@8.1.1)(typescript@6.0.3))(@react-native/metro-config@0.88.1(@babel/core@7.29.13(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.3.3)(react@19.3.0)(supports-color@8.1.1))(react@19.3.0):
     dependencies:
       '@react-native-community/slider': 5.2.2
       react: 19.3.0
