@@ -1,3 +1,17 @@
+# [1.2.0](https://github.com/icco/etu-mobile/compare/v1.1.5...v1.2.0) (2026-11-28)
+
+
+### Bug Fixes
+
+* add min age exclusion ([0001c04](https://github.com/icco/etu-mobile/commit/0001c0422564cfcf86cc8a7e47a3aa9424e21994))
+* compose notes on a single screen ([#272](https://github.com/icco/etu-mobile/issues/272)) ([168a8c0](https://github.com/icco/etu-mobile/commit/168a8c0e292c7d798bd0d6b259666a6b7f91b7fb))
+* **deps:** patch minimatch advisory paths and correct docs ([#273](https://github.com/icco/etu-mobile/issues/273)) ([2f22443](https://github.com/icco/etu-mobile/commit/2f2244336e17b1d7cb4c5836bde1ee83b73803a3))
+
+
+### Features
+
+* add daily reminder notifications ([#271](https://github.com/icco/etu-mobile/issues/271)) ([66cbc06](https://github.com/icco/etu-mobile/commit/66cbc06808f58d03fe2041b492a97cadb912bd2c))
+
 ## [1.1.5](https://github.com/icco/etu-mobile/compare/v1.1.4...v1.1.5) (2026-11-22)
 
 ## [1.1.4](https://github.com/icco/etu-mobile/compare/v1.1.3...v1.1.4) (2026-11-16)
