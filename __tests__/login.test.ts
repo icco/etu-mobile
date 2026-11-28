@@ -8,10 +8,13 @@ import { createLoginSession } from '../src/api/login';
 jest.mock('@icco/etu-proto', () => jest.requireActual<typeof import('@icco/etu-proto')>('../node_modules/@icco/etu-proto/dist/etu_pb.js'));
 jest.mock('../src/api/transport');
 
+const bridge = { unary: jest.fn<Promise<string>, [string, string, string, string, Record<string, string>, number]>(), cancel: jest.fn() };
+jest.mocked(getTransport).mockReturnValue(createNativeGrpcTransport('https://grpc.example.com', bridge));
+
 it.each(['etu_test', ''])('calls Login and validates raw key %j', async rawKey => {
+  bridge.unary.mockReset();
   const response = create(CreateApiKeyResponseSchema, { rawKey, apiKey: { id: 'key-id' } });
-  const bridge = { unary: jest.fn<Promise<string>, [string, string, string, string, Record<string, string>, number]>().mockResolvedValue(base64Encode(toBinary(CreateApiKeyResponseSchema, response))), cancel: jest.fn() };
-  jest.mocked(getTransport).mockReturnValue(createNativeGrpcTransport('https://grpc.example.com', bridge));
+  bridge.unary.mockResolvedValue(base64Encode(toBinary(CreateApiKeyResponseSchema, response)));
   const login = createLoginSession('test@example.com', 'password');
   if (rawKey) await expect(login).resolves.toEqual(response);
   else await expect(login).rejects.toThrow('Login response missing session');

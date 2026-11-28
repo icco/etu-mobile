@@ -1,4 +1,5 @@
-import { createClient } from '@connectrpc/connect';
+import { createClient, type Client } from '@connectrpc/connect';
+import type { DescService } from '@bufbuild/protobuf';
 import {
   NotesService,
   TagsService,
@@ -15,64 +16,20 @@ export function createHeaders(authToken: string): Record<string, string> {
   };
 }
 
-function getNotesClient() {
-  return createClient(NotesService, getTransport());
+function lazy<T extends DescService>(service: T): { readonly client: Client<T> } {
+  let client: Client<T> | undefined;
+  return {
+    get client() {
+      return (client ??= createClient(service, getTransport()));
+    },
+  };
 }
 
-function getTagsClient() {
-  return createClient(TagsService, getTransport());
-}
-
-function getAuthClient() {
-  return createClient(AuthService, getTransport());
-}
-
-function getApiKeysClient() {
-  return createClient(ApiKeysService, getTransport());
-}
-
-function getUserSettingsClient() {
-  return createClient(UserSettingsService, getTransport());
-}
-
-function getStatsClient() {
-  return createClient(StatsService, getTransport());
-}
-
-export const notesClient = {
-  get client() {
-    return getNotesClient();
-  },
-};
-
-export const tagsClient = {
-  get client() {
-    return getTagsClient();
-  },
-};
-
-export const authClient = {
-  get client() {
-    return getAuthClient();
-  },
-};
-
-export const apiKeysClient = {
-  get client() {
-    return getApiKeysClient();
-  },
-};
-
-export const userSettingsClient = {
-  get client() {
-    return getUserSettingsClient();
-  },
-};
-
-export const statsClient = {
-  get client() {
-    return getStatsClient();
-  },
-};
+export const notesClient = lazy(NotesService);
+export const tagsClient = lazy(TagsService);
+export const authClient = lazy(AuthService);
+export const apiKeysClient = lazy(ApiKeysService);
+export const userSettingsClient = lazy(UserSettingsService);
+export const statsClient = lazy(StatsService);
 
 export type { Note, Tag, User, ApiKey } from '@icco/etu-proto';
