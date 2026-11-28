@@ -1,3 +1,11 @@
+## [1.2.1](https://github.com/icco/etu-mobile/compare/v1.2.0...v1.2.1) (2026-11-28)
+
+
+### Bug Fixes
+
+* **ci:** enforce coverage thresholds and cover api modules ([#277](https://github.com/icco/etu-mobile/issues/277)) ([733b1bc](https://github.com/icco/etu-mobile/commit/733b1bc75e6a218401ea2770055bf50c796f8ad3))
+* show etu as the launcher app name ([#278](https://github.com/icco/etu-mobile/issues/278)) ([bced429](https://github.com/icco/etu-mobile/commit/bced429603e6adc51f03143e094da34d7551d9ee))
+
 # [1.2.0](https://github.com/icco/etu-mobile/compare/v1.1.5...v1.2.0) (2026-11-28)
 
 
