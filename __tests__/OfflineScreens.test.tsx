@@ -11,6 +11,7 @@ import TimelineScreen from '../src/screens/TimelineScreen';
 import NoteEditScreen from '../src/screens/NoteEditScreen';
 import { clearQueue, enqueueNote } from '../src/api/offlineQueue';
 import { createNote } from '../src/api/notes';
+import { launchCamera } from 'react-native-image-picker';
 
 jest.mock('../src/api/notes', () => ({
   createNote: jest.fn(),
@@ -115,6 +116,30 @@ describe('NoteEditScreen', () => {
         'hello',
         ['work'],
         undefined,
+        undefined,
+      ),
+    );
+  });
+
+  it('saves a photo-only note taken with the camera', async () => {
+    jest.mocked(launchCamera).mockResolvedValueOnce({
+      assets: [{ uri: 'file://ada.jpg', type: 'image/jpeg', fileSize: 10 }],
+    });
+    mockedCreateNote.mockResolvedValue({ id: 'n1' } as never);
+    const screen = await render(<NoteEditScreen />);
+    await fireEvent.press(screen.getByRole('button', { name: 'Photos' }));
+    await fireEvent.press(screen.getByRole('button', { name: 'Take photo' }));
+    await screen.findByLabelText('Remove image 1');
+    const { headerRight } = mockSetOptions.mock.lastCall![0];
+    const header = await render(headerRight());
+    await fireEvent.press(header.getByRole('button', { name: 'Save note' }));
+    await waitFor(() =>
+      expect(mockedCreateNote).toHaveBeenCalledWith(
+        'alice',
+        'token',
+        '',
+        [],
+        [{ data: '', mimeType: 'image/jpeg' }],
         undefined,
       ),
     );

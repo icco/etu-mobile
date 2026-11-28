@@ -11,7 +11,12 @@ export type RootStackParamList = {
   Register: undefined;
   MainTabs: NavigatorScreenParams<MainTabParamList> | undefined;
   NoteDetail: { noteId: string };
-  NoteEdit: { noteId?: string; note?: Note; initialContent?: string };
+  NoteEdit: {
+    noteId?: string;
+    note?: Note;
+    initialContent?: string;
+    attach?: 'images' | 'audio';
+  };
 };
 
 export type MainTabParamList = {

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useEffectEvent } from 'react';
 import {
   View,
   Text,
@@ -8,7 +8,7 @@ import {
   ScrollView,
   Alert,
 } from 'react-native';
-import { launchImageLibrary } from 'react-native-image-picker';
+import { launchCamera, launchImageLibrary } from 'react-native-image-picker';
 import RNFS from 'react-native-fs';
 import { useThemedStyles, type Colors } from '../theme';
 
@@ -24,6 +24,7 @@ interface ImagePickerProps {
   onImagesChange: (images: SelectedImage[]) => void;
   maxImages?: number;
   maxSizeMB?: number;
+  autoStart?: boolean;
 }
 
 const ALLOWED_MIME_TYPES = [
@@ -40,23 +41,27 @@ export default function ImagePicker({
   onImagesChange,
   maxImages = MAX_IMAGES,
   maxSizeMB = MAX_SIZE_MB,
+  autoStart,
 }: ImagePickerProps) {
   const styles = useThemedStyles(createStyles);
   const maxSizeBytes = maxSizeMB * 1024 * 1024;
 
-  const handleSelectImages = async () => {
+  const handleSelectImages = async (fromCamera = false) => {
     if (images.length >= maxImages) {
       Alert.alert('Limit Reached', `Maximum ${maxImages} images allowed`);
       return;
     }
 
     try {
-      const result = await launchImageLibrary({
-        mediaType: 'photo',
+      const options = {
+        mediaType: 'photo' as const,
         selectionLimit: maxImages - images.length,
-        quality: 0.8,
+        quality: 0.8 as const,
         includeBase64: false,
-      });
+      };
+      const result = fromCamera
+        ? await launchCamera(options)
+        : await launchImageLibrary(options);
 
       if (result.didCancel || !result.assets) {
         return;
@@ -112,6 +117,11 @@ export default function ImagePicker({
     }
   };
 
+  const startCamera = useEffectEvent(() => void handleSelectImages(true));
+  useEffect(() => {
+    if (autoStart) startCamera();
+  }, [autoStart]);
+
   const handleRemoveImage = (index: number) => {
     const newImages = images.filter((_, i) => i !== index);
     onImagesChange(newImages);
@@ -124,12 +134,22 @@ export default function ImagePicker({
           Images ({images.length}/{maxImages})
         </Text>
         {images.length < maxImages && (
-          <TouchableOpacity
-            style={styles.addButton}
-            onPress={() => void handleSelectImages()}
-          >
-            <Text style={styles.addButtonText}>+ Add Images</Text>
-          </TouchableOpacity>
+          <View style={styles.actions}>
+            <TouchableOpacity
+              accessibilityRole="button"
+              style={styles.addButton}
+              onPress={() => void handleSelectImages(true)}
+            >
+              <Text style={styles.addButtonText}>Take photo</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              accessibilityRole="button"
+              style={styles.addButton}
+              onPress={() => void handleSelectImages()}
+            >
+              <Text style={styles.addButtonText}>+ Add Images</Text>
+            </TouchableOpacity>
+          </View>
         )}
       </View>
 
@@ -180,6 +200,7 @@ const createStyles = (colors: Colors) =>
       fontSize: 16,
       fontWeight: '600',
     },
+    actions: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
     addButton: {
       backgroundColor: colors.primaryContainer,
       paddingHorizontal: 12,
