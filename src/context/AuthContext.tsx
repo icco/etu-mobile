@@ -32,7 +32,6 @@ interface AuthContextValue extends AuthState {
   login: (email: string, password: string) => Promise<void>;
   register: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
-  refreshUser: () => Promise<void>;
   handleAuthError: () => Promise<void>;
 }
 
@@ -139,13 +138,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     logInfo('User logged out');
   }, [state, clearSession]);
 
-  const refreshUser = useCallback(async () => {
-    const stored = await getStoredAuth();
-    if (stored?.user) {
-      setState((s) => ({ ...s, user: stored.user }));
-    }
-  }, []);
-
   const handleAuthError = useCallback(async () => {
     logError('Authentication error - logging out user');
     await clearSession();
@@ -157,7 +149,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     login,
     register,
     logout,
-    refreshUser,
     handleAuthError,
   };
 

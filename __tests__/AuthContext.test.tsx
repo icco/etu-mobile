@@ -272,26 +272,4 @@ describe('AuthContext', () => {
     expect(mockedAuthApi.clearStoredAuth).toHaveBeenCalled();
     expect(result.current.isAuthenticated).toBe(false);
   });
-
-  it('refreshes user data', async () => {
-    const mockUser = createMockUser('123', 'test@example.com');
-    const updatedUser = createMockUser('123', 'updated@example.com');
-    const mockToken = 'test-token';
-    
-    mockedAuthApi.getStoredAuth
-      .mockResolvedValueOnce({ user: mockUser, token: mockToken })
-      .mockResolvedValueOnce({ user: updatedUser, token: mockToken });
-
-    const { result } = await renderHook(() => useAuth(), { wrapper });
-
-    await waitFor(() => {
-      expect(result.current.user).toEqual(mockUser);
-    });
-
-    await act(async () => {
-      await result.current.refreshUser();
-    });
-
-    expect(result.current.user).toEqual(updatedUser);
-  });
 });
