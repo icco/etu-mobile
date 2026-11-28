@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { base64Encode } from '@bufbuild/protobuf/wire';
 import {
   View,
   Text,
@@ -90,14 +91,7 @@ export default function NoteDetailScreen() {
   }): string | null => {
     if (image.url) return image.url;
     if (image.data != null && image.mimeType) {
-      const data = image.data;
-      const binary = Array.from(data, (byte: number) =>
-        String.fromCharCode(byte),
-      ).join('');
-      const base64 = (
-        globalThis as unknown as { btoa(s: string): string }
-      ).btoa(binary);
-      return `data:${image.mimeType};base64,${base64}`;
+      return `data:${image.mimeType};base64,${base64Encode(image.data)}`;
     }
     return null;
   };

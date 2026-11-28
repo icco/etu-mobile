@@ -1,3 +1,5 @@
+import type { Note } from '../api/client';
+
 /**
  * Convert proto Timestamp (seconds + nanos) to JS Date
  */
@@ -20,4 +22,21 @@ export function formatDateGroup(date: Date): string {
   if (diffDays < 7) return `${diffDays} days ago`;
   if (diffDays < 14) return 'Last week';
   return date.toLocaleDateString();
+}
+
+export function groupNotesByDate(notes: Note[]): { label: string; notes: Note[] }[] {
+  const groups: Record<string, Note[]> = {};
+  const sorted = [...notes].sort(
+    (a, b) =>
+      protoTimestampToDate(b.createdAt).getTime() -
+      protoTimestampToDate(a.createdAt).getTime(),
+  );
+  for (const note of sorted) {
+    const label = formatDateGroup(protoTimestampToDate(note.createdAt));
+    (groups[label] ??= []).push(note);
+  }
+  return Object.entries(groups).map(([label, groupNotes]) => ({
+    label,
+    notes: groupNotes,
+  }));
 }
