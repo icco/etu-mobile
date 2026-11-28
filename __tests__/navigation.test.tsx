@@ -49,3 +49,15 @@ it.each([
   expect(state?.routes[0].name).toBe('MainTabs');
   expect(state?.routes[0].state?.routes[0].name).toBe(screen);
 });
+
+it.each([
+  'edit?attach=audio',
+  'capture?attach=images',
+  'edit?note=abc&attach=audio',
+])('ignores camera, microphone, and note params in %s', path => {
+  const params = getStateFromPath(path, linking.config)?.routes.at(-1)?.params as
+    | Record<string, unknown>
+    | undefined;
+  expect(params?.attach).toBeUndefined();
+  expect(params?.note).toBeUndefined();
+});
