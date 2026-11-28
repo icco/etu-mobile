@@ -24,8 +24,6 @@ export interface SelectedImage {
 interface ImagePickerProps {
   images: SelectedImage[];
   onImagesChange: (images: SelectedImage[]) => void;
-  maxImages?: number;
-  maxSizeMB?: number;
   autoStart?: boolean;
 }
 
@@ -41,11 +39,11 @@ const MAX_SIZE_MB = 5;
 export default function ImagePicker({
   images,
   onImagesChange,
-  maxImages = MAX_IMAGES,
-  maxSizeMB = MAX_SIZE_MB,
   autoStart,
 }: ImagePickerProps) {
   const styles = useThemedStyles(createStyles);
+  const maxImages = MAX_IMAGES;
+  const maxSizeMB = MAX_SIZE_MB;
   const maxSizeBytes = maxSizeMB * 1024 * 1024;
 
   const handleSelectImages = async (fromCamera = false) => {
