@@ -1,12 +1,15 @@
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import type { CompositeNavigationProp } from '@react-navigation/native';
+import type {
+  CompositeNavigationProp,
+  NavigatorScreenParams,
+} from '@react-navigation/native';
 import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import type { Note } from '../api/client';
 
 export type RootStackParamList = {
   Login: undefined;
   Register: undefined;
-  MainTabs: undefined;
+  MainTabs: NavigatorScreenParams<MainTabParamList> | undefined;
   NoteDetail: { noteId: string };
   NoteEdit: { noteId?: string; note?: Note; initialContent?: string };
 };
