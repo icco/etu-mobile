@@ -11,10 +11,11 @@ export const OFFLINE_QUEUE_KEY = 'etu.offlineNoteQueue.v1';
 const FILES_DIR = `${RNFS.DocumentDirectoryPath}/offline-notes`;
 
 // Attachments live in files: Android cannot read a storage row over about 2 MB.
+// `name` is relative to FILES_DIR, which moves when iOS updates the app container.
 // `data` is only set on entries queued before attachments moved to files.
 export interface QueuedFile {
   mimeType: string;
-  path?: string;
+  name?: string;
   data?: string;
 }
 
@@ -68,9 +69,10 @@ function updateCounts(queue: QueuedNote[]) {
 }
 
 async function readQueue(): Promise<QueuedNote[]> {
+  // A failed read throws so no write can overwrite notes it could not see.
+  const raw = await AsyncStorage.getItem(OFFLINE_QUEUE_KEY);
+  if (!raw) return [];
   try {
-    const raw = await AsyncStorage.getItem(OFFLINE_QUEUE_KEY);
-    if (!raw) return [];
     const parsed: unknown = JSON.parse(raw);
     if (Array.isArray(parsed)) return parsed as QueuedNote[];
     throw new Error('queue is not an array');
@@ -95,20 +97,21 @@ function newId() {
   return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
 }
 
-async function saveFiles(
-  id: string,
-  kind: string,
-  list?: UploadInput[],
-): Promise<QueuedFile[] | undefined> {
-  if (!list?.length) return undefined;
+function fileNames(id: string, kind: string, list?: UploadInput[]): QueuedFile[] | undefined {
+  return list?.length
+    ? list.map((file, i) => ({ mimeType: file.mimeType, name: `${id}-${kind}-${i}` }))
+    : undefined;
+}
+
+// Waits for every write to settle so a cleanup after a failure deletes them all.
+async function saveFiles(files: QueuedFile[], uploads: UploadInput[]) {
+  if (!files.length) return;
   await RNFS.mkdir(FILES_DIR);
-  return Promise.all(
-    list.map(async (file, i) => {
-      const path = `${FILES_DIR}/${id}-${kind}-${i}`;
-      await RNFS.writeFile(path, file.data, 'base64');
-      return { mimeType: file.mimeType, path };
-    }),
+  const writes = await Promise.allSettled(
+    uploads.map((u, i) => RNFS.writeFile(`${FILES_DIR}/${files[i].name}`, u.data, 'base64')),
   );
+  const failed = writes.find(w => w.status === 'rejected');
+  if (failed) throw failed.reason;
 }
 
 async function loadFiles(list?: QueuedFile[]): Promise<UploadInput[] | undefined> {
@@ -116,15 +119,15 @@ async function loadFiles(list?: QueuedFile[]): Promise<UploadInput[] | undefined
   return Promise.all(
     list.map(async file => ({
       mimeType: file.mimeType,
-      data: file.data ?? (await RNFS.readFile(file.path ?? '', 'base64')),
+      data: file.data ?? (await RNFS.readFile(`${FILES_DIR}/${file.name}`, 'base64')),
     })),
   );
 }
 
-async function deleteFiles(item: QueuedNote) {
-  for (const file of [...(item.images ?? []), ...(item.audios ?? [])]) {
-    if (!file.path) continue;
-    await RNFS.unlink(file.path).catch((error: unknown) => {
+async function deleteFiles(files: QueuedFile[]) {
+  for (const file of files) {
+    if (!file.name) continue;
+    await RNFS.unlink(`${FILES_DIR}/${file.name}`).catch((error: unknown) => {
       logError('Failed to delete queued attachment', {
         error: getErrorMessage(error),
       });
@@ -142,19 +145,26 @@ export function refreshPendingCount(): Promise<void> {
 
 export function enqueueNote(input: NewNote): Promise<QueuedNote> {
   return withLock(async () => {
+    const queue = await readQueue();
     const id = newId();
     const item: QueuedNote = {
       id,
       userId: input.userId,
       content: input.content,
       tags: input.tags,
-      images: await saveFiles(id, 'image', input.images),
-      audios: await saveFiles(id, 'audio', input.audios),
+      images: fileNames(id, 'image', input.images),
+      audios: fileNames(id, 'audio', input.audios),
       createdAt: Date.now(),
     };
-    const queue = await readQueue();
-    queue.push(item);
-    await writeQueue(queue);
+    const files = [...(item.images ?? []), ...(item.audios ?? [])];
+    try {
+      await saveFiles(files, [...(input.images ?? []), ...(input.audios ?? [])]);
+      queue.push(item);
+      await writeQueue(queue);
+    } catch (error) {
+      await deleteFiles(files);
+      throw error;
+    }
     return item;
   });
 }
@@ -170,7 +180,7 @@ function removeItem(item: QueuedNote) {
   return withLock(async () => {
     const queue = await readQueue();
     await writeQueue(queue.filter(i => i.id !== item.id));
-    await deleteFiles(item);
+    await deleteFiles([...(item.images ?? []), ...(item.audios ?? [])]);
   });
 }
 
@@ -237,7 +247,13 @@ export async function createNoteOrQueue(
   images?: UploadInput[],
   audios?: UploadInput[],
 ): Promise<CreateNoteResult> {
-  const queued = (await getPendingNotes()).some(i => i.userId === userId);
+  const queued = await getPendingNotes().then(
+    q => q.some(i => i.userId === userId),
+    (error: unknown) => {
+      logError('Failed to read offline note queue', { error: getErrorMessage(error) });
+      return false;
+    },
+  );
   if (queued) {
     const { error } = await flushPendingNotes(userId, token);
     if (error) {

@@ -3,6 +3,7 @@
  */
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import RNFS from 'react-native-fs';
 import { ConnectError, Code } from '@connectrpc/connect';
 import {
   OFFLINE_QUEUE_KEY,
@@ -204,5 +205,28 @@ describe('stuck notes', () => {
     jest.spyOn(AsyncStorage, 'getItem').mockRejectedValueOnce(new Error('Row too big to fit into CursorWindow'));
     mockedCreateNote.mockResolvedValue({ id: 'n1' } as never);
     expect((await createNoteOrQueue('alice', 'tok', 'hello')).status).toBe('sent');
+  });
+});
+
+describe('storage failures', () => {
+  const photo = { data: 'aGVsbG8=', mimeType: 'image/png' };
+
+  it('does not overwrite stored notes it could not read', async () => {
+    mockedCreateNote.mockRejectedValue(new ConnectError('down', Code.Unavailable));
+    await createNoteOrQueue('alice', 'tok', 'kept');
+    const stored = await AsyncStorage.getItem(OFFLINE_QUEUE_KEY);
+
+    jest.spyOn(AsyncStorage, 'getItem')
+      .mockRejectedValueOnce(new Error('Row too big to fit into CursorWindow'))
+      .mockRejectedValueOnce(new Error('Row too big to fit into CursorWindow'));
+    await expect(createNoteOrQueue('alice', 'tok', 'new')).rejects.toThrow('CursorWindow');
+    expect(await AsyncStorage.getItem(OFFLINE_QUEUE_KEY)).toBe(stored);
+  });
+
+  it('deletes attachment files when queueing fails', async () => {
+    mockedCreateNote.mockRejectedValue(new ConnectError('down', Code.Unavailable));
+    jest.spyOn(AsyncStorage, 'setItem').mockRejectedValueOnce(new Error('disk full'));
+    await expect(createNoteOrQueue('alice', 'tok', 'pic', [], [photo])).rejects.toThrow('disk full');
+    expect(RNFS.unlink).toHaveBeenCalledWith(expect.stringMatching(/\/offline-notes\/.+-image-0$/));
   });
 });
