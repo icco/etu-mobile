@@ -30,6 +30,7 @@
     "@tanstack/react-query-persist-client": "^5.108.4",
     "expo": "~58.1.0",
     "expo-notifications": "~58.1.10",
+    "lucide-react-native": "^1.82.0",
     "react": "19.3.0",
     "react-native": "^0.88.1",
     "react-native-config": "^1.7.2",
